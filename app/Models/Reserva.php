@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Reserva extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        "fecha",
+        "proyecto_id",
+        "lote_id",
+        "vendedor_id",
+        "cliente_id",
+        "moneda",
+        "importe",
+        // "saldo_credito",
+        // "saldo_contado",
+        "vencimiento"
+    ];
+
+    function getReferencia(){
+        return "Reserva N.º {$this->id}";
+    }
+
+    function getCurrency(){
+        return $this->currency;
+    }
+
+    function cliente(){
+        return $this->belongsTo(Cliente::class);
+    }
+
+    function vendedor(){
+        return $this->belongsTo(Vendedor::class);
+    }
+
+    function lote(){
+        return $this->belongsTo(Lote::class);
+    }
+
+    function currency(){
+        return $this->belongsTo(Currency::class, "moneda");
+    }
+}
