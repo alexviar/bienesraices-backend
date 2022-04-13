@@ -17,9 +17,12 @@ class Money implements Arrayable {
     const BUY = 1;
     const SELL = 2;
 
-    private ?Money $originalValue;
-    private BigDecimal $_amount;
-    private Currency $_currency;
+    /** @var Money|null $originalValue */
+    private $originalValue;
+    /** @var BigDecimal|null $_amount */
+    private $_amount;
+    /** @var Currency $_currency */
+    private $_currency;
 
     /**
      * @param BigDecimal|string $amount

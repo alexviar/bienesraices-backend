@@ -82,6 +82,7 @@ class Proyecto extends Model
     function toArray()
     {
         $array = parent::toArray();
+        $array["precio_mt2"] = $this->attributes["precio_mt2"];
         $array["ubicacion"] = [
             "latitud" => $this->ubicacion->getLat(),
             "longitud" => $this->ubicacion->getLng()

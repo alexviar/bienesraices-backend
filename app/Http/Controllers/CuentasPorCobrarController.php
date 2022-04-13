@@ -31,6 +31,7 @@ class CuentasPorCobrarController extends Controller
 
         if(isset($cliente)){
             $ventas = Venta::with(["cuotas.venta"])
+                ->where("cliente_id", $cliente->id)
                 ->where("tipo", 2)
                 ->where("estado", 1)
                 ->get();
@@ -66,7 +67,7 @@ class CuentasPorCobrarController extends Controller
         if($result = $this->resolvePagoCliente($codigoPago, $fecha)){
             return $result;
         }
-        // abort(404);
+        abort(404);
 
         // if(Str::startsWith($codigoPago, "NIT")){
         //     $id = Str::substr($codigoPago, 3);

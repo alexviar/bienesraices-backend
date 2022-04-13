@@ -11,6 +11,7 @@ use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\VentaController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,6 +24,10 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+Route::get('/seed', function(){
+    Artisan::call("db:seed");
+});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
