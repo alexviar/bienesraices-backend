@@ -17,9 +17,9 @@ class VentaFactory extends Factory
      */
     public function definition($attributes)
     {
-        $tipo = $this->faker->randomElement([1,2]);
-        
-        $reservaId = $this->resolveAttribute($attributes["reserva_id"] ?? optional(Reserva::factory())->value, []);
+        $tipo = $attributes["tipo"] ?? $this->faker->randomElement([1,2]);
+
+        $reservaId = $this->resolveAttribute(isset($attributes["reserva_id"]) ? $attributes["reserva_id"] : optional(Reserva::factory())->value, []);
         $reserva = Reserva::find($reservaId);
         $loteId = $this->resolveAttribute($reserva->lote ?? $attributes["lote_id"] ?? Lote::factory(), []);
         $lote = Lote::find($loteId);
@@ -27,7 +27,7 @@ class VentaFactory extends Factory
 
         $base = [
             "tipo" => $tipo,
-            "fecha" => $this->faker->date(),
+            "fecha" => $attributes["fecha"] ?? $this->faker->date(),
             "moneda" => $attributes["moneda"] ?? $proyecto->moneda,
             "lote_id" => $lote->id,
             "precio" => $attributes["precio"] ?? $lote->getAttributes()["precio"],
@@ -35,16 +35,39 @@ class VentaFactory extends Factory
             "cliente_id" => $reserva->cliente ?? $attributes["cliente_id"] ?? Cliente::factory(),
             "vendedor_id" => $reserva->vendedor ?? $attributes["vendedor_id"] ?? Vendedor::factory(),
             "proyecto_id" => $proyecto,
-            "reserva_id" => $reserva->id
+            "reserva_id" => $reserva->id ?? null
         ];
         if($tipo === 1) return $base;
 
-        $periodoPago = $this->faker->randomElement([1,2,3,4,6]);
+        $periodoPago = $attributes["periodo_pago"] ?? $this->faker->randomElement([1,2,3,4,6]);
+        $plazo = $attributes["plazo"] ?? $this->faker->randomElement([12, 24, 36, 48]);
         return $base + [
             "cuota_inicial" => $attributes["cuota_inicial"] ?? $proyecto->cuota_inicial,
-            "tasa_interes" => $attributes["tasa_interes"] ?? $proyecto->cuota_inicial,
-            "plazo" => $attributes["plazo"] ?? ($this->faker->numberBetween(2,10)*$periodoPago),
-            "periodo_pago" => $attributes["periodo_pago"] ?? $periodoPago
+            "tasa_interes" => $attributes["tasa_interes"] ?? $proyecto->tasa_interes,
+            // "plazo" => $attributes["plazo"] ?? ($this->faker->numberBetween(2,10)*$periodoPago),
+            "plazo" => $plazo,
+            "periodo_pago" => $periodoPago
         ];
+    }
+
+    public function contado(){
+        return $this->state([
+            "tipo" => 1
+        ]);
+    }
+
+    public function credito(){
+        return $this->state([
+            "tipo" => 2
+        ]);
+    }
+
+    /**
+     * @param bool $with
+     */
+    public function withReserva($with = true){
+        return $this->state([
+            "reserva_id" => $with ? Reserva::factory() : null
+        ]);
     }
 }

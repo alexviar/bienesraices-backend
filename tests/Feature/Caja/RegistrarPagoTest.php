@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\DetalleTransaccion;
-use App\Models\Transaccion;
 use App\Models\User;
 use Tests\TestCase;
 

@@ -77,7 +77,7 @@ class VentaController extends Controller
             "periodo_pago" => "required_if:tipo,2|in:1,2,3,4,6",
         ]);
 
-        $reserva = Reserva::find($payload["reserva_id"]);
+        $reserva = isset($payload["reserva_id"]) ? Reserva::find($payload["reserva_id"]) : null;
         if($reserva && $reserva->estado == 1){
             $payload["lote_id"] = $reserva->lote->id;
             $payload["cliente_id"] = $reserva->cliente_id;
@@ -100,7 +100,7 @@ class VentaController extends Controller
             //Registrar la transacción
             $importe = (string) ($record->tipo == 1 ? $record->precio : $record->cuota_inicial)->amount->minus($reserva ? $reserva->importe : "0");
             $transaccion = Transaccion::create([
-                "fecha" => Carbon::now(),
+                "fecha" => $record->fecha,
                 "moneda" => $record->moneda,
                 "importe" => $importe,
                 "forma_pago" => 2,

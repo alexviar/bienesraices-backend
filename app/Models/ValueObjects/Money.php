@@ -50,18 +50,26 @@ class Money implements Arrayable {
     }
 
     /**
+     * 
+     * @param Money|BigDecimal|string $money
+     * 
      * @return Money
      */
     function plus($money){
+        if(!($money instanceof Money)) $money = new Money($money, $this->currency);
         if($this->currency->code != $money->currency->code) throw new Exception("Currencies should to be the same but gets {$this->currency->code} and {$money->currency->code}");
 
         return new Money($this->_amount->plus($money->amount), $this->currency);
     }
 
     /**
+     * 
+     * @param Money|BigDecimal|string $money
+     * 
      * @return Money
      */
     function minus($money){
+        if(!($money instanceof Money)) $money = new Money($money, $this->currency);
         if($this->currency->code != $money->currency->code) throw new Exception("Currencies should to be the same but gets {$this->currency->code} and {$money->currency->code}");
 
         return new Money($this->_amount->minus($money->amount), $this->currency);
@@ -127,5 +135,9 @@ class Money implements Arrayable {
             "amount" => (string) $this->_amount,
             "currency" => $this->currency->code
         ];
+    }
+
+    static function create($amount, $currency){
+        return new self($amount, $currency);
     }
 }

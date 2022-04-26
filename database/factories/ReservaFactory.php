@@ -22,12 +22,12 @@ class ReservaFactory extends Factory
         $lote = Lote::find($loteId);
         $proyecto = $lote->manzana->proyecto;
         $fecha = $this->resolveAttribute($attributes["fecha"] ?? $this->faker->date, []);
+
         return [
             "fecha" => $fecha,
             "vencimiento" => $attributes["vencimiento"] ?? Carbon::parse($fecha)->addDays($proyecto->duracionReservas)->format("Y-m-d"),
-            "importe" => $attributes["importe"] ?? $proyecto->getAttributeFromArray("precio_reserva"),
-            "saldo_credito" => $attributes["saldo_credito"] ?? $proyecto->getAttributeFromArray("saldo_credito"),
-            "saldo_contado" => $attributes["saldo_contado"] ?? $proyecto->getAttributeFromArray("saldo_contado"),
+            "moneda" => $attributes["moneda"] ??  $proyecto->moneda,
+            "importe" => $attributes["importe"] ?? $proyecto->precio_reserva,
             "proyecto_id" => $proyecto,
             "lote_id" => $loteId,
             "cliente_id" => $attributes["cliente_id"] ?? Cliente::factory(),

@@ -12,6 +12,8 @@ class Manzana extends Model
 {
     use HasFactory;
 
+    protected $hidden = ["proyecto"];
+
     function proyecto(){
         return $this->belongsTo(Proyecto::class);
     }

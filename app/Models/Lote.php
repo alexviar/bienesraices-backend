@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\DB;
 class Lote extends Model
 {
     use HasFactory;
+
+    protected $hidden = ["reserva","venta"];
     
     protected $appends = [
         "precio",

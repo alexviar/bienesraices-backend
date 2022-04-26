@@ -12,7 +12,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * 
+ *
  * @property Carbon $fecha
  * @property Money $precio
  * @property Cuota[]|Collection $cuotas
@@ -40,14 +40,19 @@ class Venta extends Model
         "tasa_mora"
     ];
 
+    protected $hidden = [ "currency" ];
+
+    protected $appends = [ "formated_id" ];
+
     protected $casts = [
         "fecha" => "date:Y-m-d"
     ];
 
     function getFormatedIdAttribute(){
         $tipo = $this->tipo == 1 ? "CON" : "CRE";
-        $paddedId = str_pad($this->id, 20, "0", STR_PAD_LEFT);
-        return "$tipo$paddedId";
+        $id = $this->id;
+        // $id = str_pad($this->id, 20, "0", STR_PAD_LEFT);
+        return "$tipo$id";
     }
 
     function getPrecioAttribute($value){
@@ -55,20 +60,24 @@ class Venta extends Model
     }
 
     function getCuotaInicialAttribute($value){
-        return new Money($value, Currency::find($this->moneda));
+        return $value ? new Money($value, Currency::find($this->moneda)) : null;
     }
 
-    static function find($id){
-        if(is_string($id)){
-            $tipo = Str::substr($id, 0, 3);
-            $id = Str::substr($id, 3);
-            switch($tipo){
-                case "CON": return static::where("id", intval($id))->where("tipo", 1)->first();
-                case "CRE": return static::where("id", intval($id))->where("tipo", 2)->first();
-                default: return null;
-            }
-        }
-        return parent::find($id);
+    // static function find($id){
+    //     if(!is_numeric($id)){
+    //         $tipo = Str::substr($id, 0, 3);
+    //         $id = Str::substr($id, 3);
+    //         switch($tipo){
+    //             case "CON": return static::where("id", intval($id))->where("tipo", 1)->first();
+    //             case "CRE": return static::where("id", intval($id))->where("tipo", 2)->first();
+    //             default: return null;
+    //         }
+    //     }
+    //     return parent::find($id);
+    // }
+
+    function reserva(){
+        return $this->belongsTo(Reserva::class);
     }
 
     function cliente(){
@@ -101,7 +110,7 @@ class Venta extends Model
 
     /**
      * Calcula el factor de recuperacion del capital
-     * 
+     *
      * @param Carbon $fecha
      * @param ?Carbon $fechaPrimerCuota
      */
@@ -132,7 +141,7 @@ class Venta extends Model
                 $next->addDays($periodoPago*30);
             }
         }
-        
+
         $numerator = BigDecimal::one();
         $denominator = BigDecimal::zero();
         for($i = $numeroCuotas-1; $i >=0; $i--){
@@ -164,7 +173,7 @@ class Venta extends Model
                 $pago = $saldoCapitalMasInteres;
             }
             else{
-                $pago = $pagos; 
+                $pago = $pagos;
             }
 
             $saldoCapital = $saldoCapitalMasInteres->minus($pago);
@@ -180,10 +189,10 @@ class Venta extends Model
         }
     }
 
-    function toArray()
-    {
-        return [
-            "id" => $this->formated_id,
-        ] + parent::toArray();
-    }
+    // function toArray()
+    // {
+    //     return [
+    //         "id" => $this->formated_id,
+    //     ] + parent::toArray();
+    // }
 }
