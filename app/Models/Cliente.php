@@ -28,4 +28,8 @@ class Cliente extends Model
         if($this->apellido_materno) $apellidos .= $this->apellido_materno." ";
         return "$apellidos {$this->nombre}";
     }
+
+    function getCodigosPago(){
+        return $this->hasMany(CodigoPago::class);
+    }
 }

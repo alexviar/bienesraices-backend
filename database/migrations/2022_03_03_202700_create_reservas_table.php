@@ -26,6 +26,7 @@ class CreateReservasTable extends Migration
             // $table->string("saldo_contado");
             $table->date("vencimiento");
             $table->tinyInteger("estado")->default(1);
+            $table->bigInteger("legacy_id")->nullable();
             $table->foreignIdFor(Proyecto::class);
             $table->foreignIdFor(Lote::class);
             $table->foreignIdFor(Cliente::class);

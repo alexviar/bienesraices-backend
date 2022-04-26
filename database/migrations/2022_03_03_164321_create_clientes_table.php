@@ -22,7 +22,7 @@ class CreateClientesTable extends Migration
             $table->string("apellido_materno")->nullable();
             $table->string("nombre");
             $table->string("telefono");
-            $table->string("codigo_pago")->nullable();
+            $table->bigInteger("legacy_id")->nullable();
             $table->timestamps();
 
             $table->unique(["tipo_documento", "numero_documento"], "clientes_documento_identidad");

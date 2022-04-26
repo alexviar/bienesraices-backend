@@ -32,6 +32,7 @@ class CreateVentasTable extends Migration
             $table->tinyInteger("plazo")->nullable();
             $table->tinyInteger("periodo_pago")->nullable();
 
+            $table->bigInteger("legacy_id")->nullable();
             $table->foreign("moneda")->references("code")->on("currencies");
             $table->foreignIdFor(Proyecto::class);
             $table->foreignIdFor(Lote::class);

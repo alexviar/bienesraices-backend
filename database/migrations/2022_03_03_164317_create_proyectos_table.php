@@ -26,6 +26,7 @@ class CreateProyectosTable extends Migration
             $table->decimal("cuota_inicial", 10);
             $table->decimal("tasa_interes", 4, 4);
             $table->decimal("tasa_mora", 4, 4);
+            $table->bigInteger("legacy_id")->nullable();
             $table->timestamps();
 
             $table->foreign("moneda")->references("code")->on("currencies");

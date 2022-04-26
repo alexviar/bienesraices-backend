@@ -22,11 +22,13 @@ class CuentasPorCobrarController extends Controller
         //y creo que el uso de whereHas implica una subquery la cual podria evitarse
         //Venta::whereHas = 1 subquery
         //$venta->cliente = 1 query extra (ya sea lazy o eager load)
-        if(is_numeric($codigoPago)){
-            $cliente = Cliente::where("codigo_pago", $codigoPago);
-        }
-        else if(Str::startsWith($codigoPago, "CLI")){
+        if(Str::startsWith($codigoPago, "CLI")){
             $cliente = Cliente::find(Str::substr($codigoPago, 3));
+        }
+        else{
+            $cliente = Cliente::whereHas("codigos_pago", function($query) use($codigoPago){
+                $query->where("codigo", $codigoPago);
+            })->first();
         }
 
         if(isset($cliente)){
