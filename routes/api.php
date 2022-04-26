@@ -33,26 +33,26 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/currencies', [CurrencyController::class, "index"]);
+Route::middleware('auth:sanctum')->get('/currencies', [CurrencyController::class, "index"]);
 
-Route::get('/clientes', [ClienteController::class, "index"]);
-Route::post('/clientes', [ClienteController::class, "store"]);
+Route::middleware('auth:sanctum')->get('/clientes', [ClienteController::class, "index"]);
+Route::middleware('auth:sanctum')->post('/clientes', [ClienteController::class, "store"]);
 
-Route::get('/vendedores', [VendedorController::class, "index"]);
+Route::middleware('auth:sanctum')->get('/vendedores', [VendedorController::class, "index"]);
 
-Route::get('/proyectos/{proyectoId}/manzanas', [ManzanaController::class, "index"]);
+Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/manzanas', [ManzanaController::class, "index"]);
 
-Route::get('/proyectos/{proyectoId}/lotes', [LoteController::class, "index"]);
+Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/lotes', [LoteController::class, "index"]);
 
-Route::get('/proyectos/{proyectoId}/ventas', [VentaController::class, "index"]);
-Route::post('/proyectos/{proyectoId}/ventas', [VentaController::class, "store"]);
+Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/ventas', [VentaController::class, "index"]);
+Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/ventas', [VentaController::class, "store"]);
 
-Route::get('/proyectos/{proyectoId}/reservas', [ReservaController::class, "index"]);
-Route::post('/proyectos/{proyectoId}/reservas', [ReservaController::class, "store"]);
+Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/reservas', [ReservaController::class, "index"]);
+Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/reservas', [ReservaController::class, "store"]);
 
-Route::get('/proyectos/{proyectoId}', [ProyectoController::class, "show"]);
-Route::get('/proyectos', [ProyectoController::class, "index"]);
+Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}', [ProyectoController::class, "show"]);
+Route::middleware('auth:sanctum')->get('/proyectos', [ProyectoController::class, "index"]);
 
-Route::get('/cuentas-por-cobrar', [CuentasPorCobrarController::class, "index"]);
-Route::get('transacciones', [CajaController::class, "index"]);
-Route::post('transacciones', [CajaController::class, "store"]);
+Route::middleware('auth:sanctum')->get('/cuentas-por-cobrar', [CuentasPorCobrarController::class, "index"]);
+Route::middleware('auth:sanctum')->get('/transacciones', [CajaController::class, "index"]);
+Route::middleware('auth:sanctum')->post('/transacciones', [CajaController::class, "store"]);

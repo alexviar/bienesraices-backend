@@ -29,12 +29,22 @@ class CajaController extends Controller
             "importe" => "numeric",
             "numero_transaccion" => "integer",
             "comprobante" => "mimes:jpg",
-            "detalles" => "array",
+            "detalles" => ["array", function($attribute, $value, $fail) use($request){
+                $detalles = collect($value);
+                $deposito = BigDecimal::of($request->input("importe"))->toScale(2, RoundingMode::HALF_UP);
+                $totalPagos = $detalles->reduce(function($carry, $item){
+                    return $carry->plus($item["importe"]);
+                }, BigDecimal::zero()->toScale(2, RoundingMode::HALF_UP));
+                if($totalPagos->isGreaterThan($deposito)){
+                    $fail("Los pagos exceden el monto depositado (Pagos: $totalPagos, Deposito: $deposito)");
+                }
+            }],
             // "detalles.*.referencia" => "string", //¿Debería volver a generarse en el servidor en lugar de confiar en el frontend? <-> ¿Podría en algunos casos estar definda por el usuario?
             "detalles.*.transactable_id" => "numeric",
             "detalles.*.transactable_type" => "in:" . Cuota::class,
             "detalles.*.importe" => "numeric"
         ]);
+        dd($payload);
 
         $head = Arr::except($payload, "detalles");
         $details = $payload["detalles"];
