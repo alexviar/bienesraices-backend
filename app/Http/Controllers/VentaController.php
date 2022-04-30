@@ -59,7 +59,17 @@ class VentaController extends Controller
             "precio" => "required|numeric",
             "cliente_id" => "required_without:reserva_id|nullable|exists:clientes,id",
             "vendedor_id" => "required_without:reserva_id|nullable||exists:vendedores,id",
-            "reserva_id" => "nullable|exists:reservas,id",
+            "reserva_id" => ["nullable", function ($attribute, $value, $fail){
+                $reserva = Reserva::find($value);
+                if(!$reserva){
+                    $fail("Reserva invalida.");
+                }
+                else if($reserva->estado !== 1){
+                    $fail("La reserva ha sido anulada o se ha concretado la venta.");
+                }
+                //No se realiza una restriccion basada en el vencimiento de la reserva
+                //para dejar al criterio del operador si efectua o no la venta en casos excepcionales
+            }],
 
             "cuota_inicial" => "required_if:tipo,2|numeric",
             "tasa_interes" => "required_if:tipo,2|numeric",
@@ -68,7 +78,7 @@ class VentaController extends Controller
         ]);
 
         $reserva = Reserva::find($payload["reserva_id"]);
-        if($reserva){
+        if($reserva && $reserva->estado == 1){
             $payload["lote_id"] = $reserva->lote->id;
             $payload["cliente_id"] = $reserva->cliente_id;
             $payload["vendedor_id"] = $reserva->vendedor_id;
@@ -84,6 +94,10 @@ class VentaController extends Controller
 
             if($record->tipo == 2) $record->crearPlanPago();
 
+            //Aqui idealmente deberiamos despachar un evento para desencadenar otras acciones
+            //pero por ahora esas acciones vamos a realizarlas aqui directamente
+
+            //Registrar la transacción
             $importe = (string) ($record->tipo == 1 ? $record->precio : $record->cuota_inicial)->amount->minus($reserva ? $reserva->importe : "0");
             $transaccion = Transaccion::create([
                 "fecha" => Carbon::now(),
@@ -98,6 +112,15 @@ class VentaController extends Controller
             $detailModel->transactable()->associate($record);
 
             $transaccion->detalles()->save($detailModel);
+
+            //Actualizar el estado de la reserva, si existe
+            if($reserva){
+                $reserva->estado = 3;
+                $reserva->save();
+            }
+
+            //Actualizar el estado del lote
+
 
             return $record;
         });

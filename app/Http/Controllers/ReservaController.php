@@ -8,6 +8,7 @@ use App\Models\Reserva;
 use App\Models\Transaccion;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ReservaController extends Controller
 {
@@ -42,26 +43,30 @@ class ReservaController extends Controller
             // "cuota_inicial" => "string",
             "vencimiento" => "required|date"
         ]);
-        $reserva = Reserva::create($payload+[
-            // "saldo_credito" => $payload["cuota_inicial"],
-            // "saldo_contado" => $payload["precio"],
-            "proyecto_id" => $proyectoId
-        ]);
 
+        $reserva = DB::transaction(function() use($payload, $proyectoId){
+            $reserva = Reserva::create($payload+[
+                // "saldo_credito" => $payload["cuota_inicial"],
+                // "saldo_contado" => $payload["precio"],
+                "proyecto_id" => $proyectoId
+            ]);
+            $reserva->refresh();
+            
+            $transaccion = Transaccion::create([
+                "fecha" => Carbon::now(),
+                "moneda" => $reserva->moneda,
+                "importe" => $reserva->importe,
+                "forma_pago" => 1,
+            ]);
+            $detailModel = new DetalleTransaccion();
+            $detailModel->referencia = $reserva->getReferencia();
+            $detailModel->moneda = $reserva->getCurrency()->code;
+            $detailModel->importe = $reserva->importe;
+            $detailModel->transactable()->associate($reserva);
+    
+            $transaccion->detalles()->save($detailModel);
+        });
         
-        $transaccion = Transaccion::create([
-            "fecha" => Carbon::now(),
-            "moneda" => $reserva->moneda,
-            "importe" => $reserva->importe,
-            "forma_pago" => 1,
-        ]);
-        $detailModel = new DetalleTransaccion();
-        $detailModel->referencia = $reserva->getReferencia();
-        $detailModel->moneda = $reserva->getCurrency()->code;
-        $detailModel->importe = $reserva->importe;
-        $detailModel->transactable()->associate($reserva);
-
-        $transaccion->detalles()->save($detailModel);
         return $reserva;
     }
 }
