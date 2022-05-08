@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\ValueObjects\Money;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,6 +22,10 @@ class Reserva extends Model
         // "saldo_contado",
         "vencimiento"
     ];
+
+    function getImporteAttribute($value){
+        return new Money($value, Currency::find($this->moneda));
+    }
 
     function getReferencia(){
         return "Reserva N.º {$this->id}";

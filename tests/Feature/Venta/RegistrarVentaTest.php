@@ -2,6 +2,7 @@
 
 use App\Models\Currency;
 use App\Models\DetalleTransaccion;
+use App\Models\Reserva;
 use App\Models\Transaccion;
 use App\Models\User;
 use App\Models\ValueObjects\Money;
@@ -169,7 +170,6 @@ test('Registro con reserva', function () {
         "fecha" => "2020/09/15",
         "moneda" => "USD",
         "precio" => "10530.96",
-        "reserva_id" => null,
         "plazo" => 48,
         "periodo_pago" => 1,
         "cuota_inicial" => "500",
@@ -200,4 +200,77 @@ test('Registro con reserva', function () {
         "moneda" => $venta->moneda,
         "importe" => (string) $venta->cuota_inicial->minus($venta->reserva->importe)->amount,
     ]);
+});
+
+test('Venta y reserva con diferentes monedas', function (){
+    /** @var TestCase $this */
+
+        //Venta al contado
+        $data = Venta::factory([
+            "moneda" => "USD",
+            "precio" => "10530.96",
+        ])->contado()->for(Reserva::factory([
+            "moneda" => "BOB",
+            "importe" => "100"
+        ]))->raw();
+    
+        $proyectoId = $data["proyecto_id"];
+    
+        $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+    
+        $response->assertCreated();
+        $id = $response->json("id");
+    
+        $venta = Venta::find($id);
+    
+        $this->assertDatabaseHas("transacciones", [
+            "fecha" => $venta->fecha,
+            "forma_pago" => 2,
+            "moneda" => $venta->moneda,
+            "importe" => (string) $venta->precio->minus("14.51")->amount,
+        ]);
+        $this->assertDatabaseHas("detalles_transaccion", [
+            "transactable_id" => $id,
+            "transactable_type" => Venta::class,
+            "moneda" => $venta->moneda,
+            "importe" => (string) $venta->precio->minus("14.51")->amount,
+        ]);
+    
+        // Venta al credito
+        $data = Venta::factory([
+            "fecha" => "2020/09/15",
+            "moneda" => "USD",
+            "precio" => "10530.96",
+            "plazo" => 48,
+            "periodo_pago" => 1,
+            "cuota_inicial" => "500",
+            "tasa_interes" => "0.1000"
+        ])->credito()->for(Reserva::factory([
+            "moneda" => "BOB",
+            "importe" => "100"
+        ]))->raw();
+    
+        $proyectoId = $data["proyecto_id"];
+    
+        $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+    
+        $response->assertCreated();
+        $id = $response->json("id");
+    
+        $venta = Venta::find($id);
+    
+        // Idealmente se debería testear si el evento de registro de venta es disparado
+        $this->assertDatabaseHas("transacciones", [
+            "fecha" => $data["fecha"],
+            "forma_pago" => 2,
+            "moneda" => $venta->moneda,
+            "importe" => (string) $venta->cuota_inicial->minus("14.51")->amount,
+        ]);
+    
+        $this->assertDatabaseHas("detalles_transaccion", [
+            "transactable_id" => $id,
+            "transactable_type" => Venta::class,
+            "moneda" => $venta->moneda,
+            "importe" => (string) $venta->cuota_inicial->minus("14.51")->amount,
+        ]);
 });

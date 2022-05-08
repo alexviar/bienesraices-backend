@@ -126,6 +126,7 @@ class Money implements Arrayable {
         }
         
         if($preserveOriginal) $result->originalValue = $this;
+        $result->_currency = $currency;
 
         return $result;
     }
