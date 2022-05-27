@@ -26,7 +26,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/seed', function(){
-    Artisan::call("db:seed");
+    Artisan::call("migrate:fresh");
+    Artisan::call("db:seed InitialLoadSeeder");
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

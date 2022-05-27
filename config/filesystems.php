@@ -29,6 +29,10 @@ return [
     */
 
     'disks' => [
+        'csv' => [
+            'driver' => 'local',
+            'root' => base_path('database/seeders/csv'),
+        ],
 
         'local' => [
             'driver' => 'local',
