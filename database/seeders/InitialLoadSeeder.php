@@ -29,7 +29,7 @@ class InitialLoadSeeder extends Seeder
         foreach($files as $filename){
             if(Str::endsWith($filename, ".csv")){
                 $filename = str_replace("\\", "/", $disk->path($filename));
-                DB::select("LOAD DATA LOCAL INFILE '$filename' INTO TABLE proyectos\r\n"
+                DB::connection()->getPdo()->exec("LOAD DATA LOCAL INFILE '$filename' INTO TABLE proyectos\r\n"
                 . "FIELDS TERMINATED BY '\\,' OPTIONALLY ENCLOSED BY '\"'\r\n"
                 . "IGNORE 1 LINES\r\n"
                 . "(legacy_id, nombre, socio, @latitud, @longitud, moneda, precio_mt2, precio_reserva, redondeo, cuota_inicial, tasa_interes, tasa_mora)\r\n"
@@ -46,7 +46,7 @@ class InitialLoadSeeder extends Seeder
         foreach($files as $filename){
             if(Str::endsWith($filename, ".csv")){
                 $filename = str_replace("\\", "/", $disk->path($filename));
-                DB::select("LOAD DATA LOCAL INFILE '$filename' INTO TABLE manzanas\r\n"
+                DB::connection()->getPdo()->exec("LOAD DATA LOCAL INFILE '$filename' INTO TABLE manzanas\r\n"
                 . "FIELDS TERMINATED BY '\\,' OPTIONALLY ENCLOSED BY '\"'\r\n"
                 . "IGNORE 1 LINES\r\n"
                 . "(numero, @proyecto_id)\r\n"
@@ -63,7 +63,7 @@ class InitialLoadSeeder extends Seeder
         foreach($files as $filename){
             if(Str::endsWith($filename, ".csv")){
                 $filename = str_replace("\\", "/", $disk->path($filename));
-                DB::select("LOAD DATA LOCAL INFILE '$filename' INTO TABLE lotes\r\n"
+                DB::connection()->getPdo()->exec("LOAD DATA LOCAL INFILE '$filename' INTO TABLE lotes\r\n"
                 . "FIELDS TERMINATED BY '\\,' OPTIONALLY ENCLOSED BY '\"'\r\n"
                 . "IGNORE 1 LINES\r\n"
                 . "(numero, superficie, precio, estado, @manzana_id, @proyecto_id)\r\n"

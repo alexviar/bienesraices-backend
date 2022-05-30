@@ -98,7 +98,6 @@ class VentaController extends Controller
             //pero por ahora esas acciones vamos a realizarlas aqui directamente
 
             //Registrar la transacción
-            var_dump($reserva?->importe->exchangeTo($record->currency)->round()->toArray());
             $importe = (string) ($record->tipo == 1 ? $record->precio : $record->cuota_inicial)->minus($reserva ? $reserva->importe->exchangeTo($record->currency)->round() : "0")->amount;
             $transaccion = Transaccion::create([
                 "fecha" => $record->fecha,
