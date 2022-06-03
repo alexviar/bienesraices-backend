@@ -20,7 +20,7 @@ class Lote extends Model
     protected $hidden = ["reserva","venta"];
     
     protected $appends = [
-        "precio",
+        // "precio",
         "precio_sugerido"
     ];
 
