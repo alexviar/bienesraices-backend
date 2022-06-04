@@ -44,7 +44,7 @@ class VentaController extends Controller
                 if(!$lote || $lote->proyecto->id != $proyectoId){
                     $fail('Lote inválido.');
                 }
-                else if($lote->estado !== "Disponible"){
+                else if($lote->estado["code"] !== 1){
                     $cliente_id = $request->input("reserva_id") ? Reserva::find($request->input("reserva_id"))->cliente_id : $request->input("cliente_id");
                     if($lote->estado === "Reservado"){
                         if($lote->reserva->cliente_id != $cliente_id){

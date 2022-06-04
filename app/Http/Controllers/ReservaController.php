@@ -31,7 +31,7 @@ class ReservaController extends Controller
                 if(!$lote || $lote->proyecto->id != $proyectoId){
                     $fail('Lote inválido.');
                 }
-                else if($lote->estado !== "Disponible"){
+                else if($lote->estado["code"] !== 1){
                     $fail('El lote no esta disponible.');
                 }
             }],

@@ -33,18 +33,36 @@ class Lote extends Model
     }
 
     function getEstadoAttribute($value){
-        switch($value){
-            case 1: 
-                if($this->reserva){
-                    return "Reservado";
-                }
-                if($this->venta){
-                    return "Vendido";
-                }
-                return "Disponible";
-            case 2:
-                return "No disponible";
+        if($value == 1){
+            if($this->reserva){
+                return [
+                    "code" => 3,
+                    "message" => "Reservado"
+                ];
+            }
+            if($this->venta){
+                return [
+                    "code" => 4,
+                    "message" => "Vendido"
+                ];
+            }
+            return [
+                "code" => 1,
+                "message" => "Disponible"
+            ];
         }
+
+        if($value == 2) {
+            return [
+                "code" => 2,
+                "message" => "No disponible"
+            ];
+        }
+
+        return [
+            "code" => $value,
+            "text" => "Desconocido"
+        ];
     }
 
     function reserva(){
