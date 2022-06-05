@@ -12,6 +12,7 @@ use App\Models\Transaccion;
 use App\Models\Vendedor;
 use App\Models\Venta;
 use Brick\Math\BigDecimal;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
@@ -30,6 +31,19 @@ class VentaController extends Controller
     {
         $queryArgs =  $request->only(["search", "filter", "page"]);
         return $this->buildResponse(Venta::with(["cliente", "vendedor", "lote.manzana"])->where("proyecto_id", $proyectoId), $queryArgs);
+    }
+
+    function print_plan_pagos(Request $request, $proyectoId, $ventaId){
+        $venta = Venta::where("proyecto_id", $proyectoId)->where("id", $ventaId)->first();
+        if(!$venta) throw new ModelNotFoundException();
+        $image = public_path("logo192.png");
+        $mime = getimagesize($image)["mime"];
+        $data = file_get_contents($image);
+        $dataUri = 'data:image/' . $mime . ';base64,' . base64_encode($data);
+        return \Barryvdh\DomPDF\Facade\PDF::loadView("pdf.plan_pagos", [
+            "img" => $dataUri,
+            "venta" => $venta
+        ])->setPaper([0, 0, 72*8.5, 72*13])->stream();
     }
 
     function store(Request $request, $proyectoId){

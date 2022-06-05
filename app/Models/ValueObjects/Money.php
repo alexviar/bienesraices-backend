@@ -138,6 +138,12 @@ class Money implements Arrayable {
         ];
     }
 
+    function __toString()
+    {
+        $amount = $this->amount ?? "-";
+        return "$amount {$this->currency->code}";
+    }
+
     static function create($amount, $currency){
         return new self($amount, $currency);
     }

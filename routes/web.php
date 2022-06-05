@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\File;
 |
 */
 
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->name("login");
 Route::post('/logout', [AuthController::class, 'logout']);
 
 Route::fallback(function () {

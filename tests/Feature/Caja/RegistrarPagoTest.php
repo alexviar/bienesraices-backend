@@ -3,7 +3,7 @@
 use App\Models\User;
 use Tests\TestCase;
 
-test('Los pagos exceden el monto del depósito', function () {
+it('No permite pagos que excedan el monto del depósito', function () {
     /** @var TestCase $this */
 
     $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [

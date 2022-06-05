@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\SaveToUpper;
+use App\Models\ValueObjects\Money;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use Carbon\Carbon;
@@ -21,6 +22,22 @@ class Cuota extends Model
         "saldo",
         "saldo_capital"
     ];
+
+    protected $casts = [
+        "vencimiento" => "date:Y-m-d"
+    ];
+
+    function getImporteAttribute($value){
+        return new Money($value, Currency::find($this->venta->moneda));
+    }
+
+    function getSaldoAttribute($value){
+        return new Money($value, Currency::find($this->venta->moneda));
+    }
+
+    function getSaldoCapitalAttribute($value){
+        return new Money($value, Currency::find($this->venta->moneda));
+    }
 
     function venta(){
         return $this->belongsTo(Venta::class);
@@ -89,26 +106,22 @@ class Cuota extends Model
     }
 
     function toTransactableArray($fecha){
-        // $numero = $this->venta->cuotas->search(function($cuota){
-        //     return $cuota->id === $this->id;
-        // }) + 1;
-        $numero = $this->numero;
 
         $pago = $this->calcularPago(
-            $this->saldo,
-            Carbon::createFromFormat("!Y-m-d", $this->vencimiento),
+            $this->saldo->amount,
+            $this->vencimiento,
             $fecha
         );
 
         return [
             "id" => $this->id,
             "type" => self::class,
-            "referencia" => "Pago de la cuota $numero del crédito {$this->venta->id}",
+            "referencia" => $this->getReferencia(),
             "importe" => (string) $pago->toScale(2, RoundingMode::HALF_UP),
             "moneda" => $this->venta->moneda,
 
-            "saldo" => $this->saldo,
-            "multa" => (string) $pago->minus($this->saldo)->toScale(2, RoundingMode::HALF_UP)
+            "saldo" => $this->saldo->amount,
+            "multa" => (string) $pago->minus($this->saldo->amount)->toScale(2, RoundingMode::HALF_UP)
         ];
     }
 }

@@ -10,4 +10,12 @@ class CodigoPago extends Model
     use HasFactory;
 
     protected $table = "codigos_pago";
+
+    function cliente(){
+        return $this->belongsTo(Cliente::class);
+    }
+
+    function proyecto(){
+        return $this->belongsTo(Proyecto::class);
+    }
 }

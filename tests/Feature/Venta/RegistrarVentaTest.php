@@ -10,7 +10,7 @@ use App\Models\Venta;
 use Illuminate\Support\Arr;
 use Tests\TestCase;
 
-test('Registro exitoso', function () {
+it('Registra una venta al credito y otra al contado', function () {
     /** @var TestCase $this */
 
     //Venta al contado
@@ -134,7 +134,7 @@ test('Registro exitoso', function () {
 });
 
 
-test('Registro con reserva', function () {
+it('Registra una venta al credito y otra al contado, pero con una reserva previa', function () {
     /** @var TestCase $this */
 
     //Venta al contado
@@ -202,7 +202,7 @@ test('Registro con reserva', function () {
     ]);
 });
 
-test('Venta y reserva con diferentes monedas', function (){
+it('Convierte el importe de la reserva a la moneda de la venta y luego realiza el descuento a la cuota inicial o el precio total segun sea una venta al credito o al contado respectivamente.', function (){
     /** @var TestCase $this */
 
         //Venta al contado

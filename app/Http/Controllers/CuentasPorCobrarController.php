@@ -3,16 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cliente;
-use App\Models\Cuota;
+use App\Models\CodigoPago;
 use App\Models\Venta;
 use Brick\Math\BigDecimal;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CuentasPorCobrarController extends Controller
 {
@@ -22,44 +18,42 @@ class CuentasPorCobrarController extends Controller
         //y creo que el uso de whereHas implica una subquery la cual podria evitarse
         //Venta::whereHas = 1 subquery
         //$venta->cliente = 1 query extra (ya sea lazy o eager load)
+        $query = Venta::with(["cuotas.venta"]);
         if(Str::startsWith($codigoPago, "CLI")){
-            $cliente = Cliente::find(Str::substr($codigoPago, 3));
+            $cliente = Cliente::find(Str::substr($codigoPago, 4));
+            if(!$cliente) return;
         }
         else{
-            $cliente = Cliente::whereHas("codigos_pago", function($query) use($codigoPago){
-                $query->where("codigo", $codigoPago);
-            })->first();
+            $codigo = CodigoPago::where("codigo", $codigoPago)->first();
+            if(!$codigo) return;
+            $cliente = $codigo->cliente;
+            $query->where("proyecto_id", $codigo->proyecto_id);
         }
 
-        if(isset($cliente)){
-            $ventas = Venta::with(["cuotas.venta"])
-                ->where("cliente_id", $cliente->id)
-                ->where("tipo", 2)
-                ->where("estado", 1)
-                ->get();
+        $ventas = $query->where("cliente_id", $cliente->id)
+            ->where("tipo", 2)
+            ->where("estado", 1)
+            ->get();
 
-            $now = $fecha ? Carbon::createFromFormat("!Y-m-d", $fecha) : Carbon::now();
-            $cuotas = $ventas->reduce(function($carry, $venta) use($now){
-                // return array_merge($carry, $venta->cuotas->map(function($cuota) use($now){
-                //     return $cuota->toTransactableArray($now);
-                // }));
-                $i = 0;
-                do{
-                    $cuota = $venta->cuotas[$i];
-                    if((BigDecimal::of($cuota->saldo))->isGreaterThan(BigDecimal::zero())) $carry[] = $cuota->toTransactableArray($now);
-                    $i++;
-                }while($now->isAfter($cuota->vencimiento) && $i < $venta->cuotas->count());
-                return $carry;
-            }, []);
+        $now = $fecha ? Carbon::createFromFormat("!Y-m-d", $fecha) : Carbon::now();
+        $cuotas = $ventas->reduce(function($carry, $venta) use($now){
+            $i = 0;
+            do{
+                $cuota = $venta->cuotas[$i];
+                if($cuota->saldo->amount->isGreaterThan(BigDecimal::zero())) $carry[] = $cuota->toTransactableArray($now);
+                $i++;
+            }while($now->isAfter($cuota->vencimiento) && $i < $venta->cuotas->count());
+            return $carry;
+            // $carry = $carry + $venta->getCuotasPendientes();
+        }, []);
 
-            return [
-                "cliente" => [
-                    "id" => $cliente->id,
-                    "nombre_completo" => $cliente->nombreCompleto
-                ],
-                "cuentas" => $cuotas
-            ];
-        }
+        return [
+            "cliente" => [
+                "id" => $cliente->id,
+                "nombre_completo" => $cliente->nombreCompleto
+            ],
+            "cuentas" => $cuotas
+        ];
     }
 
     function index(Request $request) {

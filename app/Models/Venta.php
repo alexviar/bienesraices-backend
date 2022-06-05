@@ -42,17 +42,24 @@ class Venta extends Model
 
     protected $hidden = [ "currency" ];
 
-    protected $appends = [ "formated_id" ];
+    protected $appends = [ "formated_id", "url_plan_pago" ];
 
     protected $casts = [
         "fecha" => "date:Y-m-d"
     ];
 
+    function getUrlPlanPagoAttribute(){
+        return route("ventas.plan_pago", [
+            "proyectoId" => $this->proyecto_id,
+            "id" => $this->id
+        ]);
+    }
+
     function getFormatedIdAttribute(){
         $tipo = $this->tipo == 1 ? "CON" : "CRE";
         $id = $this->id;
         // $id = str_pad($this->id, 20, "0", STR_PAD_LEFT);
-        return "$tipo$id";
+        return "$tipo-$id";
     }
 
     function getPrecioAttribute($value){
@@ -61,6 +68,16 @@ class Venta extends Model
 
     function getCuotaInicialAttribute($value){
         return $value ? new Money($value, Currency::find($this->moneda)) : null;
+    }
+
+    function getPeriodoPagoTextAttribute(){
+        switch($this->periodo_pago){
+            case 1: return "Mensual";
+            case 2: return "Bimestral";
+            case 4: return "Trimestral";
+            case 6: return "Semestral";
+            default: return "Inválido";
+        }
     }
 
     // static function find($id){
@@ -92,8 +109,27 @@ class Venta extends Model
         return $this->belongsTo(Lote::class);
     }
 
+    function getManzanaAttribute(){
+        return $this->lote->manzana;
+    }
+
+    function proyecto(){
+        return $this->belongsTo(Proyecto::class);
+    }
+
     function cuotas(){
         return $this->hasMany(Cuota::class);
+    }
+
+    function getTotalCreditoAttribute(){
+        //TODO: Aplicar un mecanismo equivalente a useMemo en React
+        return $this->cuotas->reduce(function($total, $cuota){
+            return $total->plus($cuota->importe);
+        }, new Money("0", $this->currency));
+    }
+
+    function getTotalInteresesAttribute(){
+        return $this->total_credito->minus($this->precio);
     }
 
     function currency(){

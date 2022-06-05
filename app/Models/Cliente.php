@@ -24,12 +24,21 @@ class Cliente extends Model
 
     function getNombreCompletoAttribute(){
         $apellidos = "";
-        if($this->apellido_materno) $apellidos .= $this->apellido_paterno." ";
+        if($this->apellido_paterno) $apellidos .= $this->apellido_paterno." ";
         if($this->apellido_materno) $apellidos .= $this->apellido_materno." ";
         return "$apellidos {$this->nombre}";
     }
 
-    function getCodigosPago(){
+    function getCodigoPagoAttribute(){
+        return  "CLI-{$this->id}";
+    }
+
+    // function getCodigoPago($proyecto_id){
+    //     $cp = $this->codigosPago->where("proyecto_id", $proyecto_id)->first();
+    //     return $cp ? $cp->codigo : $this->codigo_pago;
+    // }
+
+    function codigosPago(){
         return $this->hasMany(CodigoPago::class);
     }
 }
