@@ -60,7 +60,7 @@ class VentaController extends Controller
                 }
                 else if($lote->estado["code"] !== 1){
                     $cliente_id = $request->input("reserva_id") ? Reserva::find($request->input("reserva_id"))->cliente_id : $request->input("cliente_id");
-                    if($lote->estado === "Reservado"){
+                    if($lote->estado["code"] === 3){
                         if($lote->reserva->cliente_id != $cliente_id){
                             $fail("El lote ha sido reservado por otro cliente.");
                         }

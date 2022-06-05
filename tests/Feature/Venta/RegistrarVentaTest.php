@@ -2,12 +2,14 @@
 
 use App\Models\Currency;
 use App\Models\DetalleTransaccion;
+use App\Models\Lote;
 use App\Models\Reserva;
 use App\Models\Transaccion;
 use App\Models\User;
 use App\Models\ValueObjects\Money;
 use App\Models\Venta;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 it('Registra una venta al credito y otra al contado', function () {
@@ -273,4 +275,38 @@ it('Convierte el importe de la reserva a la moneda de la venta y luego realiza e
             "moneda" => $venta->moneda,
             "importe" => (string) $venta->cuota_inicial->minus("14.51")->amount,
         ]);
+});
+
+test("Un lote que ha sido reservado por un cliente no puede ser vendido a otro, a menos que la reserva haya expirado", function (){
+
+    $lote = Lote::factory()->create();
+    $now = Carbon::now();
+    $reserva = Reserva::factory([
+        "fecha" => $now->format("Y-m-d")
+    ])->for($lote)->create();
+
+    //Venta al contado
+    $data = Venta::factory()->for($lote)->contado()->withReserva(false)->raw();
+
+    $proyectoId = $data["proyecto_id"];
+
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+
+    $response->assertJsonValidationErrors([
+        "lote_id" => "El lote ha sido reservado por otro cliente."
+    ]);
+
+    $this->travelTo($reserva->vencimiento);
+
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+
+    $response->assertJsonValidationErrors([
+        "lote_id" => "El lote ha sido reservado por otro cliente."
+    ]);
+
+    $this->travel(1)->days();
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+
+    $response->assertCreated();
+
 });

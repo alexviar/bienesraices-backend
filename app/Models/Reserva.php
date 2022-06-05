@@ -23,6 +23,11 @@ class Reserva extends Model
         "vencimiento"
     ];
 
+    protected $casts = [
+        "fecha" => "date:Y-m-d",
+        "vencimiento" => "date:Y-m-d"
+    ];
+
     function getImporteAttribute($value){
         return new Money($value, Currency::find($this->moneda));
     }

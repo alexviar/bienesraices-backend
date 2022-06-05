@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\ValueObjects\Money;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -66,7 +67,9 @@ class Lote extends Model
     }
 
     function reserva(){
-        return $this->hasOne(Reserva::class)->where("estado", 1)->where("vencimiento", ">=", DB::raw("NOW()"))->orderBy("id");
+        // return $this->hasOne(Reserva::class)->where("estado", 1)->where("vencimiento", ">=", DB::raw("NOW()"))->orderBy("id");
+        //Refactor por propositos de testing (travelTo)
+        return $this->hasOne(Reserva::class)->where("estado", 1)->where("vencimiento", ">=", Carbon::now()->format("Y-m-d"))->orderBy("id");
     }
 
     function venta(){
