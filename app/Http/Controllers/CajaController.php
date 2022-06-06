@@ -44,7 +44,6 @@ class CajaController extends Controller
             "detalles.*.transactable_type" => "in:" . Cuota::class,
             "detalles.*.importe" => "numeric"
         ]);
-        dd($payload);
 
         $head = Arr::except($payload, "detalles");
         $details = $payload["detalles"];

@@ -33,6 +33,10 @@ return [
             'driver' => 'local',
             'root' => base_path('database/seeders/csv'),
         ],
+        'tests' => [
+            'driver' => 'local',
+            'root' => base_path('tests'),
+        ],
 
         'local' => [
             'driver' => 'local',

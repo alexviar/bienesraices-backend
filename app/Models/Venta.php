@@ -74,7 +74,7 @@ class Venta extends Model
         switch($this->periodo_pago){
             case 1: return "Mensual";
             case 2: return "Bimestral";
-            case 4: return "Trimestral";
+            case 3: return "Trimestral";
             case 6: return "Semestral";
             default: return "Inválido";
         }
@@ -125,7 +125,7 @@ class Venta extends Model
         //TODO: Aplicar un mecanismo equivalente a useMemo en React
         return $this->cuotas->reduce(function($total, $cuota){
             return $total->plus($cuota->importe);
-        }, new Money("0", $this->currency));
+        }, new Money("0", $this->currency))->plus($this->cuota_inicial);
     }
 
     function getTotalInteresesAttribute(){
@@ -155,27 +155,27 @@ class Venta extends Model
         $tasaInteres,
         $numeroCuotas,
         $periodoPago,
-        $fechaPrimerCuota=null
+        $diaPago=null
     ) {
+        $fechaPrimerCuota = $diaPago ? Carbon::createFromDate($fecha->year, 1, $diaPago)->startOfDay() : null;
         $tasaInteres = BigDecimal::of($tasaInteres);
-        // if(!$fechaPrimerCuota){
-        //     return $tasaInteres->dividedBy(BigDecimal::one()->minus(BigDecimal::one()->dividedBy(BigDecimal::one()->plus($tasaInteres)->power($numeroCuotas), 10, RoundingMode::HALF_UP)), 10, RoundingMode::HALF_UP);
-        // }
-        $tasaDiaria = $tasaInteres->dividedBy($periodoPago*30, 10, RoundingMode::HALF_UP);
+        if(!$fechaPrimerCuota){
+            $tasaInteres = $tasaInteres->multipliedBy($periodoPago)->dividedBy(12, 10, RoundingMode::HALF_UP);
+            return $tasaInteres->dividedBy(BigDecimal::one()->minus(BigDecimal::one()->dividedBy(BigDecimal::one()->plus($tasaInteres)->power($numeroCuotas), 10, RoundingMode::HALF_UP)), 10, RoundingMode::HALF_UP);
+        }
+        $offset = ($fecha->daysInMonth - $fecha->day + $diaPago) < 21 ? $fecha->month : $fecha->month - 1;
         $fas = [];
         $current = $fecha;
-        $next = $fechaPrimerCuota ??  $fecha->copy()->addDays($periodoPago*30);
-        $capitalizacionCalendaria = !is_null($fechaPrimerCuota);
         for($k = 0; $k < $numeroCuotas; $k++){
-            $daysDiff = $next->diffInDays($current);
-            $fas[] = $tasaDiaria->multipliedBy($daysDiff)->plus(1);
-            $current = $next->copy();
-            if($capitalizacionCalendaria){
-                $next->addMonths($periodoPago);
-            }
-            else {
-                $next->addDays($periodoPago*30);
-            }
+            // if($fechaPrimerCuota){
+                $next = $fechaPrimerCuota->copy()->addMonthsNoOverflow($periodoPago*($k+1)+$offset);
+                $daysDiff = $next->diffInDays($current);
+                $fas[] = $tasaInteres->multipliedBy($daysDiff)->dividedBy(360, 10, RoundingMode::HALF_UP)->plus(1);
+                $current = $next->copy();
+            // }
+            // else {
+            //     $fas[] = $tasaInteres->multipliedBy($periodoPago)->dividedBy(12, 10, RoundingMode::HALF_UP)->plus(1);
+            // }
         }
 
         $numerator = BigDecimal::one();
@@ -189,21 +189,35 @@ class Venta extends Model
 
     function crearPlanPago(){
         $n = $this->plazo/$this->periodo_pago;
-        $interesPeriodoPago = BigDecimal::of($this->tasa_interes)->multipliedBy($this->periodo_pago)->dividedBy(12, 10, RoundingMode::HALF_UP);
+        //TODO: $diaPago = $this->dia_pago; 
+        $diaPago = $this->fecha->day; //Capitalizacion calendaria (Fecha fija)
+        // $diaPago = null; //Capitalizacion bancaria (Mes de 30 dias)
         $frc = static::getFRC(
             $this->fecha,
-            $interesPeriodoPago,
+            $this->tasa_interes,
             $n,
-            $this->periodo_pago
+            $this->periodo_pago,
+            $diaPago, //Comentar si se paga en fecha fija, pero se capitaliza cada 30 dias
         );
 
-        $fechaPago = $this->fecha->copy()->addMonth();
+        $fechaPrimerCuota = $diaPago ? Carbon::createFromDate($this->fecha->year, 1, $diaPago)->startOfDay() : null;
+        $offset = ($this->fecha->daysInMonth - $this->fecha->day + $diaPago) < 21 ? $this->fecha->month : $this->fecha->month - 1;
+        
+        $tasaInteres = BigDecimal::of($this->tasa_interes);
+
+        $current = $this->fecha->copy();
         $saldoCapital = $this->precio->minus($this->cuota_inicial);
         $pagos = $saldoCapital->multipliedBy($frc)->round();
         for($i = 0; $i < $n; $i++){
             if($saldoCapital->amount->isEqualTo(BigDecimal::zero())) break;
 
-            $interes = $saldoCapital->multipliedBy($interesPeriodoPago)->round();
+            $next = $fechaPrimerCuota ? $fechaPrimerCuota->copy()->addMonthsNoOverflow($this->periodo_pago*($i+1) + $offset) : $current->copy()->addDays($this->periodo_pago*30);
+            $daysDiff = $next->diffInDays($current);
+
+            $interes = ($fechaPrimerCuota ? 
+            // $interes = (false ?  //Descomentar si se paga en fecha fija, pero se capitaliza cada 30 dias
+                $saldoCapital->multipliedBy($tasaInteres->multipliedBy($daysDiff)->dividedBy(360, 10, RoundingMode::HALF_UP)) :
+                $saldoCapital->multipliedBy($tasaInteres->multipliedBy($this->periodo_pago)->dividedBy(12, 10, RoundingMode::HALF_UP)))->round();
             $saldoCapitalMasInteres = $saldoCapital->plus($interes);
             if($pagos->amount->isGreaterThan($saldoCapitalMasInteres->amount->minus("0.99")) || $i == $n -1){
                 $pago = $saldoCapitalMasInteres;
@@ -211,17 +225,19 @@ class Venta extends Model
             else{
                 $pago = $pagos;
             }
+            // var_dump($next->format("d/m/Y"), $daysDiff, (string)$interes);
 
             $saldoCapital = $saldoCapitalMasInteres->minus($pago);
             $pago = (string) $pago->amount->toScale(2, RoundingMode::HALF_UP);
             $this->cuotas()->create([
                 "numero"=>$i+1,
-                "vencimiento" => $fechaPago,
+                "vencimiento" => $next,
                 "importe" => $pago,
                 "saldo" => $pago,
                 "saldo_capital" => (string) $saldoCapital->amount->toScale(2, RoundingMode::HALF_UP)
             ]);
-            $fechaPago = $fechaPago->copy()->addMonth();
+            
+            $current = $next->copy();
         }
     }
 

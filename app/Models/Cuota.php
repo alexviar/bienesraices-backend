@@ -56,7 +56,7 @@ class Cuota extends Model
      * @param Carbon $fechaPago
      */
     function recalcularSaldo($pago, $fechaPago){
-        $this->saldo = $this->calcularSaldo($this->saldo, $pago, $this->vencimiento, $fechaPago);
+        $this->saldo = $this->calcularSaldo($this->saldo->amount, $pago, $this->vencimiento, $fechaPago);
     }
 
     function calcularSaldo($deuda, $pago, $fechaVencimiento, $fechaPago){
