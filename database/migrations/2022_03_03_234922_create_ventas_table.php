@@ -23,7 +23,7 @@ class CreateVentasTable extends Migration
             $table->date("fecha");
             $table->tinyInteger("tipo");
             $table->char("moneda", 3);
-            $table->decimal("precio", 10);
+            $table->decimal("importe", 10);
             $table->tinyInteger("estado")->default(1);
             
             $table->decimal("cuota_inicial", 10)->nullable();

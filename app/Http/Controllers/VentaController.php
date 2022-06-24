@@ -30,7 +30,11 @@ class VentaController extends Controller
     function index(Request $request, $proyectoId)
     {
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        return $this->buildResponse(Venta::with(["cliente", "vendedor", "lote.manzana"])->where("proyecto_id", $proyectoId), $queryArgs);
+        $data = $this->buildResponse(Venta::with(["cliente", "vendedor", "lote.manzana"])->where("proyecto_id", $proyectoId), $queryArgs);
+        // $data["records"]->each->setVisible([
+        //     "id"
+        // ]);
+        return $data;
     }
 
     function print_plan_pagos(Request $request, $proyectoId, $ventaId){
@@ -70,7 +74,7 @@ class VentaController extends Controller
                     }
                 }
             }],
-            "precio" => "required|numeric",
+            "importe" => "required|numeric",
             "cliente_id" => "required_without:reserva_id|nullable|exists:clientes,id",
             "vendedor_id" => "required_without:reserva_id|nullable||exists:vendedores,id",
             "reserva_id" => ["nullable", function ($attribute, $value, $fail){
@@ -112,7 +116,7 @@ class VentaController extends Controller
             //pero por ahora esas acciones vamos a realizarlas aqui directamente
 
             //Registrar la transacción
-            $importe = (string) ($record->tipo == 1 ? $record->precio : $record->cuota_inicial)->minus($reserva ? $reserva->importe->exchangeTo($record->currency)->round() : "0")->amount;
+            $importe = (string) ($record->tipo == 1 ? $record->importe : $record->cuota_inicial)->minus($reserva ? $reserva->importe->exchangeTo($record->currency)->round() : "0")->amount;
             $transaccion = Transaccion::create([
                 "fecha" => $record->fecha,
                 "moneda" => $record->moneda,

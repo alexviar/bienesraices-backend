@@ -136,7 +136,7 @@
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Importe del terreno:</b></th>
-                                                <td class="text-left"> {{$venta->precio}}</td>
+                                                <td class="text-left"> {{$venta->importe}}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -194,7 +194,7 @@
                 <td class="text-right">- {{$venta->moneda}}</td>
                 <td class="text-right">{{$venta->cuota_inicial}}</td>
                 @php
-                $saldo = $venta->precio->minus($venta->cuota_inicial);
+                $saldo = $venta->importe->minus($venta->cuota_inicial);
                 @endphp
                 <td class="text-right">{{$saldo}}</td>
             </tr>

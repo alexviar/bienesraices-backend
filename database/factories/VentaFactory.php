@@ -30,7 +30,7 @@ class VentaFactory extends Factory
             "fecha" => $attributes["fecha"] ?? $this->faker->date(),
             "moneda" => $attributes["moneda"] ?? $proyecto->moneda,
             "lote_id" => $lote->id,
-            "precio" => $attributes["precio"] ?? $lote->getAttributes()["precio"] ?? (string) $lote->precio_sugerido->amount,
+            "importe" => $attributes["importe"] ?? $lote->getAttributes()["precio"] ?? (string) $lote->precio_sugerido->amount,
             "estado" => $attributes["estado"] ?? $this->faker->randomElement([1,2]),
             "cliente_id" => $reserva->cliente ?? $attributes["cliente_id"] ?? Cliente::factory(),
             "vendedor_id" => $reserva->vendedor ?? $attributes["vendedor_id"] ?? Vendedor::factory(),
@@ -44,6 +44,7 @@ class VentaFactory extends Factory
         return $base + [
             "cuota_inicial" => $attributes["cuota_inicial"] ?? $proyecto->cuota_inicial,
             "tasa_interes" => $attributes["tasa_interes"] ?? $proyecto->tasa_interes,
+            "tasa_mora" => "0.03",
             // "plazo" => $attributes["plazo"] ?? ($this->faker->numberBetween(2,10)*$periodoPago),
             "plazo" => $plazo,
             "periodo_pago" => $periodoPago

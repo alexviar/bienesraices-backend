@@ -40,6 +40,6 @@ class Controller extends BaseController
     if ($current * $size < $total) $meta["nextPage"] = $current + 1;
     if ($current > 1) $meta["prevPage"] = $current - 1;
 
-    return response()->json($this->buildPaginatedResponseData($meta, $query->get()));
+    return $this->buildPaginatedResponseData($meta, $query->get());
   }
 }

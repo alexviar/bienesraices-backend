@@ -10,7 +10,8 @@ class Cliente extends Model
 {
     use HasFactory, SaveToUpper;
 
-    protected $appends = [ "nombre_completo" ];
+    protected $appends = [ "nombre_completo", "documento_identidad" ];
+    protected $hidden = [ "numero_documento", "tipo_documento" ];
 
     protected $fillable = [
         "tipo",
@@ -29,6 +30,14 @@ class Cliente extends Model
         return "$apellidos {$this->nombre}";
     }
 
+    function getDocumentoIdentidadAttribute(){
+        return [
+            "numero"=>$this->numero_documento,
+            "tipo"=>$this->tipo_documento,
+            "tipo_text" => $this->tipo_documento == 1 ? "CI" : ($this->tipo_documento == 2 ? "NIT" : "")
+        ];
+    }
+
     function getCodigoPagoAttribute(){
         return  "CLI-{$this->id}";
     }
@@ -40,5 +49,9 @@ class Cliente extends Model
 
     function codigosPago(){
         return $this->hasMany(CodigoPago::class);
+    }
+
+    function creditosEnMora(){
+        return $this->hasMany(Venta::class)->where("tipo", 2)->where("estado", 1)->whereHas("cuotasVencidas");
     }
 }

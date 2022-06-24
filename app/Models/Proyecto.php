@@ -45,13 +45,19 @@ class Proyecto extends Model
 
     protected $hidden = ["currency", "lotes"];
 
-    protected $appends = ["lotes_summary"];
+    protected $appends = ["lotes_summary", "clientes_en_mora"];
 
     public function getLotesSummaryAttribute() {
         return [
             "total" => $this->lotes->count(),
             "disponibles" => $this->lotes->where("estado.code", 1)->count()
         ];
+    }
+
+    public function getClientesEnMoraAttribute() {
+        return Cliente::whereHas("creditosEnMora", function($query){
+            $query->where("proyecto_id", $this->id);
+        })->count();
     }
 
     public function lotes(){

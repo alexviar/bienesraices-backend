@@ -30,7 +30,7 @@ it('Registra una venta al credito y otra al contado', function () {
     //Venta al contado
     $data = Venta::factory([
         "moneda" => "USD",
-        "precio" => "10530.96",
+        "importe" => "10530.96",
     ])->contado()->withReserva(false)->raw();
 
     $proyectoId = $data["proyecto_id"];
@@ -51,20 +51,20 @@ it('Registra una venta al credito y otra al contado', function () {
         "fecha" => $data["fecha"],
         "forma_pago" => 2,
         "moneda" => $data["moneda"],
-        "importe" => $data["precio"],
+        "importe" => $data["importe"],
     ]);
     $this->assertDatabaseHas("detalles_transaccion", [
         "transactable_id" => $id,
         "transactable_type" => Venta::class,
         "moneda" => $data["moneda"],
-        "importe" => $data["precio"],
+        "importe" => $data["importe"],
     ]);
 
     //Venta al credito
     $data = Venta::factory([
         "fecha" => "2022-02-28",
         "moneda" => "USD",
-        "precio" => "10530.96",
+        "importe" => "10530.96",
         "plazo" => 48,
         "periodo_pago" => 1,
         "cuota_inicial" => "500",
@@ -106,7 +106,7 @@ test("Pagos programados el 31 de cada mes", function(){
     $data = Venta::factory([
         "fecha" => "2022-01-31",
         "moneda" => "USD",
-        "precio" => "10530.96",
+        "importe" => "10530.96",
         "plazo" => 48,
         "periodo_pago" => 1,
         "cuota_inicial" => "500",
@@ -132,7 +132,7 @@ it('Registra una venta al credito y otra al contado, pero con una reserva previa
     //Venta al contado
     $data = Venta::factory([
         "moneda" => "USD",
-        "precio" => "10530.96",
+        "importe" => "10530.96",
     ])->contado()->withReserva()->raw();
 
     $proyectoId = $data["proyecto_id"];
@@ -148,20 +148,20 @@ it('Registra una venta al credito y otra al contado, pero con una reserva previa
         "fecha" => $venta->fecha,
         "forma_pago" => 2,
         "moneda" => $venta->moneda,
-        "importe" => (string) $venta->precio->minus($venta->reserva->importe)->amount,
+        "importe" => (string) $venta->importe->minus($venta->reserva->importe)->amount,
     ]);
     $this->assertDatabaseHas("detalles_transaccion", [
         "transactable_id" => $id,
         "transactable_type" => Venta::class,
         "moneda" => $venta->moneda,
-        "importe" => (string) $venta->precio->minus($venta->reserva->importe)->amount,
+        "importe" => (string) $venta->importe->minus($venta->reserva->importe)->amount,
     ]);
 
     // Venta al credito
     $data = Venta::factory([
         "fecha" => "2020/09/15",
         "moneda" => "USD",
-        "precio" => "10530.96",
+        "importe" => "10530.96",
         "plazo" => 48,
         "periodo_pago" => 1,
         "cuota_inicial" => "500",
@@ -200,7 +200,7 @@ it('Convierte el importe de la reserva a la moneda de la venta y luego realiza e
         //Venta al contado
         $data = Venta::factory([
             "moneda" => "USD",
-            "precio" => "10530.96",
+            "importe" => "10530.96",
         ])->contado()->for(Reserva::factory([
             "moneda" => "BOB",
             "importe" => "100"
@@ -219,20 +219,20 @@ it('Convierte el importe de la reserva a la moneda de la venta y luego realiza e
             "fecha" => $venta->fecha,
             "forma_pago" => 2,
             "moneda" => $venta->moneda,
-            "importe" => (string) $venta->precio->minus("14.51")->amount,
+            "importe" => (string) $venta->importe->minus("14.51")->amount,
         ]);
         $this->assertDatabaseHas("detalles_transaccion", [
             "transactable_id" => $id,
             "transactable_type" => Venta::class,
             "moneda" => $venta->moneda,
-            "importe" => (string) $venta->precio->minus("14.51")->amount,
+            "importe" => (string) $venta->importe->minus("14.51")->amount,
         ]);
     
         // Venta al credito
         $data = Venta::factory([
             "fecha" => "2020/09/15",
             "moneda" => "USD",
-            "precio" => "10530.96",
+            "importe" => "10530.96",
             "plazo" => 48,
             "periodo_pago" => 1,
             "cuota_inicial" => "500",

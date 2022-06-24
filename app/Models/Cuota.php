@@ -23,6 +23,15 @@ class Cuota extends Model
         "saldo_capital"
     ];
 
+    protected $appends = [
+        "multa",
+        "total"
+    ];
+
+    protected $hidden = [
+        "venta"
+    ];
+
     protected $casts = [
         "vencimiento" => "date:Y-m-d"
     ];
@@ -33,6 +42,15 @@ class Cuota extends Model
 
     function getSaldoAttribute($value){
         return new Money($value, Currency::find($this->venta->moneda));
+    }
+
+    function getMultaAttribute(){
+        // $amount = $this->total->minus($this->attributes["saldo"]);
+        return $this->total->minus($this->saldo);
+    }
+
+    function getTotalAttribute(){
+        return new Money($this->calcularPago($this->attributes["saldo"], $this->vencimiento, Carbon::now())->toScale(2, RoundingMode::HALF_UP), $this->getCurrency());
     }
 
     function getSaldoCapitalAttribute($value){

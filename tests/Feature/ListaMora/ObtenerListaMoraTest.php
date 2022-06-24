@@ -1,0 +1,85 @@
+<?php
+
+use App\Models\Cliente;
+use App\Models\Cuota;
+use App\Models\User;
+use App\Models\Venta;
+use Illuminate\Support\Carbon;
+use Tests\TestCase;
+
+it('Responde con la lista de mora', function () {
+    
+    /** @var TestCase $this */
+    $this->travelTo(Carbon::createFromFormat("Y-m-d", "2020-09-01"));
+
+    $cliente = Cliente::factory()->create();
+    $credito = Venta::factory([
+        "fecha" => "2020-04-20",
+        "moneda" => "BOB",
+        "importe" => "10530.96",
+        "cuota_inicial" => "500",
+        "plazo" => 48,
+        "periodo_pago" => 1,
+        "tasa_interes" => "0.1",
+        "estado"=>1
+    ])->for($cliente)->credito()->create();
+    $credito->crearPlanPago();
+    Cuota::where("venta_id", $credito->id)->whereIn("numero", [1,2])->update([
+        "saldo" => "0"
+    ]);
+    Cuota::where("venta_id", $credito->id)->where("numero", 3)->update([
+        "saldo" => "155.11"
+    ]);
+
+    $response = $this->actingAs(User::find(1))->withHeaders(["Accept"=>"application/json"])->get('/api/lista-mora');
+
+    $response->assertStatus(200);
+    $response->assertJsonStructure([
+        "records" => [
+            "*" => [
+                "cliente" => [
+                    "id",
+                    "nombre_completo",
+                    "documento_identidad" => [
+                        "tipo",
+                        "tipo_text",
+                        "numero",
+                    ]
+                ],
+                "resumen" => [
+                    "BOB" => [
+                        "saldo",
+                        "multa",
+                        "total"
+                    ]
+                ],
+                "creditos" => [
+                    "*" => [
+                        "id",
+                        "fecha",
+                        "proyecto" => [
+                            "id",
+                            "nombre"
+                        ],
+                        "manzana" => [
+                            "numero"
+                        ],
+                        "lote" => [
+                            "numero"
+                        ],
+                        "cuotas_vencidas" => [
+                            "*" => [
+                                "vencimiento",
+                                "numero",
+                                "importe",
+                                "saldo",
+                                "multa",
+                                "total"
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ]);
+});

@@ -6,15 +6,17 @@ use App\Models\Traits\SaveToUpper;
 use App\Models\ValueObjects\Money;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 /**
  *
  * @property Carbon $fecha
- * @property Money $precio
+ * @property Money $importe
  * @property Cuota[]|Collection $cuotas
  */
 class Venta extends Model
@@ -25,7 +27,7 @@ class Venta extends Model
         "tipo",
         "fecha",
         "moneda",
-        "precio",
+        "importe",
         "proyecto_id",
         "lote_id",
         "cliente_id",
@@ -42,7 +44,7 @@ class Venta extends Model
 
     protected $hidden = [ "currency" ];
 
-    protected $appends = [ "formated_id", "url_plan_pago" ];
+    protected $appends = [ "formated_id", "url_plan_pago", "manzana" ];
 
     protected $casts = [
         "fecha" => "date:Y-m-d"
@@ -62,7 +64,7 @@ class Venta extends Model
         return "$tipo-$id";
     }
 
-    function getPrecioAttribute($value){
+    function getImporteAttribute($value){
         return new Money($value, Currency::find($this->moneda));
     }
 
@@ -121,6 +123,10 @@ class Venta extends Model
         return $this->hasMany(Cuota::class);
     }
 
+    function cuotasVencidas(){
+        return $this->cuotas()->where("saldo", ">", "0")->whereDate("vencimiento", "<", Carbon::now()->toDateString());
+    }
+
     function getTotalCreditoAttribute(){
         //TODO: Aplicar un mecanismo equivalente a useMemo en React
         return $this->cuotas->reduce(function($total, $cuota){
@@ -129,7 +135,7 @@ class Venta extends Model
     }
 
     function getTotalInteresesAttribute(){
-        return $this->total_credito->minus($this->precio);
+        return $this->total_credito->minus($this->importe);
     }
 
     function currency(){
@@ -206,7 +212,7 @@ class Venta extends Model
         $tasaInteres = BigDecimal::of($this->tasa_interes);
 
         $current = $this->fecha->copy();
-        $saldoCapital = $this->precio->minus($this->cuota_inicial);
+        $saldoCapital = $this->importe->minus($this->cuota_inicial);
         $pagos = $saldoCapital->multipliedBy($frc)->round();
         for($i = 0; $i < $n; $i++){
             if($saldoCapital->amount->isEqualTo(BigDecimal::zero())) break;
@@ -225,7 +231,6 @@ class Venta extends Model
             else{
                 $pago = $pagos;
             }
-            // var_dump($next->format("d/m/Y"), $daysDiff, (string)$interes);
 
             $saldoCapital = $saldoCapitalMasInteres->minus($pago);
             $pago = (string) $pago->amount->toScale(2, RoundingMode::HALF_UP);
@@ -241,10 +246,82 @@ class Venta extends Model
         }
     }
 
-    // function toArray()
-    // {
-    //     return [
-    //         "id" => $this->formated_id,
-    //     ] + parent::toArray();
-    // }
+    /**
+     * Get all of the appendable values that are arrayable.
+     *
+     * @return array
+     */
+    protected function getArrayableAppends()
+    {
+        if (! count($this->appends)) {
+            return [];
+        }
+
+        return $this->getArrayableItems(
+            array_combine($this->appends, array_map(function($append){
+                return $this->mutateAttributeForArray($append, null);
+            }, $this->appends))
+        );
+    }
+
+    /**
+     * Convert the model's attributes to an array.
+     *
+     * @return array
+     */
+    public function attributesToArray()
+    {
+        // If an attribute is a date, we will cast it to a string after converting it
+        // to a DateTime / Carbon instance. This is so we will get some consistent
+        // formatting while accessing attributes vs. arraying / JSONing a model.
+        $attributes = $this->addDateAttributesToArray(
+            $attributes = $this->getArrayableAttributes()
+        );
+
+        $attributes = $this->addMutatedAttributesToArray(
+            $attributes, $mutatedAttributes = $this->getMutatedAttributes()
+        );
+
+        // Next we will handle any casts that have been setup for this model and cast
+        // the values to their appropriate type. If the attribute has a mutator we
+        // will not perform the cast on those attributes to avoid any confusion.
+        $attributes = $this->addCastAttributesToArray(
+            $attributes, $mutatedAttributes
+        );
+
+        return $attributes + $this->getArrayableAppends();
+    }
+
+    private function getArrayableItemsRecursive($values, $visible, $hidden){
+        $output = [];
+        foreach($values as $k => $v) {
+            if(!in_array($k, $hidden)){
+                if(empty($visible) || in_array($k, $visible)){
+                    $output[$k] = $v;
+                }
+                else {
+                    if($v instanceof Arrayable){
+                        $v = $v->toArray();
+                    }
+                    if(!is_array($v)) continue;
+                    $key = null;
+                    if(key_exists($k, $visible)){
+                        $key = $k;
+                    }
+                    else if(key_exists("*", $visible)){
+                        $key = "*";
+                    }
+                    if(isset($key)){
+                        $output[$k] = collect($this->getArrayableItemsRecursive($v, $visible[$key]??[], $hidden[$key]??[]));
+                    }
+                }
+            }
+        }
+        return $output;
+    }
+
+    protected function getArrayableItems(array $values)
+    {
+        return $this->getArrayableItemsRecursive($values, $this->getVisible(), $this->getHidden());
+    }
 }
