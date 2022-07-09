@@ -39,6 +39,7 @@ class Venta extends Model
         "tasa_interes",
         "plazo",
         "periodo_pago",
+        "dia_pago",
         "tasa_mora"
     ];
 
@@ -150,99 +151,67 @@ class Venta extends Model
         return $this->currency;
     }
 
-    /**
-     * Calcula el factor de recuperacion del capital
-     *
-     * @param Carbon $fecha
-     * @param ?Carbon $fechaPrimerCuota
-     */
-    static function getFRC(
-        $fecha,
-        $tasaInteres,
-        $numeroCuotas,
-        $periodoPago,
-        $diaPago=null
-    ) {
-        $fechaPrimerCuota = $diaPago ? Carbon::createFromDate($fecha->year, 1, $diaPago)->startOfDay() : null;
-        $tasaInteres = BigDecimal::of($tasaInteres);
-        if(!$fechaPrimerCuota){
-            $tasaInteres = $tasaInteres->multipliedBy($periodoPago)->dividedBy(12, 10, RoundingMode::HALF_UP);
-            return $tasaInteres->dividedBy(BigDecimal::one()->minus(BigDecimal::one()->dividedBy(BigDecimal::one()->plus($tasaInteres)->power($numeroCuotas), 10, RoundingMode::HALF_UP)), 10, RoundingMode::HALF_UP);
-        }
-        $offset = ($fecha->daysInMonth - $fecha->day + $diaPago) < 21 ? $fecha->month : $fecha->month - 1;
-        $fas = [];
-        $current = $fecha;
-        for($k = 0; $k < $numeroCuotas; $k++){
-            // if($fechaPrimerCuota){
-                $next = $fechaPrimerCuota->copy()->addMonthsNoOverflow($periodoPago*($k+1)+$offset);
-                $daysDiff = $next->diffInDays($current);
-                $fas[] = $tasaInteres->multipliedBy($daysDiff)->dividedBy(360, 10, RoundingMode::HALF_UP)->plus(1);
-                $current = $next->copy();
-            // }
-            // else {
-            //     $fas[] = $tasaInteres->multipliedBy($periodoPago)->dividedBy(12, 10, RoundingMode::HALF_UP)->plus(1);
-            // }
-        }
+    // /**
+    //  * Calcula el factor de recuperacion del capital
+    //  *
+    //  * @param Carbon $fecha
+    //  * @param ?Carbon $fechaPrimerCuota
+    //  */
+    // static function getFRC(
+    //     $fecha,
+    //     $tasaInteres,
+    //     $numeroCuotas,
+    //     $periodoPago,
+    //     $diaPago=null
+    // ) {
+    //     $fechaPrimerCuota = $diaPago ? Carbon::createFromDate($fecha->year, 1, $diaPago)->startOfDay() : null;
+    //     $tasaInteres = BigDecimal::of($tasaInteres);
+    //     if(!$fechaPrimerCuota){
+    //         $tasaInteres = $tasaInteres->multipliedBy($periodoPago)->dividedBy(12, 10, RoundingMode::HALF_UP);
+    //         return $tasaInteres->dividedBy(BigDecimal::one()->minus(BigDecimal::one()->dividedBy(BigDecimal::one()->plus($tasaInteres)->power($numeroCuotas), 10, RoundingMode::HALF_UP)), 10, RoundingMode::HALF_UP);
+    //     }
+    //     $offset = ($fecha->daysInMonth - $fecha->day + $diaPago) < 21 ? $fecha->month : $fecha->month - 1;
+    //     $fas = [];
+    //     $current = $fecha;
+    //     for($k = 0; $k < $numeroCuotas; $k++){
+    //         // if($fechaPrimerCuota){
+    //             $next = $fechaPrimerCuota->copy()->addMonthsNoOverflow($periodoPago*($k+1)+$offset);
+    //             $daysDiff = $next->diffInDays($current);
+    //             $fas[] = $tasaInteres->multipliedBy($daysDiff)->dividedBy(360, 10, RoundingMode::HALF_UP)->plus(1);
+    //             $current = $next->copy();
+    //         // }
+    //         // else {
+    //         //     $fas[] = $tasaInteres->multipliedBy($periodoPago)->dividedBy(12, 10, RoundingMode::HALF_UP)->plus(1);
+    //         // }
+    //     }
 
-        $numerator = BigDecimal::one();
-        $denominator = BigDecimal::zero();
-        for($i = $numeroCuotas-1; $i >=0; $i--){
-            $denominator = $denominator->plus($numerator);
-            $numerator = $numerator->multipliedBy($fas[$i]);
-        }
-        return $numerator->dividedBy($denominator, 10, RoundingMode::HALF_UP);
-    }
+    //     $numerator = BigDecimal::one();
+    //     $denominator = BigDecimal::zero();
+    //     for($i = $numeroCuotas-1; $i >=0; $i--){
+    //         $denominator = $denominator->plus($numerator);
+    //         $numerator = $numerator->multipliedBy($fas[$i]);
+    //     }
+    //     return $numerator->dividedBy($denominator, 10, RoundingMode::HALF_UP);
+    // }
 
     function crearPlanPago(){
-        $n = $this->plazo/$this->periodo_pago;
-        //TODO: $diaPago = $this->dia_pago; 
-        $diaPago = $this->fecha->day; //Capitalizacion calendaria (Fecha fija)
-        // $diaPago = null; //Capitalizacion bancaria (Mes de 30 dias)
-        $frc = static::getFRC(
+        $builder = new PlanPagosBuilder(
             $this->fecha,
-            $this->tasa_interes,
-            $n,
+            $this->importe->minus($this->cuota_inicial)->amount,
+            BigDecimal::of($this->tasa_interes),
+            $this->plazo,
             $this->periodo_pago,
-            $diaPago, //Comentar si se paga en fecha fija, pero se capitaliza cada 30 dias
+            $this->dia_pago
         );
-
-        $fechaPrimerCuota = $diaPago ? Carbon::createFromDate($this->fecha->year, 1, $diaPago)->startOfDay() : null;
-        $offset = ($this->fecha->daysInMonth - $this->fecha->day + $diaPago) < 21 ? $this->fecha->month : $this->fecha->month - 1;
-        
-        $tasaInteres = BigDecimal::of($this->tasa_interes);
-
-        $current = $this->fecha->copy();
-        $saldoCapital = $this->importe->minus($this->cuota_inicial);
-        $pagos = $saldoCapital->multipliedBy($frc)->round();
-        for($i = 0; $i < $n; $i++){
-            if($saldoCapital->amount->isEqualTo(BigDecimal::zero())) break;
-
-            $next = $fechaPrimerCuota ? $fechaPrimerCuota->copy()->addMonthsNoOverflow($this->periodo_pago*($i+1) + $offset) : $current->copy()->addDays($this->periodo_pago*30);
-            $daysDiff = $next->diffInDays($current);
-
-            $interes = ($fechaPrimerCuota ? 
-            // $interes = (false ?  //Descomentar si se paga en fecha fija, pero se capitaliza cada 30 dias
-                $saldoCapital->multipliedBy($tasaInteres->multipliedBy($daysDiff)->dividedBy(360, 10, RoundingMode::HALF_UP)) :
-                $saldoCapital->multipliedBy($tasaInteres->multipliedBy($this->periodo_pago)->dividedBy(12, 10, RoundingMode::HALF_UP)))->round();
-            $saldoCapitalMasInteres = $saldoCapital->plus($interes);
-            if($pagos->amount->isGreaterThan($saldoCapitalMasInteres->amount->minus("0.99")) || $i == $n -1){
-                $pago = $saldoCapitalMasInteres;
-            }
-            else{
-                $pago = $pagos;
-            }
-
-            $saldoCapital = $saldoCapitalMasInteres->minus($pago);
-            $pago = (string) $pago->amount->toScale(2, RoundingMode::HALF_UP);
+        $cuotas = $builder->build();
+        foreach($cuotas as $cuota){
             $this->cuotas()->create([
-                "numero"=>$i+1,
-                "vencimiento" => $next,
-                "importe" => $pago,
-                "saldo" => $pago,
-                "saldo_capital" => (string) $saldoCapital->amount->toScale(2, RoundingMode::HALF_UP)
+                "numero"=>$cuota["numero"],
+                "vencimiento" => $cuota["vencimiento"],
+                "importe" => (string) $cuota["pago"],
+                "saldo" => (string) $cuota["pago"],
+                "saldo_capital" => (string) $cuota["saldo"]
             ]);
-            
-            $current = $next->copy();
         }
     }
 

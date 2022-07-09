@@ -14,11 +14,17 @@ class LoteController extends Controller
         $search = Arr::get($queryArgs, "search", "");
 
         if($search){
-            $query->where("numero", "like", "%$search%");
+            $query->where("numero", "$search");
         }
 
         if($manzana_id = Arr::get($filter, "manzana_id")){
             $query->where("manzana_id", $manzana_id);
+        }
+        if($estado = Arr::get($filter, "estado")){
+            $query->whereEstado($estado);
+            if($estado == 1){
+                $query->whereDoesntHave("venta")->whereDoesntHave("reserva");
+            }
         }
     }
 

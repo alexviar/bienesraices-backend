@@ -3,11 +3,14 @@
 use App\Models\Currency;
 use App\Models\DetalleTransaccion;
 use App\Models\Lote;
+use App\Models\Proyecto;
 use App\Models\Reserva;
 use App\Models\Transaccion;
 use App\Models\User;
 use App\Models\ValueObjects\Money;
 use App\Models\Venta;
+use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -16,7 +19,7 @@ use Tests\TestCase;
 function read_csv($filename){
     $file = fopen($filename, "r");
 
-    while (($data = fgetcsv($file)) !== FALSE) {
+    while (($data = fgetcsv($file, 0, "\t")) !== FALSE) {
         yield $data;
     }
 
@@ -35,7 +38,14 @@ it('Registra una venta al credito y otra al contado', function () {
 
     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+        "pago" => [
+            "moneda" => "USD",
+            "monto" => "10530.96",
+            "numero_transaccion" => "12423325848",
+            "comprobante" => UploadedFile::fake()->image("comprobante.png")
+        ]
+    ]);
 
     $response->assertCreated();
     $id = $response->json("id");
@@ -67,20 +77,30 @@ it('Registra una venta al credito y otra al contado', function () {
         "importe" => "10530.96",
         "plazo" => 48,
         "periodo_pago" => 1,
+        "dia_pago" => 1,
         "cuota_inicial" => "500",
         "tasa_interes" => "0.1000"
     ])->credito()->withReserva(false)->raw();
 
     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+        "pago" => [
+            "moneda" => "USD",
+            "monto" => "500",
+            "numero_transaccion" => "1242325848",
+            "comprobante" => UploadedFile::fake()->image("comprobante.png")
+        ]
+    ]);
 
     $response->assertCreated();
     $id = $response->json("id");
 
     $this->assertDatabaseHas("ventas", ["estado"=>1] + $data);
-    foreach(read_csv(Storage::disk("tests")->path("Feature/Venta/csv/plan_pagos_1.csv")) as $row){
-        $this->assertDatabaseHas("cuotas", ["vencimiento" => $row[1], "venta_id" => $id, "numero" => $row[0], "importe" => $row[2], "saldo" => $row[2], "saldo_capital" => $row[3]]);
+    /** @var FilesystemAdapter $disk */
+    $disk = Storage::disk("tests");
+    foreach(read_csv($disk->path("Feature/Venta/csv/plan_pagos_1.csv")) as $row){
+        $this->assertDatabaseHas("cuotas", ["vencimiento" => $row[1], "venta_id" => $id, "numero" => $row[0], "importe" => $row[3], "saldo" => $row[3], "saldo_capital" => $row[6]]);
     }
 
     //Idealmente se debería testear si el evento de registro de venta es disparado
@@ -104,25 +124,36 @@ test("Pagos programados el 31 de cada mes", function(){
     
     //Venta al credito
     $data = Venta::factory([
-        "fecha" => "2022-01-31",
+        "fecha" => "2022-02-28",
         "moneda" => "USD",
         "importe" => "10530.96",
         "plazo" => 48,
         "periodo_pago" => 1,
+        "dia_pago" => 31,
         "cuota_inicial" => "500",
         "tasa_interes" => "0.1000"
     ])->credito()->withReserva(false)->raw();
 
     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+        "pago" => [
+            "moneda" => "USD",
+            "monto" => "500",
+            "numero_transaccion" => "1242325848",
+            "comprobante" => UploadedFile::fake()->image("comprobante.png")
+        ]
+    ]);
 
     $response->assertCreated();
     $id = $response->json("id");
 
     $this->assertDatabaseHas("ventas", ["estado"=>1] + $data);
-    foreach(read_csv(Storage::disk("tests")->path("Feature/Venta/csv/plan_pagos_4.csv")) as $row){
-        $this->assertDatabaseHas("cuotas", ["vencimiento" => $row[1], "venta_id" => $id, "numero" => $row[0], "importe" => $row[2], "saldo" => $row[2], "saldo_capital" => $row[3]]);
+    
+    /** @var FilesystemAdapter $disk */
+    $disk = Storage::disk("tests");
+    foreach(read_csv($disk->path("Feature/Venta/csv/plan_pagos_4.csv")) as $row){
+        $this->assertDatabaseHas("cuotas", ["vencimiento" => $row[1], "venta_id" => $id, "numero" => $row[0], "importe" => $row[3], "saldo" => $row[3], "saldo_capital" => $row[6]]);
     }
 });
 
@@ -133,11 +164,21 @@ it('Registra una venta al credito y otra al contado, pero con una reserva previa
     $data = Venta::factory([
         "moneda" => "USD",
         "importe" => "10530.96",
-    ])->contado()->withReserva()->raw();
+    ])->contado()->for(Reserva::factory([
+        "moneda" => "USD",
+        "importe" => "100"
+    ]))->raw();
 
     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+        "pago" => [
+            "moneda" => "USD",
+            "monto" => "10430.96",
+            "numero_transaccion" => "1242325848",
+            "comprobante" => UploadedFile::fake()->image("comprobante.png")
+        ]
+    ]);
 
     $response->assertCreated();
     $id = $response->json("id");
@@ -148,13 +189,13 @@ it('Registra una venta al credito y otra al contado, pero con una reserva previa
         "fecha" => $venta->fecha,
         "forma_pago" => 2,
         "moneda" => $venta->moneda,
-        "importe" => (string) $venta->importe->minus($venta->reserva->importe)->amount,
+        "importe" => "10430.96"
     ]);
     $this->assertDatabaseHas("detalles_transaccion", [
         "transactable_id" => $id,
         "transactable_type" => Venta::class,
         "moneda" => $venta->moneda,
-        "importe" => (string) $venta->importe->minus($venta->reserva->importe)->amount,
+        "importe" => "10430.96"
     ]);
 
     // Venta al credito
@@ -166,11 +207,21 @@ it('Registra una venta al credito y otra al contado, pero con una reserva previa
         "periodo_pago" => 1,
         "cuota_inicial" => "500",
         "tasa_interes" => "0.1000"
-    ])->credito()->withReserva()->raw();
+    ])->credito()->for(Reserva::factory([
+        "moneda" => "USD",
+        "importe" => "100"
+    ]))->raw();
 
     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+        "pago" => [
+            "moneda" => "USD",
+            "monto" => "400",
+            "numero_transaccion" => "1242325848",
+            "comprobante" => UploadedFile::fake()->image("comprobante.png")
+        ]
+    ]);
 
     $response->assertCreated();
     $id = $response->json("id");
@@ -182,7 +233,7 @@ it('Registra una venta al credito y otra al contado, pero con una reserva previa
         "fecha" => $data["fecha"],
         "forma_pago" => 2,
         "moneda" => $venta->moneda,
-        "importe" => (string) $venta->cuota_inicial->minus($venta->reserva->importe)->amount,
+        "importe" => "400",
     ]);
 
 
@@ -190,11 +241,11 @@ it('Registra una venta al credito y otra al contado, pero con una reserva previa
         "transactable_id" => $id,
         "transactable_type" => Venta::class,
         "moneda" => $venta->moneda,
-        "importe" => (string) $venta->cuota_inicial->minus($venta->reserva->importe)->amount,
+        "importe" => "400",
     ]);
 });
 
-it('Convierte el importe de la reserva a la moneda de la venta y luego realiza el descuento a la cuota inicial o el precio total segun sea una venta al credito o al contado respectivamente.', function (){
+test('Reserva y venta con diferentes monedas.', function (){
     /** @var TestCase $this */
 
         //Venta al contado
@@ -203,12 +254,19 @@ it('Convierte el importe de la reserva a la moneda de la venta y luego realiza e
             "importe" => "10530.96",
         ])->contado()->for(Reserva::factory([
             "moneda" => "BOB",
-            "importe" => "100"
+            "importe" => "696"
         ]))->raw();
     
         $proyectoId = $data["proyecto_id"];
     
-        $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+        $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+            "pago" => [
+                "moneda" => "USD",
+                "monto" => "10430.96",
+                "numero_transaccion" => "1242325848",
+                "comprobante" => UploadedFile::fake()->image("comprobante.png")
+            ]
+        ]);
     
         $response->assertCreated();
         $id = $response->json("id");
@@ -219,13 +277,13 @@ it('Convierte el importe de la reserva a la moneda de la venta y luego realiza e
             "fecha" => $venta->fecha,
             "forma_pago" => 2,
             "moneda" => $venta->moneda,
-            "importe" => (string) $venta->importe->minus("14.51")->amount,
+            "importe" => "10430.96"//(string) $venta->importe->minus("14.51")->amount,
         ]);
         $this->assertDatabaseHas("detalles_transaccion", [
             "transactable_id" => $id,
             "transactable_type" => Venta::class,
             "moneda" => $venta->moneda,
-            "importe" => (string) $venta->importe->minus("14.51")->amount,
+            "importe" => "10430.96"//(string) $venta->importe->minus("14.51")->amount,
         ]);
     
         // Venta al credito
@@ -239,12 +297,19 @@ it('Convierte el importe de la reserva a la moneda de la venta y luego realiza e
             "tasa_interes" => "0.1000"
         ])->credito()->for(Reserva::factory([
             "moneda" => "BOB",
-            "importe" => "100"
+            "importe" => "696"
         ]))->raw();
     
         $proyectoId = $data["proyecto_id"];
     
-        $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+        $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+            "pago" => [
+                "moneda" => "USD",
+                "monto" => "400",
+                "numero_transaccion" => "1242325848",
+                "comprobante" => UploadedFile::fake()->image("comprobante.png")
+            ]
+        ]);
     
         $response->assertCreated();
         $id = $response->json("id");
@@ -256,14 +321,14 @@ it('Convierte el importe de la reserva a la moneda de la venta y luego realiza e
             "fecha" => $data["fecha"],
             "forma_pago" => 2,
             "moneda" => $venta->moneda,
-            "importe" => (string) $venta->cuota_inicial->minus("14.51")->amount,
+            "importe" => "400"//(string) $venta->cuota_inicial->minus("14.51")->amount,
         ]);
     
         $this->assertDatabaseHas("detalles_transaccion", [
             "transactable_id" => $id,
             "transactable_type" => Venta::class,
             "moneda" => $venta->moneda,
-            "importe" => (string) $venta->cuota_inicial->minus("14.51")->amount,
+            "importe" => "400"//(string) $venta->cuota_inicial->minus("14.51")->amount,
         ]);
 });
 
@@ -280,7 +345,14 @@ test("Un lote que ha sido reservado por un cliente no puede ser vendido a otro, 
 
     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+        "pago" => [
+            "moneda" => $data["moneda"],
+            "monto" => $data["importe"],
+            "numero_transaccion" => "1242325848",
+            "comprobante" => UploadedFile::fake()->image("comprobante.png")
+        ]
+    ]);
 
     $response->assertJsonValidationErrors([
         "lote_id" => "El lote ha sido reservado por otro cliente."
@@ -288,14 +360,28 @@ test("Un lote que ha sido reservado por un cliente no puede ser vendido a otro, 
 
     $this->travelTo($reserva->vencimiento);
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+        "pago" => [
+            "moneda" => $data["moneda"],
+            "monto" => $data["importe"],
+            "numero_transaccion" => "1242325848",
+            "comprobante" => UploadedFile::fake()->image("comprobante.png")
+        ]
+    ]);
 
     $response->assertJsonValidationErrors([
         "lote_id" => "El lote ha sido reservado por otro cliente."
     ]);
 
     $this->travel(1)->days();
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+        "pago" => [
+            "moneda" => $data["moneda"],
+            "monto" => $data["importe"],
+            "numero_transaccion" => "1242325848",
+            "comprobante" => UploadedFile::fake()->image("comprobante.png")
+        ]
+    ]);
 
     $response->assertCreated();
 

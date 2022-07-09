@@ -55,13 +55,13 @@ class ReservaController extends Controller
             $transaccion = Transaccion::create([
                 "fecha" => Carbon::now(),
                 "moneda" => $reserva->moneda,
-                "importe" => $reserva->importe,
+                "importe" => $reserva->importe->amount,
                 "forma_pago" => 1,
             ]);
             $detailModel = new DetalleTransaccion();
             $detailModel->referencia = $reserva->getReferencia();
             $detailModel->moneda = $reserva->getCurrency()->code;
-            $detailModel->importe = $reserva->importe;
+            $detailModel->importe = $reserva->importe->amount;
             $detailModel->transactable()->associate($reserva);
     
             $transaccion->detalles()->save($detailModel);

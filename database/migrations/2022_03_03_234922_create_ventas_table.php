@@ -31,6 +31,7 @@ class CreateVentasTable extends Migration
             $table->decimal("tasa_mora", 4, 4)->nullable();
             $table->tinyInteger("plazo")->nullable();
             $table->tinyInteger("periodo_pago")->nullable();
+            $table->tinyInteger("dia_pago")->nullable();
 
             $table->bigInteger("legacy_id")->nullable();
             $table->foreign("moneda")->references("code")->on("currencies");

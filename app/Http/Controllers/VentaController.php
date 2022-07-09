@@ -2,23 +2,20 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Cliente;
 use App\Models\Currency;
 use App\Models\DetalleTransaccion;
 use App\Models\Lote;
 use App\Models\Proyecto;
 use App\Models\Reserva;
 use App\Models\Transaccion;
-use App\Models\Vendedor;
+use App\Models\ValueObjects\Money;
 use App\Models\Venta;
 use Brick\Math\BigDecimal;
+use Brick\Math\RoundingMode;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class VentaController extends Controller
 {
@@ -93,8 +90,37 @@ class VentaController extends Controller
             "tasa_interes" => "required_if:tipo,2|numeric",
             "plazo" => "required_if:tipo,2|numeric|integer",
             "periodo_pago" => "required_if:tipo,2|in:1,2,3,4,6",
-        ]);
+            "dia_pago" => "required_if:tipo,2|in:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31",
 
+            "pago.moneda" => "required|exists:currencies,code",
+            "pago.monto" => ["required", "numeric", function ($attribute, $value, $fail) use($request){
+                $reserva = Reserva::find($request->get("reserva_id"));
+                $monedaPago = Currency::find($request->input("pago.moneda"));
+                $pago = BigDecimal::of($value)->toScale(2, RoundingMode::HALF_UP);
+                $monedaVenta = Currency::find($request->input("moneda"));
+                $importeVenta = new Money(
+                    BigDecimal::of($request->get("tipo") == 2 ? $request->get("cuota_inicial") : BigDecimal::of($request->get("importe")))->toScale(2, RoundingMode::HALF_UP),
+                    $monedaVenta
+                );
+                $importeReserva = $reserva ? $reserva->importe : new Money("0", $importeVenta->currency);
+
+                if($importeVenta->currency->code !== $importeReserva->currency->code){
+                    $importeVenta = $importeVenta->exchangeTo($monedaPago)->round(2);
+                    $importeReserva = $importeReserva->exchangeTo($monedaPago, [
+                        "exchangeMode" => Money::BUY
+                    ])->round(2);
+                }
+                $montoAPagar = $importeVenta->minus($importeReserva)->exchangeTo($monedaPago)->round(2)->amount;
+                if($pago->isLessThan($montoAPagar)){
+
+                    // $fail("El pago ({$pago->toScale(2)} {$monedaPago->code}) es menor al monto a pagar ({$montoAPagar->toScale(2)} {$monedaPago->code}).");
+                    $fail("El pago es menor al monto a pagar.");
+                }
+            }],
+            "pago.comprobante" => "required|image",
+            "pago.numero_transaccion" => "required|integer"
+        ]);
+ 
         $reserva = isset($payload["reserva_id"]) ? Reserva::find($payload["reserva_id"]) : null;
         if($reserva && $reserva->estado == 1){
             $payload["lote_id"] = $reserva->lote->id;
@@ -116,17 +142,18 @@ class VentaController extends Controller
             //pero por ahora esas acciones vamos a realizarlas aqui directamente
 
             //Registrar la transacción
-            $importe = (string) ($record->tipo == 1 ? $record->importe : $record->cuota_inicial)->minus($reserva ? $reserva->importe->exchangeTo($record->currency)->round() : "0")->amount;
             $transaccion = Transaccion::create([
                 "fecha" => $record->fecha,
-                "moneda" => $record->moneda,
-                "importe" => $importe,
+                "moneda" => Arr::get($payload,"pago.moneda"),
+                "importe" => Arr::get($payload, "pago.monto"),
+                "numero_transaccion" => Arr::get($payload, "pago.numero_transaccion"),
+                "comprobante" => Arr::get($payload, "pago.comprobante")->store("comprobantes"),
                 "forma_pago" => 2,
             ]);
             $detailModel = new DetalleTransaccion();
             $detailModel->referencia = $record->getReferencia();
             $detailModel->moneda = $record->getCurrency()->code;
-            $detailModel->importe = $importe;
+            $detailModel->importe = (new Money($transaccion->importe, $transaccion->currency))->exchangeTo($record->getCurrency(), [ "exchangeMode" => Money::BUY ])->amount->toScale(2, RoundingMode::HALF_UP);
             $detailModel->transactable()->associate($record);
 
             $transaccion->detalles()->save($detailModel);

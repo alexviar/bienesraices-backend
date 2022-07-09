@@ -28,7 +28,7 @@ class CajaController extends Controller
             "fecha" => "date",
             "importe" => "numeric",
             "numero_transaccion" => "integer",
-            "comprobante" => "mimes:jpg",
+            "comprobante" => "required|image",
             "detalles" => ["array", function($attribute, $value, $fail) use($request){
                 $detalles = collect($value);
                 $deposito = BigDecimal::of($request->input("importe"))->toScale(2, RoundingMode::HALF_UP);

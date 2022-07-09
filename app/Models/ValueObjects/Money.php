@@ -102,7 +102,9 @@ class Money implements Arrayable {
 
     /**
      * @param Currency|string $currency
-     * @param 1|2 $exchangeMode
+     * @param array $options
+     * 
+     * @return Money
      */
     function exchangeTo($currency, $options = []){
 

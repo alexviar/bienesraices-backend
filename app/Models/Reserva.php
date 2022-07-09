@@ -6,6 +6,12 @@ use App\Models\ValueObjects\Money;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * 
+ * @property Money importe
+ * 
+ * @method static Reserva|null find($id)
+ */
 class Reserva extends Model
 {
     use HasFactory;
