@@ -15,14 +15,15 @@ class ProyectoTest extends TestCase
 
         $this->assertArrayHasKey("id", $array);
         $this->assertArrayHasKey("nombre", $array);
-        $this->assertArrayHasKey("socio", $array);
+        // $this->assertArrayHasKey("socio", $array);
         $this->assertArrayHasKey("ubicacion.latitud", $array);
         $this->assertArrayHasKey("ubicacion.longitud", $array);
 
         $this->assertArrayHasKey("moneda", $array);
         $this->assertArrayHasKey("redondeo", $array);
         $this->assertArrayHasKey("precio_mt2", $array);
-        $this->assertArrayHasKey("precio_reserva", $array);
+        $this->assertArrayHasKey("precio_reservas", $array);
+        $this->assertArrayHasKey("duracion_reservas", $array);
         $this->assertArrayHasKey("cuota_inicial", $array);
         $this->assertArrayHasKey("tasa_interes", $array);
     }

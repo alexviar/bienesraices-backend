@@ -25,9 +25,9 @@ class ReservaFactory extends Factory
 
         return [
             "fecha" => $fecha,
-            "vencimiento" => $attributes["vencimiento"] ?? Carbon::parse($fecha)->addDays($proyecto->duracionReservas)->format("Y-m-d"),
+            "vencimiento" => $attributes["vencimiento"] ?? Carbon::parse($fecha)->addDays($proyecto->duracion_reservas)->format("Y-m-d"),
             "moneda" => $attributes["moneda"] ??  $proyecto->moneda,
-            "importe" => $attributes["importe"] ?? $proyecto->precio_reserva,
+            "importe" => $attributes["importe"] ?? $proyecto->precio_reservas,
             "proyecto_id" => $proyecto,
             "lote_id" => $loteId,
             "cliente_id" => $attributes["cliente_id"] ?? Cliente::factory(),

@@ -20,9 +20,10 @@ class CreateProyectosTable extends Migration
             $table->point("ubicacion");
 
             $table->char("moneda", 3);
-            $table->integer("redondeo");
+            $table->integer("redondeo")->unsigned();
             $table->decimal("precio_mt2", 10);
             $table->decimal("precio_reserva", 10);
+            // $table->tinyInteger("duracion_reservas")->unsigned();
             $table->decimal("cuota_inicial", 10);
             $table->decimal("tasa_interes", 4, 4);
             $table->decimal("tasa_mora", 4, 4);

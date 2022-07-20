@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string moneda
  * @property integer $redondeo
  * @property Money $precio_mt2
- * @property Money $precio_reserva
+ * @property Money $precio_reservas
  * @property Money $cuota_inicial
  * @property string $tasa_interes
  */
@@ -28,15 +28,17 @@ class Proyecto extends Model
 
     protected $fillable = [
         "nombre",
-        "socio",
+        // "socio",
         "ubicacion",
 
         "moneda",
         "redondeo",
         "precio_mt2",
-        "precio_reserva",
+        "precio_reservas",
+        "duracion_reservas",
         "cuota_inicial",
-        "tasa_interes"
+        "tasa_interes",
+        "tasa_mora",
     ];
 
     protected $spatialFields = [

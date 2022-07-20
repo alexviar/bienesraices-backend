@@ -28,34 +28,6 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::get('/template', function(){
-    $image = public_path("logo192.png");
-    $mime = getimagesize($image)["mime"];
-    $data = file_get_contents($image);
-    $dataUri = 'data:image/' . $mime . ';base64,' . base64_encode($data);
-
-    $venta = Venta::find(1);
-
-    // return view("pdf.plan_pagos", [
-    //     "img" => $dataUri,
-    // "id" => "1",
-    // "fecha" => "dd/mm/yyyy",
-    // "proyecto" => ["nombre" => "oportunidad IV"],
-    // "manzana" => ["numero" => 10],
-    // "lote" => ["numero" => 10, "manzana" => ["numero" => 10]],
-    // "cliente" => [ "nombre" => "Lorem Ipsum", "codigo_pago" => "CLI187"],
-    // "moneda" => "USD",
-    // "precio" => new Money("10000", Currency::find("USD")),
-    // "cuota_inicial" => new Money("500", Currency::find("USD")),
-    // "interes" => "10%",
-    // ]);
-
-    return Barryvdh\DomPDF\Facade\PDF::loadView("pdf.plan_pagos", [
-        "img" => $dataUri,
-        "venta" => $venta
-    ])->setPaper([0, 0, 72*8.5, 72*13])->stream();
-});
-
 Route::get('/seed', function(){
     Artisan::call("migrate:fresh");
     Artisan::call("db:seed InitialLoadSeeder");
@@ -85,6 +57,7 @@ Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/reservas', [Res
 
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}', [ProyectoController::class, "show"]);
 Route::middleware('auth:sanctum')->get('/proyectos', [ProyectoController::class, "index"]);
+Route::middleware('auth:sanctum')->post('/proyectos', [ProyectoController::class, "store"]);
 
 Route::middleware('auth:sanctum')->get('/cuentas-por-cobrar', [CuentasPorCobrarController::class, "index"]);
 Route::middleware('auth:sanctum')->get('/transacciones', [CajaController::class, "index"]);
