@@ -76,6 +76,14 @@ class Proyecto extends Model
         return $this->belongsTo(Currency::class, "moneda");
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function manzanas()
+    {
+        return $this->hasMany(Manzana::class);
+    }
+
     // public function getUbicacionAttribute($ubicacion){
     //     $byteOrder = $ubicacion[0];
 

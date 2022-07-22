@@ -12,9 +12,26 @@ class Manzana extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        "numero",
+        "proyecto_id"
+    ];
+
+    // protected $append = ["total_lotes"];
     protected $hidden = ["proyecto"];
 
     function proyecto(){
         return $this->belongsTo(Proyecto::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    function lotes(){
+        return $this->hasMany(Lote::class);
+    }
+
+    function getTotalLotesAttribute(){
+        return ($this->relationLoaded("lotes") ? $this->lotes : $this->lotes())->count();
     }
 }

@@ -45,6 +45,7 @@ Route::middleware('auth:sanctum')->post('/clientes', [ClienteController::class, 
 Route::middleware('auth:sanctum')->get('/vendedores', [VendedorController::class, "index"]);
 
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/manzanas', [ManzanaController::class, "index"]);
+Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/manzanas', [ManzanaController::class, "store"]);
 
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/lotes', [LoteController::class, "index"]);
 

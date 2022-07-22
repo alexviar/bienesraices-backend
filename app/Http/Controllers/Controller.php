@@ -36,9 +36,9 @@ class Controller extends BaseController
     $query->limit($size);
     $query->offset(($current - 1) * $size);
 
-    $meta = ["totalRecords" => $total, "currentPage" => $current];
-    if ($current * $size < $total) $meta["nextPage"] = $current + 1;
-    if ($current > 1) $meta["prevPage"] = $current - 1;
+    $meta = ["total_records" => $total, "current_page" => $current];
+    if ($current * $size < $total) $meta["next_page"] = $current + 1;
+    if ($current > 1) $meta["prev_page"] = $current - 1;
 
     return $this->buildPaginatedResponseData($meta, $query->get());
   }
