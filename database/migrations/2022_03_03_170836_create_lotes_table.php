@@ -25,7 +25,7 @@ class CreateLotesTable extends Migration
 
             // Podría mejorar el rendimiento agregar esta redundancia?
             // $table->foreignIdFor(Proyecto::class); 
-            $table->foreignIdFor(Manzana::class);
+            $table->foreignIdFor(Manzana::class)->constrained();
             $table->unique(["manzana_id", "numero"]);
             $table->timestamps();
         });

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\File;
 
@@ -14,6 +15,14 @@ use Illuminate\Support\Facades\File;
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::get('/migrate', function(){
+  Artisan::call("migrate");
+});
+
+Route::get('/seed', function(){
+  Artisan::call("migrate:fresh");
+  Artisan::call("db:seed InitialLoadSeeder");
+});
 
 Route::post('/login', [AuthController::class, 'login'])->name("login");
 Route::post('/logout', [AuthController::class, 'logout']);

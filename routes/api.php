@@ -11,11 +11,7 @@ use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\VentaController;
-use App\Models\Currency;
-use App\Models\ValueObjects\Money;
-use App\Models\Venta;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,10 +24,6 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::get('/seed', function(){
-    Artisan::call("migrate:fresh");
-    Artisan::call("db:seed InitialLoadSeeder");
-});
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -48,6 +40,7 @@ Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/manzanas', [Manz
 Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/manzanas', [ManzanaController::class, "store"]);
 
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/lotes', [LoteController::class, "index"]);
+Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/lotes', [LoteController::class, "store"]);
 
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/ventas/{id}/plan_pagos', [VentaController::class, "print_plan_pagos"])->name("ventas.plan_pago");
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/ventas', [VentaController::class, "index"]);

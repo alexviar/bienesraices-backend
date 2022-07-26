@@ -89,7 +89,7 @@ class Money implements Arrayable {
      * @return Money
      */
     function dividedBy($value){
-        $amount = $this->_amount->dividedBy($value, 10, RoundingMode::HALF_UP);
+        $amount = $this->_amount->dividedBy($value, 20, RoundingMode::HALF_UP);
         return new Money($amount, $this->_currency);
     }
 
@@ -98,6 +98,14 @@ class Money implements Arrayable {
      */
     function round($scale=2, $roundingMode = RoundingMode::HALF_UP){
         return new Money($this->_amount->toScale($scale, $roundingMode), $this->_currency);
+    }
+    
+    /**
+     * @return Money
+     */
+    function mround($round, $roundingMode = RoundingMode::HALF_UP){
+        $amount = $this->amount ? $this->amount->dividedBy($round, 0, $roundingMode)->multipliedBy($round) : $this->amount;
+        return new Money($amount, $this->_currency);
     }
 
     /**

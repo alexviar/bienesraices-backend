@@ -3,8 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Lote;
+use App\Models\Manzana;
+use App\Models\Proyecto;
+use Grimzy\LaravelMysqlSpatial\Types\Polygon;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Throwable;
 
 class LoteController extends Controller
 {
@@ -14,7 +21,7 @@ class LoteController extends Controller
         $search = Arr::get($queryArgs, "search", "");
 
         if($search){
-            $query->where("numero", "$search");
+            $query->where("lotes.numero", "$search");
         }
 
         if($manzana_id = Arr::get($filter, "manzana_id")){
@@ -28,11 +35,62 @@ class LoteController extends Controller
         }
     }
 
+    function findProyecto($proyectoId)
+    {
+        $proyecto = Proyecto::find($proyectoId);
+        if(!$proyecto)
+        {
+            throw new ModelNotFoundException("El proyecto no existe");
+        }
+        return $proyecto;
+    }
+
     function index(Request $request, $proyectoId)
     {
+        $proyecto = $this->findProyecto($proyectoId);
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        return $this->buildResponse(Lote::whereHas("manzana", function($query) use($proyectoId){
-            $query->where("proyecto_id", $proyectoId);
-        }), $queryArgs);
+        return $this->buildResponse($proyecto->lotes()->latest(), $queryArgs);
+    }
+
+    function store(Request $request, $proyectoId)
+    {
+        $proyecto = $this->findProyecto($proyectoId);
+        try
+        {
+            $request->merge([
+                "geocerca" => Polygon::fromWKT($request->input("geocerca"))
+            ]);
+        }
+        catch(Throwable $e){ }
+        // dd($proyecto->lotes()->where("error", 1)->whereNotExists(function($query){
+        //     $query->select(DB::raw(1))
+        //     ->from("lotes", "l")
+        //     ->whereColumn("l.id", "<>", "id")
+        //     ->whereRaw("ST_Area(St_Intersection(`l`.`geocerca`, `geocerca`)) = 0");
+        // })->update(["error" => 0])->toSql());
+        $payload = $request->validate([
+            "numero" => ["required", Rule::unique(Lote::class)->where(function($query) use($request){
+                $query->where("manzana_id", $request->input("manzana_id"));
+            })],
+            "superficie" => "required|numeric",
+            "precio" => "nullable|numeric",
+            "geocerca" => ["required", function($attribute, $value, $fail) {
+                if(!($value instanceof Polygon))
+                {
+                    $fail("El campo '$attribute' no tiene un valor válido.");
+                    return;
+                }
+                if(Lote::whereRaw("ST_Area(St_Intersection(`geocerca`, ST_GeomFromText(?))) > 0", [$value->toWKT()])->exists()){
+                    $fail("La $attribute se sobrepone con otros lotes.");
+                }
+            }],
+            "manzana_id" => ["required", Rule::exists(Manzana::class, "id")->where(function ($query) use($proyectoId) {
+                return $query->where('proyecto_id', $proyectoId);
+            })]
+        ], [
+            "numero.unique" => "La manzana indicada tiene un lote con el mismo número."
+        ]);
+
+        return Lote::create($payload);
     }
 }

@@ -1,5 +1,8 @@
 <?php
 
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\Unit\BaseTest;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -43,3 +46,7 @@ function something()
 {
     // ..
 }
+
+uses()->beforeEach(function(){
+    $this->faker->seed(2022);  
+})->in("Feature");

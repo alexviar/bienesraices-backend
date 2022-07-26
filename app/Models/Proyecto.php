@@ -21,6 +21,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property Money $precio_reservas
  * @property Money $cuota_inicial
  * @property string $tasa_interes
+ * 
+ * @method static Proyecto find(integer $id)
  */
 class Proyecto extends Model
 {

@@ -3,20 +3,40 @@
 namespace App\Models;
 
 use App\Models\ValueObjects\Money;
+use Brick\Math\RoundingMode;
+use Grimzy\LaravelMysqlSpatial\Eloquent\SpatialTrait;
+use Grimzy\LaravelMysqlSpatial\Types\Point;
+use Grimzy\LaravelMysqlSpatial\Types\Polygon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
+ * 
+ * @property string $numero
  * @property string $superficie
+ * @property Polygon $geocerca
  * @property Money $precio 
  * @property Money $precio_sugerido 
  * @property Manzana $manzana
  */
 class Lote extends Model
 {
-    use HasFactory;
+    use HasFactory,
+        SpatialTrait;
+
+    protected $fillable = [
+        "numero",
+        "superficie",
+        "geocerca",
+        "precio",
+        "manzana_id"
+    ];
+
+    protected $spatialFields = [
+        "geocerca"
+    ];
 
     protected $hidden = ["reserva","venta"];
     
@@ -30,7 +50,11 @@ class Lote extends Model
     }
 
     function getPrecioSugeridoAttribute(){
-        return $this->manzana->proyecto->precio_mt2->multipliedBy($this->superficie)->round(2);
+        $precioSugerido = $this->manzana->proyecto->precio_mt2->multipliedBy($this->superficie);
+        if($this->proyecto->redondeo){
+            $precioSugerido = $precioSugerido->mround($this->proyecto->redondeo, RoundingMode::UP);
+        }
+        return $precioSugerido->round(2);
     }
 
     function getEstadoAttribute($value){
@@ -68,7 +92,7 @@ class Lote extends Model
 
     function reserva(){
         // return $this->hasOne(Reserva::class)->where("estado", 1)->where("vencimiento", ">=", DB::raw("NOW()"))->orderBy("id");
-        //Refactor por propositos de testing (travelTo)
+        //Refactor para propositos de testing (travelTo)
         return $this->hasOne(Reserva::class)->where("estado", 1)->where("vencimiento", ">=", Carbon::now()->format("Y-m-d"))->orderBy("id");
     }
 
@@ -82,5 +106,18 @@ class Lote extends Model
 
     function getProyectoAttribute(){
         return $this->manzana->proyecto;
+    }
+
+    function toArray()
+    {
+        $array = parent::toArray();
+        $array["geocerca"] = $this->geocerca ? array_map(function(Point $point) {
+            return [
+                "latitud" => $point->getLat(),
+                "longitud" => $point->getLng(),
+            ];
+        }, $this->geocerca->getLineStrings()[0]->getPoints()) : [];
+
+        return $array;
     }
 }

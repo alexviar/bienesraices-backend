@@ -17,7 +17,9 @@ it('registra un proyecto', function () {
         "longitud" => $data["ubicacion"]->getLng()
     ]]+$data);
     $response->assertCreated();
-    $this->assertDatabaseHas("proyectos", ["ubicacion"=>DB::raw("ST_GeomFromText('".$data["ubicacion"]->toWKT()."')")] + $data);
+    $this->assertDatabaseHas("proyectos", [
+        "ubicacion"=>DB::raw("ST_GeomFromText('".$data["ubicacion"]->toWKT()."')")
+    ] + $data);
     // $this->assertDatabaseHas("planos", [
     //     "proyecto_id" => $response->json("id")
     // ]);

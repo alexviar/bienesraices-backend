@@ -12,7 +12,8 @@ class LoteTest extends TestCase
     public function test_precio_sugerido()
     {
         $proyecto = Proyecto::factory([
-            "precio_mt2" => "1.99",
+            "precio_mt2" => "1.91",
+            "redondeo" => "100",
             "moneda" => "BOB"
         ])->create();
         $manzana = Manzana::factory()->for($proyecto)->create();
@@ -23,7 +24,7 @@ class LoteTest extends TestCase
 
         $precioSugerido = $lote->precio_sugerido;
 
-        $this->assertTrue($precioSugerido->amount->isEqualTo("1990.00"));
+        $this->assertTrue($precioSugerido->amount->isEqualTo("2000.00"));
         $this->assertTrue($precioSugerido->currency->code === "BOB");
     }
 
