@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
  *
  * @property Carbon $fecha
  * @property Money $importe
+ * @property Money|null $cuota_inicial
  * @property Cuota[]|Collection $cuotas
  */
 class Venta extends Model

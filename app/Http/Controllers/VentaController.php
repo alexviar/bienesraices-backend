@@ -170,7 +170,14 @@ class VentaController extends Controller
             $detailModel = new DetalleTransaccion();
             $detailModel->referencia = $record->getReferencia();
             $detailModel->moneda = $record->getCurrency()->code;
-            $detailModel->importe = (new Money($transaccion->importe, $transaccion->currency))->exchangeTo($record->getCurrency(), [ "exchangeMode" => Money::BUY ])->amount->toScale(2, RoundingMode::HALF_UP);
+            $detailModel->importe = (new Money(
+                ($record->tipo == 1 ? 
+                    $record->importe :
+                    $record->cuota_inicial
+                )->minus($reserva ? 
+                    $reserva->importe->exchangeTo($record->getCurrency(), ["exchangeMode"=>Money::BUY]) :
+                    "0"
+                )->amount, $record->getCurrency()))->amount->toScale(2, RoundingMode::HALF_UP);
             $detailModel->transactable()->associate($record);
 
             $transaccion->detalles()->save($detailModel);

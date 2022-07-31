@@ -87,8 +87,8 @@
     @php
         $zero = new \App\Models\ValueObjects\Money("0", $venta->currency);
         $totalPagos = $pagos->reduce(function($carry, $pago){
-            return $carry->add($pago->importe);
-        }, $zero);
+            return $carry->add($pago->importe->exchangeTo($carry->currency, ["exchangeMode"=>"buy"]));
+        }, $zero)->round();
         
         $today = \Illuminate\Support\Carbon::today();
         $saldoMora = $zero;
