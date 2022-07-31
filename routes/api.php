@@ -42,6 +42,7 @@ Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/manzanas', [Man
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/lotes', [LoteController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/lotes', [LoteController::class, "store"]);
 
+Route::get('/proyectos/{proyectoId}/ventas/{id}/historial_pagos', [VentaController::class, "print_historial_pagos"])->name("ventas.historial_pagos");
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/ventas/{id}/plan_pagos', [VentaController::class, "print_plan_pagos"])->name("ventas.plan_pago");
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/ventas', [VentaController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/ventas', [VentaController::class, "store"]);

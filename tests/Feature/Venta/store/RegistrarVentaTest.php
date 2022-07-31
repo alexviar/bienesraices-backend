@@ -1,17 +1,12 @@
 <?php
 
-use App\Models\Currency;
-use App\Models\DetalleTransaccion;
 use App\Models\Lote;
 use App\Models\Proyecto;
 use App\Models\Reserva;
-use App\Models\Transaccion;
 use App\Models\User;
-use App\Models\ValueObjects\Money;
 use App\Models\Venta;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -26,6 +21,28 @@ function read_csv($filename){
     fclose($file);
 
 }
+
+test('La fecha no puede estar en el futuro', function(){
+    /** @var TestCase $this */
+
+    $proyecto = Proyecto::factory()->create();
+
+
+    $today = Carbon::today();
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyecto->id/ventas", [
+        "fecha" => $today->clone()->addDay()->format("Y-m-d")
+    ]);
+    $response->assertJsonValidationErrors([
+        "fecha" => "El campo 'fecha' no puede ser posterior a la fecha actual."
+    ]);
+
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyecto->id/ventas", [
+        "fecha" => $today->format("Y-m-d")
+    ]);
+    $response->assertJsonMissingValidationErrors([
+        "fecha" => "El campo 'fecha' no puede ser posterior a la fecha actual."
+    ]);
+});
 
 it('Registra una venta al credito y otra al contado', function () {
     /** @var TestCase $this */

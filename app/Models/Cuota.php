@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Interfaces\UfvRepositoryInterface;
 use App\Models\Traits\SaveToUpper;
 use App\Models\ValueObjects\Money;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use Carbon\Carbon;
+use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Log;
 
 class Cuota extends Model
 {
@@ -50,7 +51,7 @@ class Cuota extends Model
     }
 
     function getTotalAttribute(){
-        return new Money($this->calcularPago($this->attributes["saldo"], $this->vencimiento, Carbon::now())->toScale(2, RoundingMode::HALF_UP), $this->getCurrency());
+        return new Money($this->calcularPago(Carbon::now())->toScale(2, RoundingMode::HALF_UP), $this->getCurrency());
     }
 
     function getSaldoCapitalAttribute($value){
@@ -59,6 +60,10 @@ class Cuota extends Model
 
     function venta(){
         return $this->belongsTo(Venta::class);
+    }
+
+    function getAnteriorCuotaAttribute(){
+        return $this->venta->cuotas->where("numero", $this->numero - 1)->first();
     }
 
     function getCurrency(){
@@ -84,41 +89,44 @@ class Cuota extends Model
         $ufvVencimiento = UFV::firstWhere("fecha", $fechaVencimiento);
         $ufvPago = UFV::firstWhere("fecha", $fechaPago);
         if(!$ufvVencimiento || ! $ufvPago) $pagoActualizado = BigDecimal::of($pago);
-        else $pagoActualizado = BigDecimal::of($pago)->multipliedBy(BigDecimal::of($ufvVencimiento->valor))->dividedBy(BigDecimal::of($ufvPago->valor), 10, RoundingMode::HALF_UP);
+        else $pagoActualizado = BigDecimal::of($pago)->multipliedBy(BigDecimal::of($ufvVencimiento->valor))->dividedBy(BigDecimal::of($ufvPago->valor), 20, RoundingMode::HALF_UP);
 
         // $fas = BigDecimal::one()->plus(
-        //     BigDecimal::of($this->venta->tasaMora)->dividedBy(360, 10, RoundingMode::HALF_UP)
+        //     BigDecimal::of($this->venta->tasaMora)->dividedBy(360, 20, RoundingMode::HALF_UP)
         // )->power($ufvPago->fecha->diffInDays($ufvVencimiento));
         $fas = BigDecimal::of($this->venta->tasa_mora)
         ->multipliedBy($fechaPago->diffInDays($fechaVencimiento))
-        ->dividedBy(360, 10, RoundingMode::HALF_UP)
+        ->dividedBy(360, 20, RoundingMode::HALF_UP)
         ->plus(BigDecimal::one());
 
-        return BigDecimal::of($deuda)->minus($pagoActualizado->dividedBy($fas, 10, RoundingMode::HALF_UP));
+        return BigDecimal::of($deuda)->minus($pagoActualizado->dividedBy($fas, 20, RoundingMode::HALF_UP));
     }
 
     /**
      * @param Carbon $fechaPago
-     * @param Carbon $fechaVencimiento
      */
-    function calcularPago($deuda, $fechaVencimiento, $fechaPago){
-        $deuda = BigDecimal::of($deuda);
+    function calcularPago($fechaPago){
+        $deuda = BigDecimal::of($this->attributes["saldo"]);
+        $fechaVencimiento = $this->vencimiento;
         //Si la deuda es muy pequeña (menor a 1) entonces no se calcula la multa
         if(/* $deuda->isLessThan(BigDecimal::one())
            || */!$fechaPago->isAfter($fechaVencimiento)) return $deuda;
 
-        $ufvVencimiento = UFV::firstWhere("fecha", $fechaVencimiento);
-        $ufvPago = UFV::firstWhere("fecha", $fechaPago);
-        if(!$ufvVencimiento || ! $ufvPago) $deudaActualizada = BigDecimal::of($deuda);
-        else $deudaActualizada = BigDecimal::of($deuda)->multipliedBy(BigDecimal::of($ufvPago->valor))->dividedBy(BigDecimal::of($ufvVencimiento->valor), 10, RoundingMode::HALF_UP);
+        /** @var UfvRepositoryInterface $ufvRepository */
+        $ufvRepository = Container::getInstance()->make(UfvRepositoryInterface::class);
+        $ufvVencimiento = $ufvRepository->findByDate($fechaVencimiento);
+        $ufvPago = $ufvRepository->findByDate($fechaPago);
+        if(!$ufvVencimiento || !$ufvPago) $deudaActualizada = $deuda;
+        else $deudaActualizada = $deuda->multipliedBy(BigDecimal::of($ufvPago))->dividedBy(BigDecimal::of($ufvVencimiento), 20, RoundingMode::HALF_UP);
         // $fas = BigDecimal::one()->plus(
-        //     BigDecimal::of($this->venta->tasaMora)->dividedBy(360, 10, RoundingMode::HALF_UP)
+        //     BigDecimal::of($this->venta->tasaMora)->dividedBy(360, 20, RoundingMode::HALF_UP)
         // )->power($ufvPago->fecha->diffInDays($ufvVencimiento));
         // return $deudaActualizada->multipliedBy($factor);
         $fas = BigDecimal::of($this->venta->tasa_mora)
-        ->multipliedBy($fechaVencimiento->diffInDays($fechaPago))
-        ->dividedBy(360, 10, RoundingMode::HALF_UP)
-        ->plus(BigDecimal::one());
+            ->multipliedBy($fechaVencimiento->diffInDays($fechaPago))
+            ->dividedBy(360, 20, RoundingMode::HALF_UP)
+            ->plus(BigDecimal::one())
+            ;
 
         return $deudaActualizada->multipliedBy($fas);
     }
@@ -126,8 +134,6 @@ class Cuota extends Model
     function toTransactableArray($fecha){
 
         $pago = $this->calcularPago(
-            $this->saldo->amount,
-            $this->vencimiento,
             $fecha
         );
 

@@ -2,6 +2,8 @@
 
 namespace App\Models\Traits;
 
+use Illuminate\Support\Str;
+
 trait SaveToUpper
 {
     /**
@@ -21,7 +23,7 @@ trait SaveToUpper
     {
         if (is_string($value)) {
             if (!in_array($key, $this->no_uppercase)) {
-                $value = trim(strtoupper($value));
+                $value = trim(Str::upper($value));
             }
         }
         parent::setAttribute($key, $value);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Reports\Venta\HistorialPagos;
 use App\Models\Currency;
 use App\Models\DetalleTransaccion;
 use App\Models\Lote;
@@ -41,17 +42,31 @@ class VentaController extends Controller
         $mime = getimagesize($image)["mime"];
         $data = file_get_contents($image);
         $dataUri = 'data:image/' . $mime . ';base64,' . base64_encode($data);
-        return \Barryvdh\DomPDF\Facade\PDF::loadView("pdf.plan_pagos", [
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView("pdf.plan_pagos", [
             "img" => $dataUri,
             "venta" => $venta
         ])->setPaper([0, 0, 72*8.5, 72*13])->stream();
+    }
+
+    /**
+     * @return Venta
+     */
+    protected function findVenta($proyectoId, $ventaId){
+        $venta = Venta::where("proyecto_id", $proyectoId)->where("id", $ventaId)->first();
+        if(!$venta) throw new ModelNotFoundException();
+        return $venta;
+    }
+
+    function print_historial_pagos(Request $request, HistorialPagos $report, $proyectoId, $ventaId){
+        $venta = $this->findVenta($proyectoId, $ventaId);
+        return $report->generate($venta)->stream("historial_pagos.pdf");
     }
 
     function store(Request $request, $proyectoId){
 
         $payload = $request->validate([
             "tipo" => "required|in:1,2",
-            "fecha" => "required|date",
+            "fecha" => "required|date|before_or_equal:".now()->format("Y-m-d"),
             "moneda" => "required|exists:currencies,code",
             "lote_id" => ["required_without:reserva_id", function ($attribute, $value, $fail) use($request, $proyectoId){
                 $reserva = Reserva::find($request["reserva_id"]);
@@ -119,6 +134,8 @@ class VentaController extends Controller
             }],
             "pago.comprobante" => "required|image",
             "pago.numero_transaccion" => "required|integer"
+        ], [
+            "fecha.before_or_equal" => "El campo ':attribute' no puede ser posterior a la fecha actual."
         ]);
  
         $reserva = isset($payload["reserva_id"]) ? Reserva::find($payload["reserva_id"]) : null;

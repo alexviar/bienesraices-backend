@@ -1,8 +1,5 @@
 <?php
 
-use Illuminate\Foundation\Testing\WithFaker;
-use Tests\Unit\BaseTest;
-
 /*
 |--------------------------------------------------------------------------
 | Test Case

@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Http\Reports\Venta;
+
+use App\Models\Cuota;
+use App\Models\DetalleTransaccion;
+use App\Models\Venta;
+
+class HistorialPagos {
+
+    function generate(Venta $venta){
+        $image = public_path("logo192.png");
+        $mime = getimagesize($image)["mime"];
+        $data = file_get_contents($image);
+        $dataUri = 'data:image/' . $mime . ';base64,' . base64_encode($data);
+
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView("pdf.historial_pagos", [
+            "img" => $dataUri,
+            "venta" => $venta,
+            "pagos" => DetalleTransaccion::with("transaccion")->whereHasMorph("transactable", [Venta::class, Cuota::class], function($query, $type) use($venta){
+                if($type === Venta::class){
+                    $query->where("id", $venta->id);
+                }
+                else{
+                    $query->where("venta_id", $venta->id);
+                }
+            })->get()
+        ])->setPaper([0, 0, 72*8.5, 72*13]);
+    }
+}

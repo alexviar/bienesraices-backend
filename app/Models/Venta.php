@@ -45,7 +45,7 @@ class Venta extends Model
 
     protected $hidden = [ "currency" ];
 
-    protected $appends = [ "formated_id", "url_plan_pago", "manzana" ];
+    protected $appends = [ "formated_id", "url_plan_pago", "url_historial_pagos", "manzana" ];
 
     protected $casts = [
         "fecha" => "date:Y-m-d"
@@ -53,6 +53,13 @@ class Venta extends Model
 
     function getUrlPlanPagoAttribute(){
         return route("ventas.plan_pago", [
+            "proyectoId" => $this->proyecto_id,
+            "id" => $this->id
+        ]);
+    }
+
+    function getUrlHistorialPagosAttribute(){
+        return route("ventas.historial_pagos", [
             "proyectoId" => $this->proyecto_id,
             "id" => $this->id
         ]);
