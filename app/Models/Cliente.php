@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Traits\SaveToUpper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Cliente extends Model
 {
@@ -42,16 +43,34 @@ class Cliente extends Model
         return  "CLI-{$this->id}";
     }
 
-    // function getCodigoPago($proyecto_id){
-    //     $cp = $this->codigosPago->where("proyecto_id", $proyecto_id)->first();
-    //     return $cp ? $cp->codigo : $this->codigo_pago;
-    // }
-
-    function codigosPago(){
+    function codigosPagoLegacy(){
         return $this->hasMany(CodigoPago::class);
     }
 
     function creditosEnMora(){
-        return $this->hasMany(Venta::class)->where("tipo", 2)->where("estado", 1)->whereHas("cuotasVencidas");
+        // return $this->hasMany(Credito::class)->with("creditable")->whereHasMorph([Venta::class], function($query){
+        //     $query->where("estado", 1);
+        // })->whereHas("cuotasVencidas");
+        return $this->hasMany(Venta::class)->whereHas("credito", function($query){
+            $query->whereHas("cuotasVencidas");
+        });
+    }
+
+    function getCreditosAttribute(){
+        return Credito::whereHasMorph([Venta::class], function($query){
+            $query->where("estado", 1)->where("cliente_id", $this->id);
+        })->get();
+    }
+
+    /**
+     * @return Cliente|null
+     */
+    static function findByCodigoPago($codigoPago) {
+        if(Str::startsWith($codigoPago, "CLI-")){
+            return self::find(Str::after($codigoPago, "CLI-"));
+        }
+        return self::whereHas("codigosPagoLegacy", function($query) use($codigoPago){
+            $query->where("codigo", $codigoPago);
+        })->first();
     }
 }

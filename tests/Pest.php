@@ -11,6 +11,8 @@
 |
 */
 
+use PHPUnit\Framework\Assert;
+
 uses(Tests\TestCase::class)->in('Feature');
 
 /*
@@ -24,8 +26,37 @@ uses(Tests\TestCase::class)->in('Feature');
 |
 */
 
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
+expect()->extend('toMatchNestedArray', function ($array, $path="") {
+    if (is_object($this->value) && method_exists($this->value, 'toArray')) {
+        $valueAsArray = $this->value->toArray();
+    } else {
+        $valueAsArray = (array) $this->value;
+    }
+
+    foreach ($array as $key => $value) {
+        Assert::assertArrayHasKey($key, $valueAsArray);
+
+        $qulifiedKey = $path !== "" ? $path.".".$key : $key;
+        if(is_array($value)){
+            $savedValue = $this->value;
+            $this->value = $valueAsArray[$key];
+            $this->toMatchNestedArray($value, $qulifiedKey);
+            $this->value = $savedValue;
+        }
+        else{
+            Assert::assertEquals(
+                $value,
+                $valueAsArray[$key],
+                sprintf(
+                    'Failed asserting that an array has a key %s with the value %s.',
+                    $this->export($qulifiedKey),
+                    $this->export($valueAsArray[$key]),
+                ),
+            );
+        }
+    }
+
+    return $this;
 });
 
 /*

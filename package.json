@@ -2,6 +2,8 @@
     "private": true,
     "scripts": {
         "start": "php artisan serve --host=api.example.com --port=80",
+        "pretest": "cls",
+        "test": "php artisan test",
         "dev": "npm run development",
         "development": "mix",
         "watch": "mix watch",

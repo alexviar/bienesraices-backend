@@ -84,26 +84,6 @@
       </style>
 </head>
 <body>
-    @php
-        $zero = new \App\Models\ValueObjects\Money("0", $venta->currency);
-        $totalPagos = $pagos->reduce(function($carry, $pago){
-            return $carry->add($pago->importe->exchangeTo($carry->currency, ["exchangeMode"=>"buy"]));
-        }, $zero)->round();
-        
-        $today = \Illuminate\Support\Carbon::today();
-        $saldoMora = $zero;
-        $totalPagado = $zero;
-        $i = 0;
-        while($venta->cuotas[$i]->vencimiento->isBefore($today) && $i < $venta->cuotas->count()){
-            $saldoMora = $saldoMora->plus($venta->cuotas[$i]->calcularPago($today)->toScale(2, \Brick\Math\RoundingMode::HALF_UP));
-            $totalPagado = $totalPagado->plus($venta->cuotas[$i]->importe->minus($venta->cuotas[$i]->saldo));
-            $i++;
-        }
-        $totalPagado = $totalPagado->plus($venta->cuotas[$i]->importe->minus($venta->cuotas[$i]->saldo));
-        $totalMultas = $totalPagos->minus($venta->cuota_inicial)->minus($totalPagado);
-        $saldoPendiente = $venta->cuotas[$i]->saldo->plus($venta->cuotas[$i]->saldo_capital)->plus($saldoMora);
-    @endphp
-
     <div class="title center bg-primary">HISTORIAL DE PAGOS</div>
     <br>
     <table style="width:100%">
@@ -142,15 +122,15 @@
                                         <tbody>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Plazo del crédito:</b></th>
-                                                <td class="text-left"> {{$venta->plazo}} meses</td>
+                                                <td class="text-left"> {{$venta->credito->plazo}} meses</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Periodo de pago:</b></th>
-                                                <td class="text-left"> {{$venta->periodo_pago_text}}</td>
+                                                <td class="text-left"> {{$venta->credito->periodo_pago_text}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Tasa de interés anual:</b></th>
-                                                <td class="text-left"> {{\Brick\Math\BigDecimal::of("100")->multipliedBy($venta->tasa_interes)->toScale(2)}} %</td>
+                                                <td class="text-left"> {{\Brick\Math\BigDecimal::of("100")->multipliedBy($venta->credito->tasa_interes)->toScale(2)}} %</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Importe del terreno:</b></th>

@@ -3,6 +3,7 @@
 use Illuminate\Support\Str;
 use App\Http\Reports\Venta\HistorialPagos;
 use App\Models\Cliente;
+use App\Models\Credito;
 use App\Models\DetalleTransaccion;
 use App\Models\Lote;
 use App\Models\Manzana;
@@ -25,25 +26,17 @@ function comparePdf($generatedContent, $sampleContent){
     return $generatedContent == $sampleContent;
 }
 
-beforeEach(function(){
-    $maxId = Cliente::max("id") ?? 0;
-    DB::statement('ALTER TABLE clientes AUTO_INCREMENT=' . intval($maxId + 1) . ';');
-    DB::connection()->setPdo(DB::connection()->getPdo());
-    DB::beginTransaction();
-});
-
 it("Genera un reporte del historial de pagos", function(){
     /** @var TestCase $this */
+    
+    $maxId = Cliente::max("id") ?? 0;
+    DB::statement('ALTER TABLE clientes AUTO_INCREMENT=' . intval($maxId + 1) . ';');
+    DB::statement('START TRANSACTION;');
     $report = new HistorialPagos();
     $venta = Venta::factory([
         "fecha" => "2022/07/28",
         "importe" => "3600",
         "moneda" => "USD",
-        "cuota_inicial" => "500",
-        "plazo" => "48",
-        "dia_pago" => 1,
-        "periodo_pago" => 1,
-        "tasa_interes" => "0.1"
     ])->for(Cliente::factory([
         "nombre" => "JOAQUIN",
         "apellido_paterno" => "CHUMACERO",
@@ -52,7 +45,14 @@ it("Genera un reporte del historial de pagos", function(){
     ]))->for(Lote::factory(["numero" => 2])->for(Manzana::factory(["numero"=>"100"])->for(Proyecto::factory([
         "nombre" => "OPORTUNIDAD IV"
     ]))))->create();
-    $venta->crearPlanPago();
+    $credito = Credito::factory([
+        "cuota_inicial" => "500",
+        "plazo" => "48",
+        "dia_pago" => 1,
+        "periodo_pago" => 1,
+        "tasa_interes" => "0.1"
+    ])->for($venta, "creditable")->create();
+    $credito->build();
 
     $transaccion = Transaccion::factory([
         "fecha" => "2022/07/28",
@@ -63,8 +63,8 @@ it("Genera un reporte del historial de pagos", function(){
     $detailModel->referencia = "Cuota inicial de la venta N.º 1";
     $detailModel->moneda = "USD";
     $detailModel->importe = "500";
-    $detailModel->transactable()->associate($venta);
     $transaccion->detalles()->save($detailModel);
+    $detailModel->creditos()->attach($credito);
 
     $transaccion = Transaccion::factory([
         "fecha" => "2022/08/24",
@@ -75,8 +75,8 @@ it("Genera un reporte del historial de pagos", function(){
     $detailModel->referencia = "Pago de la cuota 1 del crédito 1";
     $detailModel->moneda = "USD";
     $detailModel->importe = "70";
-    $detailModel->transactable()->associate($venta->cuotas->where("numero", 1)->first());
     $transaccion->detalles()->save($detailModel);
+    $detailModel->cuotas()->attach($credito->cuotas->where("numero", 1)->first());
 
     $transaccion = Transaccion::factory([
         "fecha" => "2022/09/30",
@@ -87,15 +87,15 @@ it("Genera un reporte del historial de pagos", function(){
     $detailModel->referencia = "Pago de la cuota 1 del crédito 1";
     $detailModel->moneda = "USD";
     $detailModel->importe = "8.95";
-    $detailModel->transactable()->associate($venta->cuotas->where("numero", 1)->first());
     $transaccion->detalles()->save($detailModel);
+    $detailModel->cuotas()->attach($credito->cuotas->where("numero", 1)->first());
     $detailModel = new DetalleTransaccion();
     $detailModel->referencia = "Pago de la cuota 2 del crédito 1";
     $detailModel->moneda = "USD";
     $detailModel->importe = "78.93";
-    $detailModel->transactable()->associate($venta->cuotas->where("numero", 2)->first());
     $transaccion->detalles()->save($detailModel);
-    $venta->cuotas()->whereIn("numero", [1, 2])->update(["saldo" => "0"]);
+    $detailModel->cuotas()->attach($credito->cuotas->where("numero", 2)->first());
+    $credito->cuotas()->whereIn("numero", [1, 2])->update(["saldo" => "0"]);
 
     $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-09-30"));
     
@@ -127,7 +127,8 @@ it("imprime el historial de pagos en pantalla", function(){
 
     $user = User::find(1);
     $venta = Venta::factory()->credito()->create();
-    $venta->crearPlanPago();
+    $credito = Credito::factory()->for($venta, "creditable")->create();
+    $credito->build();
     $proyectoId = $venta->proyecto_id;
     $id = $venta->id;
 

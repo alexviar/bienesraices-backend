@@ -1,6 +1,7 @@
 <?php
 
 use App\Infrastructure\Repositories\UfvRepository;
+use App\Models\Credito;
 use App\Models\Cuota;
 use App\Models\Interfaces\UfvRepositoryInterface;
 use App\Models\PlanPagosBuilder;
@@ -14,9 +15,12 @@ use Illuminate\Support\Carbon;
 it("Calcular pago actualizado", function(){
     $venta = new Venta();
     $venta->moneda = "USD";
-    $venta->tasa_mora = "0.03";
+    $credito = new Credito([
+        "tasa_mora" => "0.03"
+    ]);
+    $credito->setRelation("creditable", $venta);
     $cuota = new Cuota();
-    $cuota->setRelation("venta", $venta);
+    $cuota->setRelation("credito", $credito);
     $cuota->vencimiento = Carbon::createFromFormat("Y-m-d", "2022-11-01")->startOfDay();
     $cuota->importe = "78.93";
     $cuota->saldo = "78.93";

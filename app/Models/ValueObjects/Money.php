@@ -108,6 +108,13 @@ class Money implements Arrayable {
         return new Money($amount, $this->_currency);
     }
 
+    function isEqualTo($money){
+        return (!$this->amount && !$money->amount) || (
+            $this->amount->isEqualTo($money->amount) &&
+            $this->currency->code == $money->currency->code
+        );
+    }
+
     /**
      * @param Currency|string $currency
      * @param array $options

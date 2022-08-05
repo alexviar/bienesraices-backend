@@ -34,14 +34,7 @@ class Venta extends Model
         "cliente_id",
         "vendedor_id",
         "reserva_id",
-        "estado",
-
-        "cuota_inicial",
-        "tasa_interes",
-        "plazo",
-        "periodo_pago",
-        "dia_pago",
-        "tasa_mora"
+        "estado"
     ];
 
     protected $hidden = [ "currency" ];
@@ -75,20 +68,6 @@ class Venta extends Model
 
     function getImporteAttribute($value){
         return new Money($value, Currency::find($this->moneda));
-    }
-
-    function getCuotaInicialAttribute($value){
-        return $value ? new Money($value, Currency::find($this->moneda)) : null;
-    }
-
-    function getPeriodoPagoTextAttribute(){
-        switch($this->periodo_pago){
-            case 1: return "Mensual";
-            case 2: return "Bimestral";
-            case 3: return "Trimestral";
-            case 6: return "Semestral";
-            default: return "Inválido";
-        }
     }
 
     // static function find($id){
@@ -128,23 +107,8 @@ class Venta extends Model
         return $this->belongsTo(Proyecto::class);
     }
 
-    function cuotas(){
-        return $this->hasMany(Cuota::class);
-    }
-
-    function cuotasVencidas(){
-        return $this->cuotas()->where("saldo", ">", "0")->whereDate("vencimiento", "<", Carbon::now()->toDateString());
-    }
-
-    function getTotalCreditoAttribute(){
-        //TODO: Aplicar un mecanismo equivalente a useMemo en React
-        return $this->cuotas->reduce(function($total, $cuota){
-            return $total->plus($cuota->importe);
-        }, new Money("0", $this->currency))->plus($this->cuota_inicial);
-    }
-
-    function getTotalInteresesAttribute(){
-        return $this->total_credito->minus($this->importe);
+    function credito(){
+        return $this->morphOne(Credito::class, "creditable")->latestOfMany();
     }
 
     function currency(){
@@ -152,75 +116,11 @@ class Venta extends Model
     }
 
     function getReferencia(){
-        return $this->tipo == 1 ? "Venta N.º {$this->id}" : "Cuota inicial de la venta N.º {$this->id}";
+        return "Venta N.º {$this->id}";
     }
 
     function getCurrency(){
         return $this->currency;
-    }
-
-    // /**
-    //  * Calcula el factor de recuperacion del capital
-    //  *
-    //  * @param Carbon $fecha
-    //  * @param ?Carbon $fechaPrimerCuota
-    //  */
-    // static function getFRC(
-    //     $fecha,
-    //     $tasaInteres,
-    //     $numeroCuotas,
-    //     $periodoPago,
-    //     $diaPago=null
-    // ) {
-    //     $fechaPrimerCuota = $diaPago ? Carbon::createFromDate($fecha->year, 1, $diaPago)->startOfDay() : null;
-    //     $tasaInteres = BigDecimal::of($tasaInteres);
-    //     if(!$fechaPrimerCuota){
-    //         $tasaInteres = $tasaInteres->multipliedBy($periodoPago)->dividedBy(12, 10, RoundingMode::HALF_UP);
-    //         return $tasaInteres->dividedBy(BigDecimal::one()->minus(BigDecimal::one()->dividedBy(BigDecimal::one()->plus($tasaInteres)->power($numeroCuotas), 10, RoundingMode::HALF_UP)), 10, RoundingMode::HALF_UP);
-    //     }
-    //     $offset = ($fecha->daysInMonth - $fecha->day + $diaPago) < 21 ? $fecha->month : $fecha->month - 1;
-    //     $fas = [];
-    //     $current = $fecha;
-    //     for($k = 0; $k < $numeroCuotas; $k++){
-    //         // if($fechaPrimerCuota){
-    //             $next = $fechaPrimerCuota->copy()->addMonthsNoOverflow($periodoPago*($k+1)+$offset);
-    //             $daysDiff = $next->diffInDays($current);
-    //             $fas[] = $tasaInteres->multipliedBy($daysDiff)->dividedBy(360, 10, RoundingMode::HALF_UP)->plus(1);
-    //             $current = $next->copy();
-    //         // }
-    //         // else {
-    //         //     $fas[] = $tasaInteres->multipliedBy($periodoPago)->dividedBy(12, 10, RoundingMode::HALF_UP)->plus(1);
-    //         // }
-    //     }
-
-    //     $numerator = BigDecimal::one();
-    //     $denominator = BigDecimal::zero();
-    //     for($i = $numeroCuotas-1; $i >=0; $i--){
-    //         $denominator = $denominator->plus($numerator);
-    //         $numerator = $numerator->multipliedBy($fas[$i]);
-    //     }
-    //     return $numerator->dividedBy($denominator, 10, RoundingMode::HALF_UP);
-    // }
-
-    function crearPlanPago(){
-        $builder = new PlanPagosBuilder(
-            $this->fecha,
-            $this->importe->minus($this->cuota_inicial)->amount,
-            BigDecimal::of($this->tasa_interes),
-            $this->plazo,
-            $this->periodo_pago,
-            $this->dia_pago
-        );
-        $cuotas = $builder->build();
-        foreach($cuotas as $cuota){
-            $this->cuotas()->create([
-                "numero"=>$cuota["numero"],
-                "vencimiento" => $cuota["vencimiento"],
-                "importe" => (string) $cuota["pago"],
-                "saldo" => (string) $cuota["pago"],
-                "saldo_capital" => (string) $cuota["saldo"]
-            ]);
-        }
     }
 
     /**

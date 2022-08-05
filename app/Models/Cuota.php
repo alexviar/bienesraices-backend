@@ -7,11 +7,15 @@ use App\Models\Traits\SaveToUpper;
 use App\Models\ValueObjects\Money;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
-use Carbon\Carbon;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon $vencimiento;
+ * @method static Cuota find($id)
+ */
 class Cuota extends Model
 {
     use HasFactory, SaveToUpper;
@@ -30,19 +34,63 @@ class Cuota extends Model
     ];
 
     protected $hidden = [
-        "venta"
+        "credito"
     ];
 
     protected $casts = [
         "vencimiento" => "date:Y-m-d"
     ];
+    
+    /** @var Carbon $fechaDeConsulta */
+    public $fechaDeConsulta;
+   
+    /**
+     * @param Carbon
+     */
+    function setFechaDeConsulta($fecha){
+        $this->fechaDeConsulta = $fecha;
+    }
+
+    function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->fechaDeConsulta = Carbon::today();
+    }
+
+    function getIsVencidaAttribute(){
+        return $this->vencimiento->isBefore(Carbon::today());
+    }
+
+    function getIsPendienteAttribute(){
+        return !$this->anterior || $this->anterior->isVencida;
+    }
 
     function getImporteAttribute($value){
-        return new Money($value, Currency::find($this->venta->moneda));
+        return new Money($value, $this->getCurrency());
     }
 
     function getSaldoAttribute($value){
-        return new Money($value, Currency::find($this->venta->moneda));
+        return new Money($value, $this->getCurrency());
+    }
+
+    function getTotalMultasAttribute($value){
+        return new Money($value, $this->getCurrency());
+    }
+
+    function getTotalPagosAttribute($value){
+        return new Money($value, $this->getCurrency());
+    }
+
+    function getInteresAttribute(){
+        return $this->importe->minus($this->amortizacion);
+    }
+
+    function getAmortizacionAttribute(){
+        $saldoAnterior = $this->anterior ?
+            $this->anterior->saldo_capital :
+            $this->credito->importe;
+        $amortizacion = $saldoAnterior->minus($this->saldo_capital);
+        return $amortizacion;
     }
 
     function getMultaAttribute(){
@@ -51,35 +99,55 @@ class Cuota extends Model
     }
 
     function getTotalAttribute(){
-        return new Money($this->calcularPago(Carbon::now())->toScale(2, RoundingMode::HALF_UP), $this->getCurrency());
+        return new Money($this->calcularPago($this->fechaDeConsulta)->toScale(2, RoundingMode::HALF_UP), $this->getCurrency());
     }
 
     function getSaldoCapitalAttribute($value){
-        return new Money($value, Currency::find($this->venta->moneda));
+        return new Money($value, $this->getCurrency());
     }
 
-    function venta(){
-        return $this->belongsTo(Venta::class);
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
+     */
+    function transacciones(){
+        return $this->morphToMany(DetalleTransaccion::class, "transactable");
+    }
+
+    function credito(){
+        return $this->belongsTo(Credito::class);
     }
 
     function getAnteriorCuotaAttribute(){
-        return $this->venta->cuotas->where("numero", $this->numero - 1)->first();
+        return $this->credito->cuotas->where("numero", $this->numero - 1)->first();
+    }    
+
+    function getAnteriorAttribute(){
+        return $this->credito->cuotas->where("numero", $this->numero - 1)->first();
     }
 
     function getCurrency(){
-        return $this->venta->currency;
+        return $this->credito->getCurrency();
+    }
+
+    function getReferenciaAttribute(){
+        return $this->getReferencia();
     }
 
     function getReferencia(){
-        return "Pago de la cuota {$this->numero} del crédito {$this->venta->id}";
+        return "Pago de la cuota {$this->numero} del crédito {$this->credito->id}";
     }
 
     /**
      * @param string|BigDecimal $pago
      * @param Carbon $fechaPago
      */
-    function recalcularSaldo($pago, $fechaPago){
-        $this->saldo = $this->calcularSaldo($this->saldo->amount, $pago, $this->vencimiento, $fechaPago);
+    function recalcular($pago, $fechaPago){
+        $saldo = $this->attributes["saldo"];
+        $nuevoSaldo = $this->calcularSaldo($saldo, $pago, $this->vencimiento, $fechaPago)->toScale(2, RoundingMode::HALF_UP);
+        $multa = $nuevoSaldo->plus($pago)->minus($saldo);
+        $this->saldo = $nuevoSaldo;
+        $this->total_multas = $multa->plus($this->attributes["total_multas"]);
+        $this->total_pagos = BigDecimal::of($pago)->plus($this->attributes["total_pagos"]);
     }
 
     function calcularSaldo($deuda, $pago, $fechaVencimiento, $fechaPago){
@@ -94,7 +162,7 @@ class Cuota extends Model
         // $fas = BigDecimal::one()->plus(
         //     BigDecimal::of($this->venta->tasaMora)->dividedBy(360, 20, RoundingMode::HALF_UP)
         // )->power($ufvPago->fecha->diffInDays($ufvVencimiento));
-        $fas = BigDecimal::of($this->venta->tasa_mora)
+        $fas = BigDecimal::of($this->credito->tasa_mora)
         ->multipliedBy($fechaPago->diffInDays($fechaVencimiento))
         ->dividedBy(360, 20, RoundingMode::HALF_UP)
         ->plus(BigDecimal::one());
@@ -122,7 +190,7 @@ class Cuota extends Model
         //     BigDecimal::of($this->venta->tasaMora)->dividedBy(360, 20, RoundingMode::HALF_UP)
         // )->power($ufvPago->fecha->diffInDays($ufvVencimiento));
         // return $deudaActualizada->multipliedBy($factor);
-        $fas = BigDecimal::of($this->venta->tasa_mora)
+        $fas = BigDecimal::of($this->credito->tasa_mora)
             ->multipliedBy($fechaVencimiento->diffInDays($fechaPago))
             ->dividedBy(360, 20, RoundingMode::HALF_UP)
             ->plus(BigDecimal::one())
@@ -142,7 +210,7 @@ class Cuota extends Model
             "type" => self::class,
             "referencia" => $this->getReferencia(),
             "importe" => (string) $pago->toScale(2, RoundingMode::HALF_UP),
-            "moneda" => $this->venta->moneda,
+            "moneda" => $this->getCurrency()->code,
 
             "saldo" => $this->saldo->amount,
             "multa" => (string) $pago->minus($this->saldo->amount)->toScale(2, RoundingMode::HALF_UP)

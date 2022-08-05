@@ -1,15 +1,20 @@
 <?php
 
+use App\Models\Credito;
 use App\Models\Lote;
 use App\Models\Proyecto;
 use App\Models\Reserva;
+use App\Models\Transaccion;
 use App\Models\User;
 use App\Models\Venta;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
+
+require(__DIR__."/assertTransaccion.php");
 
 function read_csv($filename){
     $file = fopen($filename, "r");
@@ -44,7 +49,7 @@ test('La fecha no puede estar en el futuro', function(){
     ]);
 });
 
-it('Registra una venta al credito y otra al contado', function () {
+it('Registra una venta al contado', function () {
     /** @var TestCase $this */
 
     //Venta al contado
@@ -53,300 +58,137 @@ it('Registra una venta al credito y otra al contado', function () {
         "importe" => "10530.96",
     ])->contado()->withReserva(false)->raw();
 
-    $proyectoId = $data["proyecto_id"];
-
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+    $data += [
         "pago" => [
             "moneda" => "USD",
             "monto" => "10530.96",
             "numero_transaccion" => "12423325848",
             "comprobante" => UploadedFile::fake()->image("comprobante.png")
         ]
-    ]);
+    ];
+
+    $proyectoId = $data["proyecto_id"];
+
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
 
     $response->assertCreated();
     $id = $response->json("id");
 
-    // Venta::find($id);
+    $venta = Venta::find($id);
 
-    $this->assertDatabaseHas("ventas", ["estado"=>1] + $data);
-    $this->assertDatabaseMissing("cuotas", [
-        "venta_id" => $id
-    ]);
-    //Idealmente se debería testear si el evento de registro de venta es disparado
-    $this->assertDatabaseHas("transacciones", [
-        "fecha" => $data["fecha"],
-        "forma_pago" => 2,
-        "moneda" => $data["moneda"],
-        "importe" => $data["importe"],
-    ]);
-    $this->assertDatabaseHas("detalles_transaccion", [
-        "transactable_id" => $id,
-        "transactable_type" => Venta::class,
-        "moneda" => $data["moneda"],
-        "importe" => $data["importe"],
-    ]);
+    $this->assertSame(1, $venta->estado);
+    $this->assertSame(1, $venta->tipo);
+    $keys = [
+        "fecha",
+        "moneda",
+        "importe",
+        "proyecto_id",
+        "lote_id",
+        "cliente_id",
+        "vendedor_id",
+    ];
+    $this->assertEquals(Arr::only($data, $keys), Arr::only($venta->getAttributes(), $keys));
 
-    //Venta al credito
+    assertTransaccionPorVentaAlContado($data, $venta, "10530.96");
+});
+
+it("Registra una venta al crédito", function(){
     $data = Venta::factory([
         "fecha" => "2022-02-28",
         "moneda" => "USD",
         "importe" => "10530.96",
+    ])->credito()->withReserva(false)->raw();
+    $dataCredito = Credito::factory([
         "plazo" => 48,
         "periodo_pago" => 1,
         "dia_pago" => 1,
-        "cuota_inicial" => "500",
-        "tasa_interes" => "0.1000"
-    ])->credito()->withReserva(false)->raw();
-
-    $proyectoId = $data["proyecto_id"];
-
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+    ])->raw();
+    $data += [
+        "credito" => $dataCredito
+    ] + [
         "pago" => [
             "moneda" => "USD",
             "monto" => "500",
             "numero_transaccion" => "1242325848",
             "comprobante" => UploadedFile::fake()->image("comprobante.png")
         ]
-    ]);
+    ];
+
+    $proyectoId = $data["proyecto_id"];
+
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
 
     $response->assertCreated();
     $id = $response->json("id");
 
-    $this->assertDatabaseHas("ventas", ["estado"=>1] + $data);
-    /** @var FilesystemAdapter $disk */
-    $disk = Storage::disk("tests");
-    foreach(read_csv($disk->path("Feature/Venta/csv/plan_pagos_1.csv")) as $row){
-        $this->assertDatabaseHas("cuotas", ["vencimiento" => $row[1], "venta_id" => $id, "numero" => $row[0], "importe" => $row[3], "saldo" => $row[3], "saldo_capital" => $row[6]]);
-    }
+    $venta = Venta::find($id);
 
-    //Idealmente se debería testear si el evento de registro de venta es disparado
-    $this->assertDatabaseHas("transacciones", [
-        "fecha" => $data["fecha"],
-        "forma_pago" => 2,
-        "moneda" => $data["moneda"],
-        "importe" => $data["cuota_inicial"],
-    ]);
+    $this->assertSame(1, $venta->estado);
+    $this->assertSame(2, $venta->tipo);
+    $keys = [
+        "fecha",
+        "moneda",
+        "importe",
+        "proyecto_id",
+        "lote_id",
+        "cliente_id",
+        "vendedor_id",
+    ];
+    $this->assertEquals(Arr::only($data, $keys), Arr::only($venta->getAttributes(), $keys));
+    expect($venta->credito->getAttributes())->toMatchArray(Arr::except($dataCredito, ["creditable_id", "creditable_type"]));
 
-
-    $this->assertDatabaseHas("detalles_transaccion", [
-        "transactable_id" => $id,
-        "transactable_type" => Venta::class,
-        "moneda" => $data["moneda"],
-        "importe" => $data["cuota_inicial"]
-    ]);
+    assertTransaccionPorVentaAlCredito($data, $venta->credito, "500");
 });
 
 test("Pagos programados el 31 de cada mes", function(){
-    
-    //Venta al credito
     $data = Venta::factory([
         "fecha" => "2022-02-28",
         "moneda" => "USD",
         "importe" => "10530.96",
+    ])->credito()->withReserva(false)->raw();
+    $dataCredito = Credito::factory([
         "plazo" => 48,
         "periodo_pago" => 1,
         "dia_pago" => 31,
-        "cuota_inicial" => "500",
-        "tasa_interes" => "0.1000"
-    ])->credito()->withReserva(false)->raw();
-
-    $proyectoId = $data["proyecto_id"];
-
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
+    ])->raw();
+    $data += [
+        "credito" => $dataCredito
+    ] + [
         "pago" => [
             "moneda" => "USD",
             "monto" => "500",
             "numero_transaccion" => "1242325848",
             "comprobante" => UploadedFile::fake()->image("comprobante.png")
         ]
-    ]);
+    ];
+
+    $proyectoId = $data["proyecto_id"];
+
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
 
     $response->assertCreated();
     $id = $response->json("id");
 
-    $this->assertDatabaseHas("ventas", ["estado"=>1] + $data);
+    $venta = Venta::find($id);
+
+    $this->assertSame(1, $venta->estado);
+    $this->assertSame(2, $venta->tipo);
+    $keys = [
+        "fecha",
+        "moneda",
+        "importe",
+        "proyecto_id",
+        "lote_id",
+        "cliente_id",
+        "vendedor_id",
+    ];
+    $this->assertEquals(Arr::only($data, $keys), Arr::only($venta->getAttributes(), $keys));
     
     /** @var FilesystemAdapter $disk */
     $disk = Storage::disk("tests");
     foreach(read_csv($disk->path("Feature/Venta/csv/plan_pagos_4.csv")) as $row){
-        $this->assertDatabaseHas("cuotas", ["vencimiento" => $row[1], "venta_id" => $id, "numero" => $row[0], "importe" => $row[3], "saldo" => $row[3], "saldo_capital" => $row[6]]);
+        $this->assertDatabaseHas("cuotas", ["vencimiento" => $row[1], "credito_id" => $venta->credito->id, "numero" => $row[0], "importe" => $row[3], "saldo" => $row[3], "saldo_capital" => $row[6]]);
     }
-});
-
-it('Registra una venta al credito y otra al contado, pero con una reserva previa', function () {
-    /** @var TestCase $this */
-
-    //Venta al contado
-    $data = Venta::factory([
-        "moneda" => "USD",
-        "importe" => "10530.96",
-    ])->contado()->for(Reserva::factory([
-        "moneda" => "USD",
-        "importe" => "100"
-    ]))->raw();
-
-    $proyectoId = $data["proyecto_id"];
-
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
-        "pago" => [
-            "moneda" => "USD",
-            "monto" => "10430.96",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ]);
-
-    $response->assertCreated();
-    $id = $response->json("id");
-
-    $venta = Venta::find($id);
-
-    $this->assertDatabaseHas("transacciones", [
-        "fecha" => $venta->fecha,
-        "forma_pago" => 2,
-        "moneda" => $venta->moneda,
-        "importe" => "10430.96"
-    ]);
-    $this->assertDatabaseHas("detalles_transaccion", [
-        "transactable_id" => $id,
-        "transactable_type" => Venta::class,
-        "moneda" => $venta->moneda,
-        "importe" => "10430.96"
-    ]);
-
-    // Venta al credito
-    $data = Venta::factory([
-        "fecha" => "2020/09/15",
-        "moneda" => "USD",
-        "importe" => "10530.96",
-        "plazo" => 48,
-        "periodo_pago" => 1,
-        "cuota_inicial" => "500",
-        "tasa_interes" => "0.1000"
-    ])->credito()->for(Reserva::factory([
-        "moneda" => "USD",
-        "importe" => "100"
-    ]))->raw();
-
-    $proyectoId = $data["proyecto_id"];
-
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
-        "pago" => [
-            "moneda" => "USD",
-            "monto" => "400",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ]);
-
-    $response->assertCreated();
-    $id = $response->json("id");
-
-    $venta = Venta::find($id);
-
-    // Idealmente se debería testear si el evento de registro de venta es disparado
-    $this->assertDatabaseHas("transacciones", [
-        "fecha" => $data["fecha"],
-        "forma_pago" => 2,
-        "moneda" => $venta->moneda,
-        "importe" => "400",
-    ]);
-
-
-    $this->assertDatabaseHas("detalles_transaccion", [
-        "transactable_id" => $id,
-        "transactable_type" => Venta::class,
-        "moneda" => $venta->moneda,
-        "importe" => "400",
-    ]);
-});
-
-test('Reserva y venta con diferentes monedas.', function (){
-    /** @var TestCase $this */
-
-        //Venta al contado
-        $data = Venta::factory([
-            "moneda" => "USD",
-            "importe" => "10530.96",
-        ])->contado()->for(Reserva::factory([
-            "moneda" => "BOB",
-            "importe" => "696"
-        ]))->raw();
-    
-        $proyectoId = $data["proyecto_id"];
-    
-        $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
-            "pago" => [
-                "moneda" => "USD",
-                "monto" => "10430.96",
-                "numero_transaccion" => "1242325848",
-                "comprobante" => UploadedFile::fake()->image("comprobante.png")
-            ]
-        ]);
-    
-        $response->assertCreated();
-        $id = $response->json("id");
-    
-        $venta = Venta::find($id);
-    
-        $this->assertDatabaseHas("transacciones", [
-            "fecha" => $venta->fecha,
-            "forma_pago" => 2,
-            "moneda" => $venta->moneda,
-            "importe" => "10430.96"//(string) $venta->importe->minus("14.51")->amount,
-        ]);
-        $this->assertDatabaseHas("detalles_transaccion", [
-            "transactable_id" => $id,
-            "transactable_type" => Venta::class,
-            "moneda" => $venta->moneda,
-            "importe" => "10430.96"//(string) $venta->importe->minus("14.51")->amount,
-        ]);
-    
-        // Venta al credito
-        $data = Venta::factory([
-            "fecha" => "2020/09/15",
-            "moneda" => "USD",
-            "importe" => "10530.96",
-            "plazo" => 48,
-            "periodo_pago" => 1,
-            "cuota_inicial" => "500",
-            "tasa_interes" => "0.1000"
-        ])->credito()->for(Reserva::factory([
-            "moneda" => "BOB",
-            "importe" => "696"
-        ]))->raw();
-    
-        $proyectoId = $data["proyecto_id"];
-    
-        $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
-            "pago" => [
-                "moneda" => "USD",
-                "monto" => "400",
-                "numero_transaccion" => "1242325848",
-                "comprobante" => UploadedFile::fake()->image("comprobante.png")
-            ]
-        ]);
-    
-        $response->assertCreated();
-        $id = $response->json("id");
-    
-        $venta = Venta::find($id);
-    
-        // Idealmente se debería testear si el evento de registro de venta es disparado
-        $this->assertDatabaseHas("transacciones", [
-            "fecha" => $data["fecha"],
-            "forma_pago" => 2,
-            "moneda" => $venta->moneda,
-            "importe" => "400"//(string) $venta->cuota_inicial->minus("14.51")->amount,
-        ]);
-    
-        $this->assertDatabaseHas("detalles_transaccion", [
-            "transactable_id" => $id,
-            "transactable_type" => Venta::class,
-            "moneda" => $venta->moneda,
-            "importe" => "400"//(string) $venta->cuota_inicial->minus("14.51")->amount,
-        ]);
 });
 
 test("Un lote que ha sido reservado por un cliente no puede ser vendido a otro, a menos que la reserva haya expirado", function (){

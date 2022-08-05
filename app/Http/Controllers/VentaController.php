@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Reports\Venta\HistorialPagos;
+use App\Models\Credito;
 use App\Models\Currency;
 use App\Models\DetalleTransaccion;
 use App\Models\Lote;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class VentaController extends Controller
 {
@@ -64,18 +66,42 @@ class VentaController extends Controller
 
     function store(Request $request, $proyectoId){
 
+        $montoAPagar = null;
+        try{
+            $reserva = Reserva::find($request->get("reserva_id"));
+            $monedaPago = Currency::find($request->input("pago.moneda"));
+            $monedaVenta = Currency::find($request->input("moneda"));
+            $importeVenta = new Money(
+                BigDecimal::of($request->get("tipo") == 2 ? 
+                    $request->input("credito.cuota_inicial") : 
+                    $request->get("importe")
+                )->toScale(2, RoundingMode::HALF_UP),
+                $monedaVenta
+            );
+            $importeReserva = $reserva ? $reserva->importe : new Money("0", $importeVenta->currency);
+
+            if($importeVenta->currency->code !== $importeReserva->currency->code){
+                $importeVenta = $importeVenta->exchangeTo($monedaPago)->round(2);
+                $importeReserva = $importeReserva->exchangeTo($monedaPago, [
+                    "exchangeMode" => Money::BUY
+                ])->round(2);
+            }
+            $montoAPagar = $importeVenta->minus($importeReserva)->exchangeTo($monedaPago)->round(2);
+        }catch(Throwable $e){ }        
+
         $payload = $request->validate([
             "tipo" => "required|in:1,2",
             "fecha" => "required|date|before_or_equal:".now()->format("Y-m-d"),
-            "moneda" => "required|exists:currencies,code",
-            "lote_id" => ["required_without:reserva_id", function ($attribute, $value, $fail) use($request, $proyectoId){
-                $reserva = Reserva::find($request["reserva_id"]);
+            "moneda" => ["required", function($attribute, $value, $fail) use($monedaVenta){
+                if(!$monedaVenta) $fail("Moneda invalida.");
+            }],
+            "lote_id" => ["required_without:reserva_id", function ($attribute, $value, $fail) use($request, $reserva, $proyectoId){
                 $lote = $reserva ? $reserva->lote : Lote::find($value);
                 if(!$lote || $lote->proyecto->id != $proyectoId){
                     $fail('Lote inválido.');
                 }
                 else if($lote->estado["code"] !== 1){
-                    $cliente_id = $request->input("reserva_id") ? Reserva::find($request->input("reserva_id"))->cliente_id : $request->input("cliente_id");
+                    $cliente_id = $reserva ? $reserva->cliente_id : $request->input("cliente_id");
                     if($lote->estado["code"] === 3){
                         if($lote->reserva->cliente_id != $cliente_id){
                             $fail("El lote ha sido reservado por otro cliente.");
@@ -89,8 +115,7 @@ class VentaController extends Controller
             "importe" => "required|numeric",
             "cliente_id" => "required_without:reserva_id|nullable|exists:clientes,id",
             "vendedor_id" => "required_without:reserva_id|nullable||exists:vendedores,id",
-            "reserva_id" => ["nullable", function ($attribute, $value, $fail){
-                $reserva = Reserva::find($value);
+            "reserva_id" => ["nullable", function ($attribute, $value, $fail) use($reserva){
                 if(!$reserva){
                     $fail("Reserva invalida.");
                 }
@@ -101,33 +126,18 @@ class VentaController extends Controller
                 //para dejar al criterio del operador si efectua o no la venta en casos excepcionales
             }],
 
-            "cuota_inicial" => "required_if:tipo,2|numeric",
-            "tasa_interes" => "required_if:tipo,2|numeric",
-            "plazo" => "required_if:tipo,2|numeric|integer",
-            "periodo_pago" => "required_if:tipo,2|in:1,2,3,4,6",
-            "dia_pago" => "required_if:tipo,2|in:1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31",
+            "credito" => "required_if:tipo,2",
+            "credito.cuota_inicial" => "required_with:credito|numeric",
+            "credito.tasa_interes" => "required_with:credito|numeric",
+            "credito.plazo" => "required_with:credito|numeric|integer",
+            "credito.periodo_pago" => "required_with:credito|in:1,2,3,4,6",
+            "credito.dia_pago" => "required_with:credito|min:1|max:31",
 
-            "pago.moneda" => "required|exists:currencies,code",
-            "pago.monto" => ["required", "numeric", function ($attribute, $value, $fail) use($request){
-                $reserva = Reserva::find($request->get("reserva_id"));
-                $monedaPago = Currency::find($request->input("pago.moneda"));
-                $pago = BigDecimal::of($value)->toScale(2, RoundingMode::HALF_UP);
-                $monedaVenta = Currency::find($request->input("moneda"));
-                $importeVenta = new Money(
-                    BigDecimal::of($request->get("tipo") == 2 ? $request->get("cuota_inicial") : BigDecimal::of($request->get("importe")))->toScale(2, RoundingMode::HALF_UP),
-                    $monedaVenta
-                );
-                $importeReserva = $reserva ? $reserva->importe : new Money("0", $importeVenta->currency);
-
-                if($importeVenta->currency->code !== $importeReserva->currency->code){
-                    $importeVenta = $importeVenta->exchangeTo($monedaPago)->round(2);
-                    $importeReserva = $importeReserva->exchangeTo($monedaPago, [
-                        "exchangeMode" => Money::BUY
-                    ])->round(2);
-                }
-                $montoAPagar = $importeVenta->minus($importeReserva)->exchangeTo($monedaPago)->round(2)->amount;
-                if($pago->isLessThan($montoAPagar)){
-
+            "pago.moneda" => ["required", function($attribute, $value, $fail) use($monedaPago){
+                if(!$monedaPago) $fail("Moneda de pago invalida.");
+            }],
+            "pago.monto" => ["required", "numeric", function ($attribute, $value, $fail) use($montoAPagar){
+                if($montoAPagar && $montoAPagar->amount->isGreaterThan($value)){
                     // $fail("El pago ({$pago->toScale(2)} {$monedaPago->code}) es menor al monto a pagar ({$montoAPagar->toScale(2)} {$monedaPago->code}).");
                     $fail("El pago es menor al monto a pagar.");
                 }
@@ -153,7 +163,11 @@ class VentaController extends Controller
                 "tasa_mora" => $proyecto->tasa_mora
             ]+$payload);
 
-            if($record->tipo == 2) $record->crearPlanPago();
+            if($record->tipo == 2) {
+                /** @var Credito $credito */
+                $credito = $record->credito()->create($payload["credito"]);
+                $credito->build();
+            }
 
             //Aqui idealmente deberiamos despachar un evento para desencadenar otras acciones
             //pero por ahora esas acciones vamos a realizarlas aqui directamente
@@ -167,20 +181,25 @@ class VentaController extends Controller
                 "comprobante" => Arr::get($payload, "pago.comprobante")->store("comprobantes"),
                 "forma_pago" => 2,
             ]);
+            
+            $importeReserva = $reserva ? $reserva->importe->exchangeTo($record->getCurrency(), [
+                "exchangeMode" => Money::BUY
+            ])->round() : "0";
             $detailModel = new DetalleTransaccion();
-            $detailModel->referencia = $record->getReferencia();
             $detailModel->moneda = $record->getCurrency()->code;
-            $detailModel->importe = (new Money(
-                ($record->tipo == 1 ? 
-                    $record->importe :
-                    $record->cuota_inicial
-                )->minus($reserva ? 
-                    $reserva->importe->exchangeTo($record->getCurrency(), ["exchangeMode"=>Money::BUY]) :
-                    "0"
-                )->amount, $record->getCurrency()))->amount->toScale(2, RoundingMode::HALF_UP);
-            $detailModel->transactable()->associate($record);
-
-            $transaccion->detalles()->save($detailModel);
+            if($record->tipo == 1){
+                $detailModel->referencia = $record->getReferencia();
+                $detailModel->importe = $record->importe->minus($importeReserva)->amount;
+                $transaccion->detalles()->save($detailModel);
+                $detailModel->ventas()->save($record);
+            }
+            else {
+                $credito = $record->credito;
+                $detailModel->referencia = $credito->getReferencia();
+                $detailModel->importe = $credito->cuota_inicial->minus($importeReserva)->amount;
+                $transaccion->detalles()->save($detailModel);
+                $detailModel->creditos()->save($credito);
+            }
 
             //Actualizar el estado de la reserva, si existe
             if($reserva){

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Cliente;
+use App\Models\Credito;
 use App\Models\Cuota;
 use App\Models\User;
 use App\Models\Venta;
@@ -13,21 +14,21 @@ it('Responde con la lista de mora', function () {
     $this->travelTo(Carbon::createFromFormat("Y-m-d", "2020-09-01"));
 
     $cliente = Cliente::factory()->create();
-    $credito = Venta::factory([
+    $credito = Credito::factory([
+        "cuota_inicial" => "500",
+        "plazo" => 48,
+        "periodo_pago" => 1
+    ])->for(Venta::factory([
         "fecha" => "2020-04-20",
         "moneda" => "BOB",
         "importe" => "10530.96",
-        "cuota_inicial" => "500",
-        "plazo" => 48,
-        "periodo_pago" => 1,
-        "tasa_interes" => "0.1",
         "estado"=>1
-    ])->for($cliente)->credito()->create();
-    $credito->crearPlanPago();
-    Cuota::where("venta_id", $credito->id)->whereIn("numero", [1,2])->update([
+    ])->for($cliente)->credito(), "creditable")->create();
+    $credito->build();
+    Cuota::where("credito_id", $credito->id)->whereIn("numero", [1,2])->update([
         "saldo" => "0"
     ]);
-    Cuota::where("venta_id", $credito->id)->where("numero", 3)->update([
+    Cuota::where("credito_id", $credito->id)->where("numero", 3)->update([
         "saldo" => "155.11"
     ]);
 

@@ -25,7 +25,7 @@ class VentaFactory extends Factory
         $lote = Lote::find($loteId);
         $proyecto = $lote->manzana->proyecto;
 
-        $base = [
+        return [
             "tipo" => $tipo,
             "fecha" => $attributes["fecha"] ?? $this->faker->date(),
             "moneda" => $attributes["moneda"] ?? $proyecto->moneda,
@@ -36,19 +36,6 @@ class VentaFactory extends Factory
             "vendedor_id" => $reserva->vendedor ?? $attributes["vendedor_id"] ?? Vendedor::factory(),
             "proyecto_id" => $proyecto,
             "reserva_id" => $reserva->id ?? null
-        ];
-        if($tipo === 1) return $base;
-
-        $periodoPago = $attributes["periodo_pago"] ?? $this->faker->randomElement([1,2,3,4,6]);
-        $plazo = $attributes["plazo"] ?? $this->faker->randomElement([12, 24, 36, 48]);
-        return $base + [
-            "cuota_inicial" => $attributes["cuota_inicial"] ?? $proyecto->cuota_inicial,
-            "tasa_interes" => $attributes["tasa_interes"] ?? $proyecto->tasa_interes,
-            "tasa_mora" => "0.03",
-            // "plazo" => $attributes["plazo"] ?? ($this->faker->numberBetween(2,10)*$periodoPago),
-            "plazo" => $plazo,
-            "periodo_pago" => $periodoPago,
-            "dia_pago" => $attributes["dia_pago"] ?? $this->faker->numberBetween(1, 31)
         ];
     }
 
