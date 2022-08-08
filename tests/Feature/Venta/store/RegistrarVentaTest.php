@@ -138,6 +138,12 @@ it("Registra una venta al crédito", function(){
     expect($venta->credito->getAttributes())->toMatchArray(Arr::except($dataCredito, ["creditable_id", "creditable_type"]));
 
     assertTransaccionPorVentaAlCredito($data, $venta->credito, "500");
+    
+    /** @var FilesystemAdapter $disk */
+    $disk = Storage::disk("tests");
+    foreach(read_csv($disk->path("Feature/Venta/csv/plan_pagos_1.csv")) as $row){
+        $this->assertDatabaseHas("cuotas", ["vencimiento" => $row[1], "credito_id" => $venta->credito->id, "numero" => $row[0], "importe" => $row[3], "saldo" => $row[3], "saldo_capital" => $row[6]]);
+    }
 });
 
 test("Pagos programados el 31 de cada mes", function(){

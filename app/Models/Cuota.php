@@ -6,6 +6,7 @@ use App\Models\Interfaces\UfvRepositoryInterface;
 use App\Models\Traits\SaveToUpper;
 use App\Models\ValueObjects\Money;
 use Brick\Math\BigDecimal;
+use Brick\Math\BigRational;
 use Brick\Math\RoundingMode;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,7 +14,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
 /**
- * @property Carbon $vencimiento;
+ * 
+ * @property Carbon $vencimiento
+ * @property Money $saldo_capital
+ * @property Cuota $anterior
+ * @property Cuota $siguiente
  * @method static Cuota find($id)
  */
 class Cuota extends Model
@@ -24,6 +29,7 @@ class Cuota extends Model
         "numero",
         "vencimiento",
         "importe",
+        "pago_extra",
         "saldo",
         "saldo_capital"
     ];
@@ -69,6 +75,10 @@ class Cuota extends Model
         return new Money($value, $this->getCurrency());
     }
 
+    function getPagoExtraAttribute($value){
+        return new Money($value, $this->getCurrency());
+    }
+
     function getSaldoAttribute($value){
         return new Money($value, $this->getCurrency());
     }
@@ -81,14 +91,22 @@ class Cuota extends Model
         return new Money($value, $this->getCurrency());
     }
 
+    function getDiasAttribute(){
+        return $this->vencimiento->diffInDays($this->anterior ? $this->anterior->vencimiento : $this->credito->fecha);
+    }
+
     function getInteresAttribute(){
-        return $this->importe->minus($this->amortizacion);
+        return $this->importe->plus($this->pago_extra)->minus($this->amortizacion);
+        // $saldoAnterior = $this->anterior ?
+        //     $this->anterior->saldo_capital :
+        //     $this->credito->importe->minus($this->credito->cuota_inicial);
+        // return $saldoAnterior->multipliedBy($this->fas->minus("1")->toScale(20, RoundingMode::HALF_UP))->round();
     }
 
     function getAmortizacionAttribute(){
         $saldoAnterior = $this->anterior ?
             $this->anterior->saldo_capital :
-            $this->credito->importe;
+            $this->credito->importe->minus($this->credito->cuota_inicial);
         $amortizacion = $saldoAnterior->minus($this->saldo_capital);
         return $amortizacion;
     }
@@ -104,6 +122,39 @@ class Cuota extends Model
 
     function getSaldoCapitalAttribute($value){
         return new Money($value, $this->getCurrency());
+    }
+
+    function getFasAttribute(){
+        return BigRational::of($this->credito->tasa_interes)->multipliedBy($this->dias)->dividedBy("360")->plus("1");
+    }
+
+    function computeFrc(){
+        if($this->siguiente){
+            $frc = $this->siguiente->computeFrc();
+            return [
+                $frc[0]->multipliedBy($this->fas),
+                $frc[1]->plus($frc[0]),
+            ];
+        }
+        return [
+            BigRational::of($this->fas),
+            BigRational::one()
+        ];
+    }
+
+    function getFrcAttribute(){
+        [$numerador, $denominador] = $this->computeFrc();
+        return $numerador->dividedBy($denominador);
+    }
+
+    // function pagosExtras(){
+    //     return $this->hasMany(PagoExtra::class, "numero", "periodo")->where("credito_id", $this->credito_id);
+    // }
+
+    function getPagosExtrasAttribute(){
+        return $this->credito->pagosExtras->where("periodo", $this->numero)->sortBy(function($pe){
+            return $pe->id;
+        });
     }
 
     /**
@@ -123,6 +174,10 @@ class Cuota extends Model
 
     function getAnteriorAttribute(){
         return $this->credito->cuotas->where("numero", $this->numero - 1)->first();
+    }  
+
+    function getSiguienteAttribute(){
+        return $this->credito->cuotas->where("numero", $this->numero + 1)->first();
     }
 
     function getCurrency(){

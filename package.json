@@ -4,6 +4,7 @@
         "start": "php artisan serve --host=api.example.com --port=80",
         "pretest": "cls",
         "test": "php artisan test",
+        "zip": "git archive -o backend.zip HEAD",
         "dev": "npm run development",
         "development": "mix",
         "watch": "mix watch",

@@ -33,6 +33,9 @@ class Credito extends Model
         parent::__construct($attributes);
         $this->fechaDeConsulta = Carbon::today();
     }
+    function getFechaAttribute(){
+        return $this->creditable->fecha;
+    }
 
     function getImporteAttribute(){
         return $this->creditable->importe;
@@ -101,6 +104,10 @@ class Credito extends Model
      */
     function cuotas(){
         return $this->hasMany(Cuota::class)->oldest("numero");
+    }
+
+    function pagosExtras(){
+        return $this->hasMany(PagoExtra::class);
     }
     
     function build(){
