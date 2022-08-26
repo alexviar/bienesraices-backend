@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Reports\Venta\HistorialPagos;
+use App\Http\Reports\Venta\PlanPagosPdfReporter;
 use App\Models\Credito;
 use App\Models\Currency;
 use App\Models\DetalleTransaccion;
@@ -30,24 +31,8 @@ class VentaController extends Controller
     function index(Request $request, $proyectoId)
     {
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        $data = $this->buildResponse(Venta::with(["cliente", "vendedor", "lote.manzana"])->where("proyecto_id", $proyectoId), $queryArgs);
-        // $data["records"]->each->setVisible([
-        //     "id"
-        // ]);
+        $data = $this->buildResponse(Venta::with(["cliente", "vendedor", "lote.manzana", "credito"])->where("proyecto_id", $proyectoId), $queryArgs);
         return $data;
-    }
-
-    function print_plan_pagos(Request $request, $proyectoId, $ventaId){
-        $venta = Venta::where("proyecto_id", $proyectoId)->where("id", $ventaId)->first();
-        if(!$venta) throw new ModelNotFoundException();
-        $image = public_path("logo192.png");
-        $mime = getimagesize($image)["mime"];
-        $data = file_get_contents($image);
-        $dataUri = 'data:image/' . $mime . ';base64,' . base64_encode($data);
-        return \Barryvdh\DomPDF\Facade\Pdf::loadView("pdf.plan_pagos", [
-            "img" => $dataUri,
-            "venta" => $venta
-        ])->setPaper([0, 0, 72*8.5, 72*13])->stream();
     }
 
     /**
@@ -59,13 +44,7 @@ class VentaController extends Controller
         return $venta;
     }
 
-    function print_historial_pagos(Request $request, HistorialPagos $report, $proyectoId, $ventaId){
-        $venta = $this->findVenta($proyectoId, $ventaId);
-        return $report->generate($venta)->stream("historial_pagos.pdf");
-    }
-
-    function store(Request $request, $proyectoId){
-
+    function preprocesStoreRequest(Request $request){
         $montoAPagar = null;
         try{
             $reserva = Reserva::find($request->get("reserva_id"));
@@ -87,8 +66,12 @@ class VentaController extends Controller
                 ])->round(2);
             }
             $montoAPagar = $importeVenta->minus($importeReserva)->exchangeTo($monedaPago)->round(2);
-        }catch(Throwable $e){ }        
+        }catch(Throwable $e){ }
+        return [$montoAPagar, $monedaVenta, $monedaPago, $reserva];
+    }
 
+    function validateStoreRequest(Request $request, $proyectoId){        
+        [$montoAPagar, $monedaVenta, $monedaPago, $reserva] = $this->preprocesStoreRequest($request);
         $payload = $request->validate([
             "tipo" => "required|in:1,2",
             "fecha" => "required|date|before_or_equal:".now()->format("Y-m-d"),
@@ -128,7 +111,7 @@ class VentaController extends Controller
 
             "credito" => "required_if:tipo,2",
             "credito.cuota_inicial" => "required_with:credito|numeric",
-            "credito.tasa_interes" => "required_with:credito|numeric",
+            // "credito.tasa_interes" => "required_with:credito|numeric",
             "credito.plazo" => "required_with:credito|numeric|integer",
             "credito.periodo_pago" => "required_with:credito|in:1,2,3,4,6",
             "credito.dia_pago" => "required_with:credito|min:1|max:31",
@@ -147,25 +130,34 @@ class VentaController extends Controller
         ], [
             "fecha.before_or_equal" => "El campo ':attribute' no puede ser posterior a la fecha actual."
         ]);
- 
-        $reserva = isset($payload["reserva_id"]) ? Reserva::find($payload["reserva_id"]) : null;
+
+        return [$payload, $reserva];
+    }
+
+    function store(Request $request, $proyectoId){  
+        $proyecto = Proyecto::find($proyectoId);
+        if(!$proyecto){
+            throw new ModelNotFoundException("El proyecto no existe");
+        }    
+        [$payload, $reserva] = $this->validateStoreRequest($request, $proyectoId);
         if($reserva && $reserva->estado == 1){
             $payload["lote_id"] = $reserva->lote->id;
             $payload["cliente_id"] = $reserva->cliente_id;
             $payload["vendedor_id"] = $reserva->vendedor_id;
         }
-        $proyecto = Proyecto::find($proyectoId);
 
         $record = DB::transaction(function() use($proyecto, $reserva, $payload){
             /** @var Venta $record */
             $record = Venta::create([
-                "proyecto_id" => $proyecto->id,
-                "tasa_mora" => $proyecto->tasa_mora
+                "proyecto_id" => $proyecto->id
             ]+$payload);
 
             if($record->tipo == 2) {
                 /** @var Credito $credito */
-                $credito = $record->credito()->create($payload["credito"]);
+                $credito = $record->credito()->create($payload["credito"]+[
+                    "tasa_mora" => $proyecto->tasa_mora,
+                    "tasa_interes" => $proyecto->tasa_interes,
+                ]);
                 $credito->build();
             }
 

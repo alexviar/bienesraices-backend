@@ -13,7 +13,8 @@ class UfvRepository implements UfvRepositoryInterface {
      */
     function findByDate(DateTimeInterface $fecha)
     {
-        $ufv = UFV::firstWhere("fecha", $fecha);
-        return $ufv ? BigDecimal::of($ufv->valor) : null;
+        // $ufv = UFV::firstWhere("fecha", $fecha);
+        // return $ufv ? BigDecimal::of($ufv->valor) : null;
+        return BigDecimal::one();
     }
 }

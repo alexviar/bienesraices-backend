@@ -35,8 +35,13 @@ class Cuota extends Model
     ];
 
     protected $appends = [
+        "dias",
+        "interes",
+        "amortizacion",
         "multa",
-        "total"
+        "total",
+        "vencida",
+        "pendiente"
     ];
 
     protected $hidden = [
@@ -63,12 +68,12 @@ class Cuota extends Model
         $this->fechaDeConsulta = Carbon::today();
     }
 
-    function getIsVencidaAttribute(){
+    function getVencidaAttribute(){
         return $this->vencimiento->isBefore(Carbon::today());
     }
 
-    function getIsPendienteAttribute(){
-        return !$this->anterior || $this->anterior->isVencida;
+    function getPendienteAttribute(){
+        return !$this->anterior || $this->anterior->vencida;
     }
 
     function getImporteAttribute($value){

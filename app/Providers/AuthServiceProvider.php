@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Models\PagoExtra;
+use App\Policies\PagoExtraPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 
@@ -14,6 +16,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+        PagoExtra::class => PagoExtraPolicy::class
     ];
 
     /**
@@ -25,6 +28,16 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        Gate::before(function ($user) {
+            if($user->estado !== 1){
+                return false;
+            }
+        });
+
+        Gate::after(function ($user) {
+            if($user->isSuperUser()){
+                return true;
+            }
+        });
     }
 }

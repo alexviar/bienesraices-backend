@@ -2,25 +2,25 @@
 
 namespace App\Http\Reports\Venta;
 
-use App\Models\Cuota;
+use App\Models\Credito;
 use App\Models\DetalleTransaccion;
-use App\Models\Reserva;
-use App\Models\Venta;
 
 class HistorialPagos {
 
-    function generate(Venta $venta){
+    function generate(Credito $credito){
         $image = public_path("logo192.png");
         $mime = getimagesize($image)["mime"];
         $data = file_get_contents($image);
         $dataUri = 'data:image/' . $mime . ';base64,' . base64_encode($data);
 
+        $venta = $credito->creditable;
+
         $pagos = DetalleTransaccion::whereHas("reservas", function($query) use($venta){
             $query->where("id", $venta->reserva_id);
-        })->union(DetalleTransaccion::whereHas("creditos", function($query) use($venta){
-            $query->where("id", $venta->credito->id);
-        }))->union(DetalleTransaccion::whereHas("cuotas", function($query) use($venta){
-            $query->where("credito_id", $venta->credito->id);
+        })->union(DetalleTransaccion::whereHas("creditos", function($query) use($credito){
+            $query->where("id", $credito->id);
+        }))->union(DetalleTransaccion::whereHas("cuotas", function($query) use($credito){
+            $query->where("credito_id", $credito->id);
         }))->get();
         
         $zero = new \App\Models\ValueObjects\Money("0", $venta->currency);
@@ -32,14 +32,14 @@ class HistorialPagos {
         $saldoMora = $zero;
         $totalPagado = $zero;
         $i = 0;
-        while($venta->credito->cuotas[$i]->vencimiento->isBefore($today) && $i < $venta->credito->cuotas->count()){
-            $saldoMora = $saldoMora->plus($venta->credito->cuotas[$i]->calcularPago($today)->toScale(2, \Brick\Math\RoundingMode::HALF_UP));
-            $totalPagado = $totalPagado->plus($venta->credito->cuotas[$i]->importe->minus($venta->credito->cuotas[$i]->saldo));
+        while($credito->cuotas[$i]->vencimiento->isBefore($today) && $i < $credito->cuotas->count()){
+            $saldoMora = $saldoMora->plus($credito->cuotas[$i]->calcularPago($today)->toScale(2, \Brick\Math\RoundingMode::HALF_UP));
+            $totalPagado = $totalPagado->plus($credito->cuotas[$i]->importe->minus($credito->cuotas[$i]->saldo));
             $i++;
         }
-        $totalPagado = $totalPagado->plus($venta->credito->cuotas[$i]->importe->minus($venta->credito->cuotas[$i]->saldo));
-        $totalMultas = $totalPagos->minus($venta->credito->cuota_inicial)->minus($totalPagado);
-        $saldoPendiente = $venta->credito->cuotas[$i]->saldo->plus($venta->credito->cuotas[$i]->saldo_capital)->plus($saldoMora);
+        $totalPagado = $totalPagado->plus($credito->cuotas[$i]->importe->minus($credito->cuotas[$i]->saldo));
+        $totalMultas = $totalPagos->minus($credito->cuota_inicial)->minus($totalPagado);
+        $saldoPendiente = $credito->cuotas[$i]->saldo->plus($venta->credito->cuotas[$i]->saldo_capital)->plus($saldoMora);
 
         return \Barryvdh\DomPDF\Facade\Pdf::loadView("pdf.historial_pagos", [
             "img" => $dataUri,

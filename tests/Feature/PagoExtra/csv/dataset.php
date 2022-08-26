@@ -60,151 +60,151 @@ dataset("planes_pago", function (){
     // };
 
     return [
-        // #region Pago extra simple {periodo: 5, importe: 100}
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         // "testDescription" => "registra un pago extra con un importe de 100 en el periodo 5",
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 100,
-        //                 "periodo" => 5
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 100,
-        //                 "periodo" => 5,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 100,
-        //                 "periodo" => 5,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 100,
-        //                 "periodo" => 5,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2.csv")
-        //     ];
-        // },
-        // #endregion
+        #region Pago extra simple {periodo: 5, importe: 100}
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            return [
+                "testDescription" => "registra un pago extra con un importe de 100 en el periodo 5",
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 100,
+                        "periodo" => 5
+                    ]
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1.csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 100,
+                        "periodo" => 5,
+                        "tipo_ajuste" => 2
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2.csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 100,
+                        "periodo" => 5,
+                        "tipo_ajuste" => 3
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2.csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 100,
+                        "periodo" => 5,
+                        "tipo_ajuste" => 4
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2.csv")
+            ];
+        },
+        #endregion
 
-        // #region Pago extra simple {periodo: 14, importe: 1100}
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2(2).csv")
-        //     ];
-        // },        
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4.csv")
-        //     ];
-        // },
-        // #endregion
+        #region Pago extra simple {periodo: 14, importe: 1100}
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 1
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2(2).csv")
+            ];
+        },        
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3.csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4.csv")
+            ];
+        },
+        #endregion
     
-        // #region Multiples pagos extra {periodo: 5, importe: 100, tipo_ajuste: 1}, {periodo: 14, importe: 1100}
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 100,
-        //                 "periodo" => 5
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_1.csv")
-        //     ];
-        // },    
+        #region Multiples pagos extra {periodo: 5, importe: 100, tipo_ajuste: 1}, {periodo: 14, importe: 1100}
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 100,
+                        "periodo" => 5
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_1.csv")
+            ];
+        },    
         // function() {
         //     /** @var FilesystemAdapter $disk */
         //     $disk = Storage::disk("tests");
@@ -223,980 +223,6 @@ dataset("planes_pago", function (){
         //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_1.csv")
         //     ];
         // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 100,
-        //                 "periodo" => 5,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_2.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //             [
-        //                 "importe" => 100,
-        //                 "periodo" => 5,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_2.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 100,
-        //                 "periodo" => 5,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_3.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //             [
-        //                 "importe" => 100,
-        //                 "periodo" => 5,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_3.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 100,
-        //                 "periodo" => 5,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_4.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //             [
-        //                 "importe" => 100,
-        //                 "periodo" => 5,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_4.csv")
-        //     ];
-        // },
-        // #endregion
-
-        // #region Multiples pagos extra {periodo: 14, importe: 1100, tipo_ajuste: 2}, {periodo: 15, importe: 1000}
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1000,
-        //                 "periodo" => 15,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_1.csv")
-        //     ];
-        // },    
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //             [
-        //                 "importe" => 1000,
-        //                 "periodo" => 15,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_1.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1000,
-        //                 "periodo" => 15,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_2.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //             [
-        //                 "importe" => 1000,
-        //                 "periodo" => 15,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_2.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1000,
-        //                 "periodo" => 15,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_3.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //             [
-        //                 "importe" => 1000,
-        //                 "periodo" => 15,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_3.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1000,
-        //                 "periodo" => 15,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_4.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //             [
-        //                 "importe" => 1000,
-        //                 "periodo" => 15,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_4.csv")
-        //     ];
-        // },        
-        // #endregion
-
-        // #region Multiples pagos extra {periodo: 14, importe: 1100, tipo_ajuste: 3}, {periodo: 16, importe: 500}
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_1.csv")
-        //     ];
-        // },    
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_1.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_2.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_2.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_3.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_3.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_4.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_4.csv")
-        //     ];
-        // },        
-        // #endregion
-
-        // #region Multiples pagos extra {periodo: 14, importe: 1100, tipo_ajuste: 4}, {periodo: 16, importe: 500}
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_1.csv")
-        //     ];
-        // },    
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_1.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_2.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_2.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_3.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_3.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ]
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_4.csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //             [
-        //                 "importe" => 500,
-        //                 "periodo" => 16,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_4.csv")
-        //     ];
-        // },        
-        // #endregion
-
-        // #region Multiples pagos extra en el mismo periodo {periodo: 14, importe: 1100}, {periodo: 14, importe: 1100}
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_1(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_2(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_3(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_4(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_1(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_2(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_3(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_4(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_1(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_2(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_3(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_4(2).csv")
-        //     ];
-        // },        
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 1
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_1(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 2
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_2(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 3
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_3(2).csv")
-        //     ];
-        // },
-        // function() {
-        //     /** @var FilesystemAdapter $disk */
-        //     $disk = Storage::disk("tests");
-
-        //     return [
-        //         "credito" => factory(),
-        //         "requests" => [
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //             [
-        //                 "importe" => 1100,
-        //                 "periodo" => 14,
-        //                 "tipo_ajuste" => 4
-        //             ],
-        //         ],
-        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_4(2).csv")
-        //     ];
-        // },
-        // #endregion
-
         function() {
             /** @var FilesystemAdapter $disk */
             $disk = Storage::disk("tests");
@@ -1206,12 +232,958 @@ dataset("planes_pago", function (){
                 "requests" => [
                     [
                         "importe" => 100,
-                        "periodo" => 19,
+                        "periodo" => 5,
+                        "tipo_ajuste" => 1
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ]
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_2.csv")
+            ];
+        },
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 2
+        //             ],
+        //             [
+        //                 "importe" => 100,
+        //                 "periodo" => 5,
+        //                 "tipo_ajuste" => 1
+        //             ],
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_2.csv")
+        //     ];
+        // },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 100,
+                        "periodo" => 5,
+                        "tipo_ajuste" => 1
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ]
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_3.csv")
+            ];
+        },
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 3
+        //             ],
+        //             [
+        //                 "importe" => 100,
+        //                 "periodo" => 5,
+        //                 "tipo_ajuste" => 1
+        //             ],
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_3.csv")
+        //     ];
+        // },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 100,
+                        "periodo" => 5,
+                        "tipo_ajuste" => 1
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ]
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_4.csv")
+            ];
+        },
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 4
+        //             ],
+        //             [
+        //                 "importe" => 100,
+        //                 "periodo" => 5,
+        //                 "tipo_ajuste" => 1
+        //             ],
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_4.csv")
+        //     ];
+        // },
+        #endregion
+
+        #region Multiples pagos extra {periodo: 14, importe: 1100, tipo_ajuste: 2}, {periodo: 15, importe: 1000}
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 1000,
+        //                 "periodo" => 15,
+        //                 "tipo_ajuste" => 1
+        //             ],
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 2
+        //             ],
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_1.csv")
+        //     ];
+        // },    
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
                         "tipo_ajuste" => 2
                     ],
                     [
-                        "importe" => 100,
-                        "periodo" => 18,
+                        "importe" => 1000,
+                        "periodo" => 15,
+                        "tipo_ajuste" => 1
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_1.csv")
+            ];
+        },
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 1000,
+        //                 "periodo" => 15,
+        //                 "tipo_ajuste" => 2
+        //             ],
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 2
+        //             ]
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_2.csv")
+        //     ];
+        // },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ],
+                    [
+                        "importe" => 1000,
+                        "periodo" => 15,
+                        "tipo_ajuste" => 2
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_2.csv")
+            ];
+        },
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 1000,
+        //                 "periodo" => 15,
+        //                 "tipo_ajuste" => 3
+        //             ],
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 2
+        //             ]
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_3.csv")
+        //     ];
+        // },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ],
+                    [
+                        "importe" => 1000,
+                        "periodo" => 15,
+                        "tipo_ajuste" => 3
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_3.csv")
+            ];
+        },
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 1000,
+        //                 "periodo" => 15,
+        //                 "tipo_ajuste" => 4
+        //             ],
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 2
+        //             ]
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_4.csv")
+        //     ];
+        // },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ],
+                    [
+                        "importe" => 1000,
+                        "periodo" => 15,
+                        "tipo_ajuste" => 4
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_4.csv")
+            ];
+        },        
+        #endregion
+
+        #region Multiples pagos extra {periodo: 14, importe: 1100, tipo_ajuste: 3}, {periodo: 16, importe: 500}
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 500,
+        //                 "periodo" => 16,
+        //                 "tipo_ajuste" => 1
+        //             ],
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 3
+        //             ],
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_1.csv")
+        //     ];
+        // },    
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                    [
+                        "importe" => 500,
+                        "periodo" => 16,
+                        "tipo_ajuste" => 1
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_1.csv")
+            ];
+        },
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 500,
+        //                 "periodo" => 16,
+        //                 "tipo_ajuste" => 2
+        //             ],
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 3
+        //             ]
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_2.csv")
+        //     ];
+        // },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                    [
+                        "importe" => 500,
+                        "periodo" => 16,
+                        "tipo_ajuste" => 2
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_2.csv")
+            ];
+        },
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 500,
+        //                 "periodo" => 16,
+        //                 "tipo_ajuste" => 3
+        //             ],
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 3
+        //             ]
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_3.csv")
+        //     ];
+        // },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                    [
+                        "importe" => 500,
+                        "periodo" => 16,
+                        "tipo_ajuste" => 3
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_3.csv")
+            ];
+        },
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 500,
+        //                 "periodo" => 16,
+        //                 "tipo_ajuste" => 4
+        //             ],
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 3
+        //             ]
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_4.csv")
+        //     ];
+        // },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                    [
+                        "importe" => 500,
+                        "periodo" => 16,
+                        "tipo_ajuste" => 4
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_4.csv")
+            ];
+        },        
+        #endregion
+
+        #region Multiples pagos extra {periodo: 14, importe: 1100, tipo_ajuste: 4}, {periodo: 16, importe: 500}
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 500,
+        //                 "periodo" => 16,
+        //                 "tipo_ajuste" => 1
+        //             ],
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 4
+        //             ],
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_1.csv")
+        //     ];
+        // },    
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ],
+                    [
+                        "importe" => 500,
+                        "periodo" => 16,
+                        "tipo_ajuste" => 1
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_1.csv")
+            ];
+        },
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 500,
+        //                 "periodo" => 16,
+        //                 "tipo_ajuste" => 2
+        //             ],
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 4
+        //             ]
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_2.csv")
+        //     ];
+        // },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ],
+                    [
+                        "importe" => 500,
+                        "periodo" => 16,
+                        "tipo_ajuste" => 2
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_2.csv")
+            ];
+        },
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 500,
+        //                 "periodo" => 16,
+        //                 "tipo_ajuste" => 3
+        //             ],
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 4
+        //             ]
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_3.csv")
+        //     ];
+        // },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ],
+                    [
+                        "importe" => 500,
+                        "periodo" => 16,
+                        "tipo_ajuste" => 3
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_3.csv")
+            ];
+        },
+        // function() {
+        //     /** @var FilesystemAdapter $disk */
+        //     $disk = Storage::disk("tests");
+
+        //     return [
+        //         "credito" => factory(),
+        //         "requests" => [
+        //             [
+        //                 "importe" => 500,
+        //                 "periodo" => 16,
+        //                 "tipo_ajuste" => 4
+        //             ],
+        //             [
+        //                 "importe" => 1100,
+        //                 "periodo" => 14,
+        //                 "tipo_ajuste" => 4
+        //             ]
+        //         ],
+        //         "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_4.csv")
+        //     ];
+        // },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ],
+                    [
+                        "importe" => 500,
+                        "periodo" => 16,
+                        "tipo_ajuste" => 4
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_4.csv")
+            ];
+        },        
+        #endregion
+
+        #region Multiples pagos extra en el mismo periodo {periodo: 14, importe: 1100}, {periodo: 14, importe: 1100}
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 1
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 1
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_1(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 1
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_2(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 1
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_3(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 1
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_1_4(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 1
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_1(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_2(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_3(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_2_4(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 1
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_1(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_2(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_3(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_3_4(2).csv")
+            ];
+        },        
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 1
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_1(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 2
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_2(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ],
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 3
+                    ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_3(2).csv")
+            ];
+        },
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
                         "tipo_ajuste" => 4
                     ],
                     [
@@ -1219,21 +1191,49 @@ dataset("planes_pago", function (){
                         "periodo" => 14,
                         "tipo_ajuste" => 4
                     ],
-                    // [
-                    //     "importe" => 100,
-                    //     "periodo" => 17,
-                    //     "tipo_ajuste" => 4
-                    // ],
-                    // [
-                    //     "importe" => 100,
-                    //     "periodo" => 15,
-                    //     "tipo_ajuste" => 4
-                    // ],
-                    // [
-                    //     "importe" => 100,
-                    //     "periodo" => 16,
-                    //     "tipo_ajuste" => 4
-                    // ],
+                ],
+                "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_4_4(2).csv")
+            ];
+        },
+        #endregion
+
+        function() {
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+
+            return [
+                "credito" => factory(),
+                "requests" => [
+                    [
+                        "importe" => 1100,
+                        "periodo" => 14,
+                        "tipo_ajuste" => 4
+                    ],
+                    [
+                        "importe" => 100,
+                        "periodo" => 15,
+                        "tipo_ajuste" => 4
+                    ],
+                    [
+                        "importe" => 100,
+                        "periodo" => 16,
+                        "tipo_ajuste" => 4
+                    ],
+                    [
+                        "importe" => 100,
+                        "periodo" => 17,
+                        "tipo_ajuste" => 4
+                    ],
+                    [
+                        "importe" => 100,
+                        "periodo" => 18,
+                        "tipo_ajuste" => 4
+                    ],
+                    [
+                        "importe" => 100,
+                        "periodo" => 19,
+                        "tipo_ajuste" => 2
+                    ],
                 ],
                 "filename" => $disk->path("Feature/PagoExtra/csv/plan_pagos_diferido.csv")
             ];

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Proyecto;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -20,9 +21,17 @@ class ProyectoController extends Controller
         return $this->buildResponse(Proyecto::query(), $queryArgs);
     }
 
+    function findProyecto(Request $request, $id){
+        $proyecto = Proyecto::find($id);
+        if(!$proyecto){
+            throw new ModelNotFoundException("El proyecto no existe");
+        }
+        return $proyecto;
+    }
+
     function show(Request $request, $id)
     {
-        return Proyecto::find($id);
+        return $this->findProyecto($request, $id);
     }
 
     function store(Request $request){

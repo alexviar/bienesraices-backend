@@ -8,7 +8,7 @@ use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\ListaMoraController;
 use App\Http\Controllers\LoteController;
 use App\Http\Controllers\ManzanaController;
-use App\Http\Controllers\PagoExtraController;
+use App\Http\Controllers\CreditoController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\VendedorController;
@@ -44,8 +44,6 @@ Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/manzanas', [Man
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/lotes', [LoteController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/lotes', [LoteController::class, "store"]);
 
-Route::get('/proyectos/{proyectoId}/ventas/{id}/historial_pagos', [VentaController::class, "print_historial_pagos"])->name("ventas.historial_pagos");
-Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/ventas/{id}/plan_pagos', [VentaController::class, "print_plan_pagos"])->name("ventas.plan_pago");
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/ventas', [VentaController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/ventas', [VentaController::class, "store"]);
 
@@ -64,4 +62,10 @@ Route::middleware('auth:sanctum')->get('lista-mora', [ListaMoraController::class
 
 Route::middleware('auth:sanctum')->get('/pagos/cuotas', [CuotaController::class, "pendientes"]);
 Route::middleware('auth:sanctum')->post('/pagos/cuotas', [CuotaController::class, "pagar_cuotas"]);
-Route::middleware('auth:sanctum')->post('/creditos/{id}/pagos-extras', [PagoExtraController::class, "store"]);
+
+Route::controller(CreditoController::class)->group(function(){
+    Route::middleware('auth:sanctum')->get('/creditos/{id}', "show");
+    Route::middleware('auth:sanctum')->post('/creditos/{id}/pagos-extras', "store_pago_extra");
+});
+
+

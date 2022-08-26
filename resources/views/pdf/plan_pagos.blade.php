@@ -118,21 +118,21 @@
                                     <table style="border-spacing:0.5rem;border-collapse:separate;table-layout:fixed">
                                         <thead>
                                             <tr class="bg-primary text-white">
-                                                <th colspan="2">Parametros del crédito</th>
+                                                <th colspan="2">Parámetros del crédito</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Plazo del crédito:</b></th>
-                                                <td class="text-left"> {{$venta->plazo}} meses</td>
+                                                <td class="text-left"> {{$credito->plazo}} meses</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Periodo de pago:</b></th>
-                                                <td class="text-left"> {{$venta->periodo_pago_text}}</td>
+                                                <td class="text-left"> {{$credito->periodo_pago_text}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Tasa de interés anual:</b></th>
-                                                <td class="text-left"> {{\Brick\Math\BigDecimal::of("100")->multipliedBy($venta->tasa_interes)->toScale(2)}} %</td>
+                                                <td class="text-left"> {{\Brick\Math\BigDecimal::of("100")->multipliedBy($credito->tasa_interes)->toScale(2)}} %</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Importe del terreno:</b></th>
@@ -151,19 +151,19 @@
                                         <tbody>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Cuota:</b></th>
-                                                <td class="text-left"> {{$venta->cuotas[0]->importe}}</td>
+                                                <td class="text-left"> {{$credito->importe_cuotas}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Nº de cuotas:</b></th>
-                                                <td class="text-left"> {{$venta->cuotas->count()}}</td>
+                                                <td class="text-left"> {{$credito->cuotas->count()}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Total intereses:</b></th>
-                                                <td class="text-left"> {{$venta->total_intereses}}</td>
+                                                <td class="text-left"> {{$credito->total_intereses}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Total crédito:</b></th>
-                                                <td class="text-left"> {{$venta->total_credito}}</td>
+                                                <td class="text-left"> {{$credito->total_credito}}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -179,79 +179,43 @@
     <br>
     <table class="tabla-amortizacion">
         <thead>
-            <th style="width:5%">#</th>
-            <th style="width:19%">Fecha vencimiento</th>
-            <th style="width:19%">Pago</th>
-            <th style="width:19%">Interes</th>
-            <th style="width:19%">Amortizacion</th>
-            <th style="width:19%">Saldo</th>
+            <th width="3%">#</th>
+            <th width="15.5%">Fecha vencimiento</th>
+            <th width="4%">Dias</th>
+            <th width="15.5%">Pago</th>
+            <th width="15.5%">Interés</th>
+            <th width="15.5%">Pago extra</th>
+            <th width="15.5%">Amortización</th>
+            <th width="15.5%">Saldo</th>
         </thead>
         <tbody>
             <tr>
                 <th scope="row">0</th>
                 <td>{{$venta->fecha->format("d/m/Y")}}</td>
-                <td class="text-right">{{$venta->cuota_inicial}}</td>
-                <td class="text-right">- {{$venta->moneda}}</td>
-                <td class="text-right">{{$venta->cuota_inicial}}</td>
+                <td class="text-right">-</td>
+                <td class="text-right">{{$credito->cuota_inicial}}</td>
+                <td class="text-right">0.00 {{$venta->moneda}}</td>
+                <td class="text-right">0.00 {{$venta->moneda}}</td>
+                <td class="text-right">{{$credito->cuota_inicial}}</td>
                 @php
-                $saldo = $venta->importe->minus($venta->cuota_inicial);
+                $saldo = $venta->importe->minus($credito->cuota_inicial);
                 @endphp
                 <td class="text-right">{{$saldo}}</td>
             </tr>
-            @for ($i = 0; $i < $venta->cuotas->count(); $i++)
-            @php
-                $importe = $venta->cuotas[$i]->importe;
-                $amortizacion = $saldo->minus($venta->cuotas[$i]->saldo_capital);
-                $interes = $importe->minus($amortizacion);
-                $saldo = $venta->cuotas[$i]->saldo_capital;
-            @endphp
+            @foreach ($credito->cuotas as $cuota)
             <tr>
-                <th scope="row">{{$i+1}}</th>
-                <td>{{$venta->cuotas[$i]->vencimiento->format("d/m/Y")}}</td>
-                <td class="text-right">{{$importe}}</td>
-                <td class="text-right">{{$interes}}</td>
-                <td class="text-right">{{$amortizacion}}</td>
-                <td class="text-right">{{$saldo}}</td>
+                <th scope="row">{{$cuota->numero}}</th>
+                <td>{{$cuota->vencimiento->format("d/m/Y")}}</td>
+                <td class="text-right">{{$cuota->dias}}</td>
+                <td class="text-right">{{$cuota->importe}}</td>
+                <td class="text-right">{{$cuota->interes}}</td>
+                <td class="text-right">{{$cuota->pago_extra}}</td>
+                <td class="text-right">{{$cuota->amortizacion}}</td>
+                <td class="text-right">{{$cuota->saldo_capital}}</td>
             </tr>
-            @endfor
+            @endforeach
         </tbody>
     </table>
-    <!-- @php
-        $i = 0
-    @endphp
-    @while(true)
-    <div class="page_break"></div>
-    <table class="tabla-amortizacion">
-        <thead>
-            <th style="width:5%">#</th>
-            <th style="width:19%">Fecha vencimiento</th>
-            <th style="width:19%">Pago</th>
-            <th style="width:19%">Interes</th>
-            <th style="width:19%">Amortizacion</th>
-            <th style="width:19%">Saldo</th>
-        </thead>
-        <tbody>
-            @while($i < $venta->cuotas->count())
-            @php
-                $importe = $venta->cuotas[$i]->importe;
-                $amortizacion = $saldo->minus($venta->cuotas[$i]->saldo_capital);
-                $interes = $importe->minus($amortizacion);
-                $saldo = $venta->cuotas[$i]->saldo_capital;
-            @endphp
-            <tr>
-                <th scope="row">{{$i+1}}</th>
-                <td>{{$venta->cuotas[$i]->vencimiento->format("d/m/Y")}}</td>
-                <td class="text-right">{{$importe}}</td>
-                <td class="text-right">{{$interes}}</td>
-                <td class="text-right">{{$amortizacion}}</td>
-                <td class="text-right">{{$saldo}}</td>
-            </tr>     
-            @break(++$i % 48 == 0)
-            @endwhile
-            @break($i >= $venta->cuotas->count())
-        </tbody>
-    </table>
-    @endwhile -->
     <footer>Deposite sus cuotas en la cuenta Nº XXXXXXXXXXX del Banco Fassil, a nombre de XXXX XXXX XXXX. No olvide incluir su codigo de pago en la referencia o glosa del deposito.</footer>
 </body>
 </html>

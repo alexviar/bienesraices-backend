@@ -20,6 +20,7 @@ class Credito extends Model
     public $fechaDeConsulta;
 
     protected $fillable = [
+        "importe_cuotas",
         "cuota_inicial",
         "tasa_interes",
         "tasa_mora",
@@ -28,17 +29,38 @@ class Credito extends Model
         "dia_pago",
     ];
 
+    protected $hidden = ["creditable"];
+
+    protected $appends = ["fecha", "importe", "url_plan_pago", "url_historial_pagos"];
+
     function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
         $this->fechaDeConsulta = Carbon::today();
     }
+
+    function getUrlPlanPagoAttribute(){
+        return route("creditos.plan_pago", [
+            "id" => $this->id
+        ]);
+    }
+
+    function getUrlHistorialPagosAttribute(){
+        return route("creditos.historial_pagos", [
+            "id" => $this->id
+        ]);
+    }
+
     function getFechaAttribute(){
         return $this->creditable->fecha;
     }
 
     function getImporteAttribute(){
         return $this->creditable->importe;
+    }
+
+    function getImporteCuotasAttribute($value){
+        return new Money($value, $this->creditable->getCurrency());
     }
 
     function getCuotaInicialAttribute($value){
@@ -84,12 +106,12 @@ class Credito extends Model
     function getTotalCreditoAttribute(){
         //TODO: Aplicar un mecanismo equivalente a useMemo en React
         return $this->cuotas->reduce(function($total, $cuota){
-            return $total->plus($cuota->importe);
-        }, new Money("0", $this->currency))->plus($this->cuota_inicial);
+            return $total->plus($cuota->importe)->plus($cuota->pago_extra);
+        }, new Money("0", $this->getCurrency()))->plus($this->cuota_inicial);
     }
 
     function getTotalInteresesAttribute(){
-        return $this->total_credito->minus($this->creditable->importe);
+        return $this->total_credito->minus($this->importe);
     }
     
     /**
@@ -129,6 +151,9 @@ class Credito extends Model
                 "saldo_capital" => (string) $cuota["saldo"]
             ]);
         }
+        $this->update([
+            "importe_cuotas" => $cuotas[0]["pago"]
+        ]);
     }    
 
     function getCurrency(){
@@ -138,4 +163,10 @@ class Credito extends Model
     function getReferencia(){
         return "Cuota inicial del crédito Nº {$this->id}";
     }
+
+    // function replicate(?array $except = null)
+    // {
+    //     $clone = parent::replicate($except);
+    //     $clone->save();
+    // }
 }

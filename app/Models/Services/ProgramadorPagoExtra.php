@@ -6,6 +6,7 @@ use App\Models\Credito;
 use App\Models\Cuota;
 use App\Models\PagoExtra;
 use Brick\Math\BigRational;
+use Brick\Math\RoundingMode;
 use Illuminate\Support\Facades\Log;
 
 abstract class ProgramadorPagoExtra {
@@ -15,6 +16,27 @@ abstract class ProgramadorPagoExtra {
     function __construct(
         private ?ProgramadorPagoExtra $next=null
     ){ }
+
+    function cloneCuota(Cuota $cuota){
+        $clone = $cuota->replicate();
+        $clone->save();
+        $clone->unsetRelation("transacciones");
+        $clone->transacciones()->attach($cuota->transacciones);
+        return $clone;
+    }
+
+    function cloneCredito(Credito $credito){
+        $clone = $credito->replicate(["estado"]);
+        $clone->save();
+        $clone->unsetRelation("cuotas");
+        $clone->cuotas()->saveMany($credito->cuotas->map([$this, "cloneCuota"]));
+        $clone->cuotas->each->setRelation("credito", $clone);
+        $clone->unsetRelation("pagos_extras");
+        $clone->pagosExtras()->saveMany($credito->pagosExtras->each->replicate());
+        // $clone->unsetRelation("transacciones");
+        // $clone->transacciones()->attach($credito->transacciones);
+        return $clone;
+    }
 
     protected function getInteresDiferido($cuota){
         $diferido = BigRational::zero();
@@ -30,13 +52,6 @@ abstract class ProgramadorPagoExtra {
         return $diferido->dividedBy("360");
     }
 
-    protected function getImporteCuotas($cuota){
-        $credito = $cuota->credito;
-        // $saldoInicial = $credito->importe->minus($credito->cuota_inicial)->amount;
-        // return $credito->cuotas[0]->frc->multipliedBy($saldoInicial);
-        return $credito->cuotas[0]->importe->amount;
-    }
-
     /**
      * 
      * @param Credito $credito
@@ -46,34 +61,39 @@ abstract class ProgramadorPagoExtra {
      * 
      */
     function apply($credito, $pagoExtra){
-        $credito->cuotas->each->setRelation("credito", $credito);
+        $credito = $this->cloneCredito($credito);
+        $credito->pagosExtras()->save($pagoExtra);
         $cuota = $credito->cuotas->where("numero", $pagoExtra->periodo)->first();
-        $saldo_capital = $cuota->saldo_capital->amount->minus($pagoExtra->importe);
-        $cuota->fill([
-            "pago_extra" => (string) $cuota->pago_extra->amount->plus($pagoExtra->importe),
-            "saldo" => (string)$cuota->saldo->amount->plus($pagoExtra->importe),
+        $saldo_capital = $cuota->saldo_capital->minus($pagoExtra->importe)->amount;
+        $cuota->update([
+            "pago_extra" => (string) $cuota->pago_extra->plus($pagoExtra->importe)->amount,
+            "saldo" => (string)$cuota->saldo->plus($pagoExtra->importe)->amount,
             "saldo_capital" => (string) $saldo_capital,
         ]);
-
-        $pagosExtras = [$pagoExtra];
-
-        while(($cuota = $cuota->siguiente) !== null){
-            foreach($pagosExtras as $pagoExtra){
-                $this->tryApply($cuota, $pagoExtra);
-            }
-
-            $saldo_capital = $cuota->saldo_capital->amount->minus($cuota->pago_extra->amount);
-            $cuota->fill([
-                "saldo" => (string) $cuota->importe->amount->plus($cuota->getAttributes()["pago_extra"])
-                    ->minus($cuota->getAttributes()["total_pagos"])
-                    ->plus($cuota->getAttributes()["total_multas"]),
-                "saldo_capital" => (string) $saldo_capital,
-            ]);
-
-            $pagosExtras = $cuota->pagosExtras;
+        
+        if(($cuota = $cuota->siguiente) !== null){
+            $this->tryApply($cuota, $pagoExtra);
         }
 
-        return $pagoExtra;
+        // $pagosExtras = [$pagoExtra];
+
+        // while(($cuota = $cuota->siguiente) !== null){
+        //     foreach($pagosExtras as $pagoExtra){
+        //         $this->tryApply($cuota, $pagoExtra);
+        //     }
+
+        //     $saldo_capital = $cuota->saldo_capital->amount->minus($cuota->pago_extra->amount);
+        //     $cuota->fill([
+        //         "saldo" => (string) $cuota->importe->amount->plus($cuota->getAttributes()["pago_extra"])
+        //             ->minus($cuota->getAttributes()["total_pagos"])
+        //             ->plus($cuota->getAttributes()["total_multas"]),
+        //         "saldo_capital" => (string) $saldo_capital,
+        //     ]);
+
+        //     $pagosExtras = $cuota->pagosExtras;
+        // }
+
+        return $credito;
     }
 
     private function tryApply($cuota, $pagoExtra){

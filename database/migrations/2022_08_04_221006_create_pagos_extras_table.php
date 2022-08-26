@@ -31,6 +31,6 @@ class CreatePagosExtrasTable extends Migration
      */
     public function down()
     {
-        // Schema::dropIfExists('pagos_extras');
+        Schema::dropIfExists('pagos_extras');
     }
 }

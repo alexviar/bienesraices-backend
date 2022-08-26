@@ -35,4 +35,9 @@ class User extends Authenticatable
     public function setPasswordAttribute($value){
         $this->attributes["password"] = Hash::make($value);
     }
+
+    public function isSuperUser(){
+        // return $this->hasRole(1);
+        return true;
+    }
 }

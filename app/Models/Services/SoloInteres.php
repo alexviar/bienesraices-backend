@@ -17,33 +17,29 @@ class SoloInteres extends ProgramadorPagoExtra {
      */
     function applyImpl($cuota, $pagoExtra)
     {
-        $saldo_capital_objetivo = $cuota->anterior->saldo_capital->amount;
-        $saldo_capital = $saldo_capital_objetivo->plus($pagoExtra->importe->amount);
-        $pago = $this->getImporteCuotas($cuota);
+        $saldo_capital = $cuota->anterior->saldo_capital->amount;
         $diferido = $this->getInteresDiferido($cuota);
 
         while($cuota !== null){
             $fas = $cuota->fas;
-            $saldoMasInteres = $fas->multipliedBy($saldo_capital)->toScale(2, RoundingMode::HALF_UP);
-            $pagoCuota = $pago->isGreaterThan($saldoMasInteres->minus("0.99")) 
-                || $cuota->siguiente == null ? 
-                    $saldoMasInteres : 
-                    $pago;
-            $saldo_capital = $saldoMasInteres->minus($pagoCuota);
-            if($saldo_capital_objetivo->isGreaterThan($saldo_capital)){
-
-                $cuota->fill([
-                    "importe" => (string )$pagoCuota,
-                    "saldo_capital" => (string) $saldo_capital,
-                ]);
+            if($saldo_capital->isGreaterThan($cuota->saldo_capital->amount)){
+                $pago = $cuota->importe->amount;
+                $saldoMasInteres = $fas->multipliedBy($saldo_capital)->plus($diferido)->toScale(2, RoundingMode::HALF_UP);
+                $pagoCuota = $pago->isGreaterThan($saldoMasInteres->minus("0.99")) || 
+                    $cuota->siguiente == null ? $saldoMasInteres : $pago;
+                $pagoCuota = $pagoCuota->plus($diferido->toScale(2, RoundingMode::HALF_UP));
+                $saldo_capital = $saldoMasInteres->minus($pagoCuota);
             } 
             else{
-                $pagoCuota = $cuota->fas->minus("1")->multipliedBy($saldo_capital);
-                $cuota->fill([
-                    "importe" => (string) $pagoCuota->plus($diferido)->toScale(2, RoundingMode::HALF_UP),
-                    "saldo_capital" => (string) $saldo_capital_objetivo,
-                ]);
+                $pagoCuota = $cuota->fas->minus("1")->multipliedBy($saldo_capital)->plus($diferido)->toScale(2, RoundingMode::HALF_UP);
             }
+            $cuota->update([
+                "importe" => (string) $pagoCuota,
+                "saldo" => (string) $pagoCuota//->plus($cuota->getAttributes()["pago_extra"])
+                    ->minus($cuota->total_pagos->amount)
+                    ->plus($cuota->total_multas->amount),
+                "saldo_capital" => (string) $saldo_capital,
+            ]);
             $diferido = BigDecimal::zero();
             $cuota = $cuota->siguiente;
         }

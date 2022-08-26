@@ -90,7 +90,7 @@ class ListaMoraController extends Controller
                             "numero" => $venta->manzana->numero
                         ],
                         "cuotas_vencidas" => $venta->credito->cuotasVencidas->map(function($cuota){
-                            return $cuota->only([
+                            return $cuota->setVisible([
                                 "numero",
                                 "vencimiento",
                                 "importe",

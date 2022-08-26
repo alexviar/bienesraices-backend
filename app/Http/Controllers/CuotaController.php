@@ -111,7 +111,7 @@ class CuotaController extends Controller
                 if(!$cuota){
                     $fail("No existe una cuota con el id proporcionado.");
                 }
-                else if(!$cuota->isPendiente){
+                else if(!$cuota->pendiente){
                     $fail("Solo puede registrar pagos de cuotas pendientes.");
                 }
             }]

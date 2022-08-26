@@ -39,25 +39,11 @@ class Venta extends Model
 
     protected $hidden = [ "currency" ];
 
-    protected $appends = [ "formated_id", "url_plan_pago", "url_historial_pagos", "manzana" ];
+    protected $appends = [ "formated_id", "manzana" ];
 
     protected $casts = [
         "fecha" => "date:Y-m-d"
     ];
-
-    function getUrlPlanPagoAttribute(){
-        return route("ventas.plan_pago", [
-            "proyectoId" => $this->proyecto_id,
-            "id" => $this->id
-        ]);
-    }
-
-    function getUrlHistorialPagosAttribute(){
-        return route("ventas.historial_pagos", [
-            "proyectoId" => $this->proyecto_id,
-            "id" => $this->id
-        ]);
-    }
 
     function getFormatedIdAttribute(){
         $tipo = $this->tipo == 1 ? "CON" : "CRE";
@@ -108,7 +94,9 @@ class Venta extends Model
     }
 
     function credito(){
-        return $this->morphOne(Credito::class, "creditable")->latestOfMany();
+        return $this->morphOne(Credito::class, "creditable")->ofMany(["id" => "max"], function($query){
+            $query->whereEstado(1);
+        });
     }
 
     function currency(){

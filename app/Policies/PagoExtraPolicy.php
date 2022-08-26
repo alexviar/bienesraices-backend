@@ -2,9 +2,11 @@
 
 namespace App\Policies;
 
+use App\Models\Credito;
 use App\Models\PagoExtra;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Auth\Access\Response;
 
 class PagoExtraPolicy
 {
@@ -39,9 +41,9 @@ class PagoExtraPolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function create(User $user)
+    public function create(User $user, Credito $credito, $payload)
     {
-        //
+        if($credito->estado != 1) return Response::deny("El credito ha sido anulado.");
     }
 
     /**

@@ -99,7 +99,7 @@ it("Genera un reporte del historial de pagos", function(){
 
     $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-09-30"));
     
-    $pdf = $report->generate($venta->refresh());
+    $pdf = $report->generate($credito->refresh());
     // $pdf->save(__DIR__."/historial_pagos_sample_1.pdf");
 
     $generatedContent = $pdf->output();
@@ -107,14 +107,14 @@ it("Genera un reporte del historial de pagos", function(){
     $this->assertTrue(comparePdf($generatedContent, $sampleContent));
 
     $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-11-01")->startOfDay());
-    $pdf = $report->generate($venta);
+    $pdf = $report->generate($credito);
     // $pdf->save(__DIR__."/historial_pagos_sample_2.pdf");
     $generatedContent = $pdf->output();
     $sampleContent = file_get_contents(__DIR__."/historial_pagos_sample_2.pdf");
     $this->assertTrue(comparePdf($generatedContent, $sampleContent));
 
     $this->travel(1)->day();
-    $pdf = $report->generate($venta);
+    $pdf = $report->generate($credito);
     // $pdf->save(__DIR__."/historial_pagos_sample_3.pdf");
     $generatedContent = $pdf->output();
     $sampleContent = file_get_contents(__DIR__."/historial_pagos_sample_3.pdf");
@@ -130,13 +130,13 @@ it("imprime el historial de pagos en pantalla", function(){
     $credito = Credito::factory()->for($venta, "creditable")->create();
     $credito->build();
     $proyectoId = $venta->proyecto_id;
-    $id = $venta->id;
+    $id = $credito->id;
 
     $this->mock(HistorialPagos::class, function($mock) use($id){
         $mock->shouldReceive("generate")
             ->once()
-            ->with(Mockery::on(function($venta) use($id){
-                return $venta->id == $id;
+            ->with(Mockery::on(function($credito) use($id){
+                return $credito->id == $id;
             }))
             ->andReturn(new class {
                 function stream($filename = "document.pdf"){
@@ -151,7 +151,7 @@ it("imprime el historial de pagos en pantalla", function(){
     // $mock = \Mockery::mock(new HistorialPagos);
     // $this->instance(HistorialPagos::class, $mock)->shouldReceive("generate")->once();
 
-    $response = $this->actingAs($user)->get("/api/proyectos/$proyectoId/ventas/$id/historial_pagos");
+    $response = $this->actingAs($user)->get("/creditos/$id/historial_pagos");
 
     $response->assertOk();
     $response->assertSeeText("MOCKED_CONTENT");
