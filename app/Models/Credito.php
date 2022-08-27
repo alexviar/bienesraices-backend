@@ -16,9 +16,6 @@ class Credito extends Model
 {
     use HasFactory;
 
-    /** @var Carbon $fechaDeConsulta */
-    public $fechaDeConsulta;
-
     protected $fillable = [
         "importe_cuotas",
         "cuota_inicial",
@@ -32,12 +29,6 @@ class Credito extends Model
     protected $hidden = ["creditable"];
 
     protected $appends = ["fecha", "importe", "url_plan_pago", "url_historial_pagos"];
-
-    function __construct(array $attributes = [])
-    {
-        parent::__construct($attributes);
-        $this->fechaDeConsulta = Carbon::today();
-    }
 
     function getUrlPlanPagoAttribute(){
         return route("creditos.plan_pago", [
@@ -82,25 +73,21 @@ class Credito extends Model
     }
 
     function getCuotasPendientesAttribute(){
-        $fecha = $this->fechaDeConsulta;
         $pendientes = [];
         $i = 0;
         do{
             $cuota = $this->cuotas[$i];
-            if($cuota->saldo->amount->isGreaterThan(BigDecimal::zero()))
+            if($cuota->saldo->round()->amount->isGreaterThan(BigDecimal::zero()))
             {
                 $pendientes[] = $cuota;
             }
             $i++;
-        }while($fecha->isAfter($cuota->vencimiento) && $i < $this->cuotas->count());
+        }while($cuota->vencida && $i < $this->cuotas->count());
         return $pendientes;
     }
-    
-    /**
-     * @param Carbon
-     */
-    function setFechaDeConsulta($fecha){
-        $this->fechaDeConsulta = $fecha;
+
+    function projectTo(Carbon $fecha){
+        $this->cuotas->each->projectTo($fecha);
     }
 
     function getTotalCreditoAttribute(){
@@ -111,7 +98,9 @@ class Credito extends Model
     }
 
     function getTotalInteresesAttribute(){
-        return $this->total_credito->minus($this->importe);
+        return $this->cuotas->reduce(function($total, $cuota){
+            return $total->plus($cuota->interes);
+        }, new Money("0", $this->getCurrency()));
     }
     
     /**
@@ -163,10 +152,4 @@ class Credito extends Model
     function getReferencia(){
         return "Cuota inicial del crédito Nº {$this->id}";
     }
-
-    // function replicate(?array $except = null)
-    // {
-    //     $clone = parent::replicate($except);
-    //     $clone->save();
-    // }
 }

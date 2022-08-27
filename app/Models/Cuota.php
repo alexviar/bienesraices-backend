@@ -8,6 +8,7 @@ use App\Models\ValueObjects\Money;
 use Brick\Math\BigDecimal;
 use Brick\Math\BigRational;
 use Brick\Math\RoundingMode;
+use Exception;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +17,16 @@ use Illuminate\Support\Carbon;
 /**
  * 
  * @property Carbon $vencimiento
+ * @property Money $importe
+ * @property Money $interes
+ * @property Money $pago_extra
+ * @property Money $amortizacion
+ * @property Money $saldo
  * @property Money $saldo_capital
+ * @property Money $total
+ * @property Money $multa
+ * @property Money $total_multas  
+ * @property Money $total_pagos
  * @property Cuota $anterior
  * @property Cuota $siguiente
  * @method static Cuota find($id)
@@ -53,24 +63,24 @@ class Cuota extends Model
         "vencimiento" => "date:Y-m-d"
     ];
     
-    /** @var Carbon $fechaDeConsulta */
-    public $fechaDeConsulta;
+    /** @var Carbon $projectionDate */
+    protected $projectionDate;
    
     /**
      * @param Carbon
      */
-    function setFechaDeConsulta($fecha){
-        $this->fechaDeConsulta = $fecha;
+    function projectTo(Carbon $fecha){
+        $this->projectionDate = $fecha;
     }
 
     function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
-        $this->fechaDeConsulta = Carbon::today();
+        $this->projectionDate = Carbon::today();
     }
 
     function getVencidaAttribute(){
-        return $this->vencimiento->isBefore(Carbon::today());
+        return $this->vencimiento->isBefore($this->projectionDate);
     }
 
     function getPendienteAttribute(){
@@ -119,7 +129,10 @@ class Cuota extends Model
     }
 
     function getTotalAttribute(){
-        return new Money($this->calcularPago($this->fechaDeConsulta)->toScale(4, RoundingMode::HALF_UP), $this->getCurrency());
+        $total = $this->getFactorActualizacion()
+            ->multipliedBy($this->saldo->amount)
+            ->toScale(4, RoundingMode::HALF_UP);
+        return new Money($total, $this->getCurrency());
     }
 
     function getSaldoCapitalAttribute($value){
@@ -149,10 +162,6 @@ class Cuota extends Model
         return $numerador->dividedBy($denominador);
     }
 
-    // function pagosExtras(){
-    //     return $this->hasMany(PagoExtra::class, "numero", "periodo")->where("credito_id", $this->credito_id);
-    // }
-
     function getPagosExtrasAttribute(){
         return $this->credito->pagosExtras->where("periodo", $this->numero)->sortBy(function($pe){
             return $pe->id;
@@ -170,9 +179,9 @@ class Cuota extends Model
         return $this->belongsTo(Credito::class);
     }
 
-    function getAnteriorCuotaAttribute(){
-        return $this->credito->cuotas->where("numero", $this->numero - 1)->first();
-    }    
+    // function getAnteriorCuotaAttribute(){
+    //     return $this->credito->cuotas->where("numero", $this->numero - 1)->first();
+    // }    
 
     function getAnteriorAttribute(){
         return $this->credito->cuotas->where("numero", $this->numero - 1)->first();
@@ -194,81 +203,36 @@ class Cuota extends Model
         return "Pago de la cuota {$this->numero} del crédito {$this->credito->id}";
     }
 
+    function getFactorActualizacion(){
+        if(!$this->projectionDate->isAfter($this->vencimiento)) return BigRational::one();
+        /** @var UfvRepositoryInterface $ufvRepository */
+        $ufvRepository = Container::getInstance()->make(UfvRepositoryInterface::class);
+        $ufvVencimiento = $ufvRepository->findByDate($this->vencimiento);
+        if(!$ufvVencimiento) throw new Exception("No se encontro el valor de la UFV en la fecha ".$this->vencimiento->format("Y-m-d"));
+        $ufvPago = $ufvRepository->findByDate($this->projectionDate);
+        if(!$ufvVencimiento) throw new Exception("No se encontro el valor de la UFV en la fecha ".$this->projectionDate->format("Y-m-d"));
+        //Factor de mantenimiento de valor
+        $fmv = BigRational::of($ufvPago)->dividedBy($ufvVencimiento);
+        $fas = BigRational::of($this->credito->tasa_mora)
+            ->multipliedBy($this->projectionDate->diffInDays($this->vencimiento))
+            ->dividedBy("360")
+            ->plus("1");
+        return $fmv->multipliedBy($fas);
+    }
+
     /**
-     * @param string|BigDecimal $pago
+     * @param string|BigNumber $pago
      * @param Carbon $fechaPago
      */
     function recalcular($pago, $fechaPago){
-        $saldo = $this->attributes["saldo"];
-        $nuevoSaldo = $this->calcularSaldo($saldo, $pago, $this->vencimiento, $fechaPago)->toScale(4, RoundingMode::HALF_UP);
+        if($this->saldo->round()->amount->isEqualTo("0")) 
+            throw new Exception("El saldo de la cuota es 0");
+        $this->projectTo($fechaPago);
+        // $nuevoSaldo = $this->calcularSaldo($saldo, $pago, $this->vencimiento, $fechaPago)->toScale(4, RoundingMode::HALF_UP);
+        $pago = BigDecimal::of($pago)->toScale(2);
+        $pagoProyectado = $pago->dividedBy($this->getFactorActualizacion(), 4, RoundingMode::HALF_UP);
+        $nuevoSaldo = $this->saldo->amount->minus($pagoProyectado);
         $this->saldo = $nuevoSaldo;
-        $this->total_pagos = BigDecimal::of($pago)->plus($this->attributes["total_pagos"]);
+        $this->total_pagos = $pago->plus($this->attributes["total_pagos"]);
     }
-
-    function calcularSaldo($deuda, $pago, $fechaVencimiento, $fechaPago){
-
-        if(!$fechaPago->isAfter($fechaVencimiento)) return BigDecimal::of($deuda)->minus($pago);
-
-        $ufvVencimiento = UFV::firstWhere("fecha", $fechaVencimiento);
-        $ufvPago = UFV::firstWhere("fecha", $fechaPago);
-        if(!$ufvVencimiento || ! $ufvPago) $pagoActualizado = BigDecimal::of($pago);
-        else $pagoActualizado = BigDecimal::of($pago)->multipliedBy(BigDecimal::of($ufvVencimiento->valor))->dividedBy(BigDecimal::of($ufvPago->valor), 20, RoundingMode::HALF_UP);
-
-        // $fas = BigDecimal::one()->plus(
-        //     BigDecimal::of($this->venta->tasaMora)->dividedBy(360, 20, RoundingMode::HALF_UP)
-        // )->power($ufvPago->fecha->diffInDays($ufvVencimiento));
-        $fas = BigDecimal::of($this->credito->tasa_mora)
-        ->multipliedBy($fechaPago->diffInDays($fechaVencimiento))
-        ->dividedBy(360, 20, RoundingMode::HALF_UP)
-        ->plus(BigDecimal::one());
-
-        return BigDecimal::of($deuda)->minus($pagoActualizado->dividedBy($fas, 20, RoundingMode::HALF_UP));
-    }
-
-    /**
-     * @param Carbon $fechaPago
-     */
-    function calcularPago($fechaPago){
-        $deuda = BigDecimal::of($this->attributes["saldo"]);
-        $fechaVencimiento = $this->vencimiento;
-        //Si la deuda es muy pequeña (menor a 1) entonces no se calcula la multa
-        if(/* $deuda->isLessThan(BigDecimal::one())
-           || */!$fechaPago->isAfter($fechaVencimiento)) return $deuda;
-
-        /** @var UfvRepositoryInterface $ufvRepository */
-        $ufvRepository = Container::getInstance()->make(UfvRepositoryInterface::class);
-        $ufvVencimiento = $ufvRepository->findByDate($fechaVencimiento);
-        $ufvPago = $ufvRepository->findByDate($fechaPago);
-        if(!$ufvVencimiento || !$ufvPago) $deudaActualizada = $deuda;
-        else $deudaActualizada = $deuda->multipliedBy(BigDecimal::of($ufvPago))->dividedBy(BigDecimal::of($ufvVencimiento), 20, RoundingMode::HALF_UP);
-        // $fas = BigDecimal::one()->plus(
-        //     BigDecimal::of($this->venta->tasaMora)->dividedBy(360, 20, RoundingMode::HALF_UP)
-        // )->power($ufvPago->fecha->diffInDays($ufvVencimiento));
-        // return $deudaActualizada->multipliedBy($factor);
-        $fas = BigDecimal::of($this->credito->tasa_mora)
-            ->multipliedBy($fechaVencimiento->diffInDays($fechaPago))
-            ->dividedBy(360, 20, RoundingMode::HALF_UP)
-            ->plus(BigDecimal::one())
-            ;
-
-        return $deudaActualizada->multipliedBy($fas);
-    }
-
-    // function toTransactableArray($fecha){
-
-    //     $pago = $this->calcularPago(
-    //         $fecha
-    //     );
-
-    //     return [
-    //         "id" => $this->id,
-    //         "type" => self::class,
-    //         "referencia" => $this->getReferencia(),
-    //         "importe" => (string) $pago->toScale(2, RoundingMode::HALF_UP),
-    //         "moneda" => $this->getCurrency()->code,
-
-    //         "saldo" => $this->saldo->amount,
-    //         "multa" => (string) $pago->minus($this->saldo->amount)->toScale(2, RoundingMode::HALF_UP)
-    //     ];
-    // }
 }

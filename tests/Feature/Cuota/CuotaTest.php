@@ -26,7 +26,8 @@ it("Calcular pago actualizado", function(){
     $cuota->saldo = "78.93";
 
     $fecha = Carbon::createFromFormat("Y-m-d", "2022-11-01")->startOfDay();
-    $this->assertTrue($cuota->calcularPago($fecha)->isEqualTo("78.93"));
+    $cuota->projectTo($fecha);
+    $this->assertSame("78.9300", (string) $cuota->total->amount);
     
     $fecha->addDay();
     /** @var \Mockery\MockInterface $mock */
@@ -34,18 +35,15 @@ it("Calcular pago actualizado", function(){
     Container::getInstance()->instance(UfvRepositoryInterface::class, $mock);
     $mock->shouldReceive("findByDate")->andReturn(BigDecimal::one());
 
-    $pago = $cuota->calcularPago($fecha);
-    $pago = $pago->toScale(2, RoundingMode::HALF_UP);
-    $this->assertTrue($pago->isEqualTo("78.94"));
+    $cuota->projectTo($fecha);
+    $this->assertSame("78.9366", (string) $cuota->total->amount);
 
     $fecha->addDays(89);
-    $pago = $cuota->calcularPago($fecha);
-    $pago = $pago->toScale(2, RoundingMode::HALF_UP);
-    $this->assertTrue($pago->isEqualTo("79.52"));
+    $cuota->projectTo($fecha);
+    $this->assertSame("79.5220", (string) $cuota->total->amount);
 
     $fecha->addDays(275);
-    $pago = $cuota->calcularPago($fecha);
-    $pago = $pago->toScale(2, RoundingMode::HALF_UP);
-    $this->assertTrue($pago->isEqualTo("81.33"));
+    $cuota->projectTo($fecha);
+    $this->assertSame("81.3308", (string)$cuota->total->amount);
     
 });

@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\ClienteController;
-use App\Http\Controllers\CuentasPorCobrarController;
 use App\Http\Controllers\CuotaController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\ListaMoraController;
@@ -54,7 +53,6 @@ Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}', [ProyectoContr
 Route::middleware('auth:sanctum')->get('/proyectos', [ProyectoController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/proyectos', [ProyectoController::class, "store"]);
 
-Route::middleware('auth:sanctum')->get('/cuentas-por-cobrar', [CuentasPorCobrarController::class, "index"]);
 Route::middleware('auth:sanctum')->get('/transacciones', [CajaController::class, "index"]);
 // Route::middleware('auth:sanctum')->post('/transacciones', [CajaController::class, "store"]);
 

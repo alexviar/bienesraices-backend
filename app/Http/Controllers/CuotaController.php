@@ -42,9 +42,8 @@ class CuotaController extends Controller
             "fecha" => $fecha->format("Y-m-d"),
             "cliente" => $cliente->setVisible(["id", "nombre_completo"]),
             "cuotas" => $creditos->each(function($credito) use($fecha){
-                $credito->setFechaDeConsulta($fecha);
+                $credito->projectTo($fecha);
             })->pluck("cuotas_pendientes")->flatten()->map(function($cuota) use($fecha){
-                $cuota->setFechaDeConsulta($fecha);
                 return [
                     "id" => $cuota->id,
                     "referencia" => $cuota->getReferencia(),
@@ -93,14 +92,16 @@ class CuotaController extends Controller
                 catch(Throwable $t){}
             }],
             "detalles.*.importe" => ["required", "numeric", function($attribute, $value, $fail) use($request, $now) {
+                /** @var Cuota $cuota */
                 $cuota = $request->input(Str::replace("importe", "cuota", $attribute));
                 
                 if(!$cuota) return;
 
-                $deuda = $cuota->calcularPago($request->fecha ? 
+                $cuota->projectTo($request->fecha ? 
                     Carbon::createFromFormat("Y-m-d", $request->fecha)->startOfDay() : 
                     $now
-                )->toScale(2, RoundingMode::HALF_UP);
+                );
+                $deuda = $cuota->total->round(2)->amount;
 
                 if(BigDecimal::of($value)->isGreaterThan($deuda)){
                     $fail("El pago excede el saldo de la cuota.");
@@ -138,6 +139,7 @@ class CuotaController extends Controller
             ]);
             
             foreach($detalles as $detalle){
+                /** @var Cuota $cuota */
                 $cuota = $detalle["cuota"];
                 $cuota->recalcular($detalle["importe"], Carbon::createFromFormat("Y-m-d", $fecha));
                 $cuota->save();

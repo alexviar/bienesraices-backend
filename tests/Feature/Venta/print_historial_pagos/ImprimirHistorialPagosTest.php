@@ -95,10 +95,12 @@ it("Genera un reporte del historial de pagos", function(){
     $detailModel->importe = "78.93";
     $transaccion->detalles()->save($detailModel);
     $detailModel->cuotas()->attach($credito->cuotas->where("numero", 2)->first());
-    $credito->cuotas()->whereIn("numero", [1, 2])->update(["saldo" => "0"]);
-
-    $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-09-30"));
     
+    $credito->cuotas()->where("numero", 1)->update(["saldo" => "0", "total_pagos" => "78.95"]);
+    $credito->cuotas()->where("numero", 2)->update(["saldo" => "0", "total_pagos" => "78.93"]);
+
+    $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-09-30"));    
+    $credito->cuotas->each->refresh();
     $pdf = $report->generate($credito->refresh());
     // $pdf->save(__DIR__."/historial_pagos_sample_1.pdf");
 
@@ -107,13 +109,15 @@ it("Genera un reporte del historial de pagos", function(){
     $this->assertTrue(comparePdf($generatedContent, $sampleContent));
 
     $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-11-01")->startOfDay());
+    $credito->cuotas->each->refresh();
     $pdf = $report->generate($credito);
-    // $pdf->save(__DIR__."/historial_pagos_sample_2.pdf");
+    // $pdf->save(__DIR__."/historial_pagos_sample_20.pdf");
     $generatedContent = $pdf->output();
     $sampleContent = file_get_contents(__DIR__."/historial_pagos_sample_2.pdf");
     $this->assertTrue(comparePdf($generatedContent, $sampleContent));
 
     $this->travel(1)->day();
+    $credito->cuotas->each->refresh();
     $pdf = $report->generate($credito);
     // $pdf->save(__DIR__."/historial_pagos_sample_3.pdf");
     $generatedContent = $pdf->output();
@@ -129,7 +133,6 @@ it("imprime el historial de pagos en pantalla", function(){
     $venta = Venta::factory()->credito()->create();
     $credito = Credito::factory()->for($venta, "creditable")->create();
     $credito->build();
-    $proyectoId = $venta->proyecto_id;
     $id = $credito->id;
 
     $this->mock(HistorialPagos::class, function($mock) use($id){

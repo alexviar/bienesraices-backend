@@ -4,6 +4,7 @@ namespace App\Http\Reports\Venta;
 
 use App\Models\Credito;
 use App\Models\DetalleTransaccion;
+use Illuminate\Support\Facades\Log;
 
 class HistorialPagos {
 
@@ -26,20 +27,20 @@ class HistorialPagos {
         $zero = new \App\Models\ValueObjects\Money("0", $venta->currency);
         $totalPagos = $pagos->reduce(function($carry, $pago){
             return $carry->add($pago->importe->exchangeTo($carry->currency, ["exchangeMode"=>"buy"]));
-        }, $zero)->round();
+        }, $zero)->round(2);
         
-        $today = \Illuminate\Support\Carbon::today();
         $saldoMora = $zero;
-        $totalPagado = $zero;
-        $i = 0;
-        while($credito->cuotas[$i]->vencimiento->isBefore($today) && $i < $credito->cuotas->count()){
-            $saldoMora = $saldoMora->plus($credito->cuotas[$i]->calcularPago($today)->toScale(2, \Brick\Math\RoundingMode::HALF_UP));
-            $totalPagado = $totalPagado->plus($credito->cuotas[$i]->importe->minus($credito->cuotas[$i]->saldo));
-            $i++;
+        $totalMultas = $zero;
+        $cuota = $credito->cuotas->first();
+        while($cuota && $cuota->vencida){
+            $saldoMora = $saldoMora->plus($cuota->total->round(2));
+            $totalMultas = $totalMultas->plus($cuota->total_multas->round(2));
+            $cuota = $cuota->siguiente;
         }
-        $totalPagado = $totalPagado->plus($credito->cuotas[$i]->importe->minus($credito->cuotas[$i]->saldo));
-        $totalMultas = $totalPagos->minus($credito->cuota_inicial)->minus($totalPagado);
-        $saldoPendiente = $credito->cuotas[$i]->saldo->plus($credito->cuotas[$i]->saldo_capital)->plus($saldoMora);
+        $saldoPendiente = $saldoMora;
+        if($cuota){
+            $saldoPendiente = $saldoPendiente->plus($cuota->saldo->plus($cuota->saldo_capital));
+        }
 
         return \Barryvdh\DomPDF\Facade\Pdf::loadView("pdf.historial_pagos", [
             "img" => $dataUri,
