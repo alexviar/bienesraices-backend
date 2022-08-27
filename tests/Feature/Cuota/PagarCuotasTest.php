@@ -228,9 +228,9 @@ test('Fecha implicita', function () {
     $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas', $data);
     $response->assertCreated();
     $credito->cuotas[0]->refresh();
-    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "155.26");
-    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.00");
-    $this->assertSame((string)$credito->cuotas[0]->total_pagos->amount, "100.00");
+    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "155.2600");
+    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.0000");
+    $this->assertSame((string)$credito->cuotas[0]->total_pagos->amount, "100.0000");
 
     $this->travelTo($credito->cuotas[1]->vencimiento);
 
@@ -255,13 +255,13 @@ test('Fecha implicita', function () {
     $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas', $data);
     $response->assertCreated();
     $credito->cuotas[0]->refresh();
-    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "0.39");
-    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.39");
-    $this->assertSame((string)$credito->cuotas[0]->total_pagos->amount, "255.26");
+    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "0.3872");
+    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.3872");
+    $this->assertSame((string)$credito->cuotas[0]->total_pagos->amount, "255.2600");
     $credito->cuotas[1]->refresh();
-    $this->assertSame((string)$credito->cuotas[1]->saldo->amount, "155.26");
-    $this->assertSame((string)$credito->cuotas[1]->total_multas->amount, "0.00");
-    $this->assertSame((string)$credito->cuotas[1]->total_pagos->amount, "100.00");
+    $this->assertSame((string)$credito->cuotas[1]->saldo->amount, "155.2600");
+    $this->assertSame((string)$credito->cuotas[1]->total_multas->amount, "0.0000");
+    $this->assertSame((string)$credito->cuotas[1]->total_pagos->amount, "100.0000");
 
 });
 
@@ -297,9 +297,9 @@ test('Fecha explicita', function () {
     $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas', $data);
     $response->assertCreated();
     $credito->cuotas[0]->refresh();
-    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "155.26");
-    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.00");
-    $this->assertSame((string)$credito->cuotas[0]->total_pagos->amount, "100.00");
+    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "155.2600");
+    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.0000");
+    $this->assertSame((string)$credito->cuotas[0]->total_pagos->amount, "100.0000");
 
     $data = Transaccion::factory([
         "fecha" => $credito->cuotas[1]->vencimiento->format("Y-m-d"),
@@ -322,12 +322,12 @@ test('Fecha explicita', function () {
     $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas', $data);
     $response->assertCreated();
     $credito->cuotas[0]->refresh();
-    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "0.39");
-    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.39");
-    $this->assertSame((string)$credito->cuotas[0]->total_pagos->amount, "255.26");
+    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "0.3872");
+    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.3872");
+    $this->assertSame((string)$credito->cuotas[0]->total_pagos->amount, "255.2600");
     $credito->cuotas[1]->refresh();
-    $this->assertSame((string)$credito->cuotas[1]->saldo->amount, "155.26");
-    $this->assertSame((string)$credito->cuotas[1]->total_multas->amount, "0.00");
-    $this->assertSame((string)$credito->cuotas[1]->total_pagos->amount, "100.00");
+    $this->assertSame((string)$credito->cuotas[1]->saldo->amount, "155.2600");
+    $this->assertSame((string)$credito->cuotas[1]->total_multas->amount, "0.0000");
+    $this->assertSame((string)$credito->cuotas[1]->total_pagos->amount, "100.0000");
 
 });

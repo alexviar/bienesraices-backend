@@ -7,6 +7,7 @@ use App\Models\Reserva;
 use App\Models\Transaccion;
 use App\Models\User;
 use App\Models\Venta;
+use Brick\Math\BigDecimal;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
@@ -81,13 +82,13 @@ it('Registra una venta al contado', function () {
     $keys = [
         "fecha",
         "moneda",
-        "importe",
         "proyecto_id",
         "lote_id",
         "cliente_id",
         "vendedor_id",
     ];
     $this->assertEquals(Arr::only($data, $keys), Arr::only($venta->getAttributes(), $keys));
+    $this->assertEquals((string) BigDecimal::of($data["importe"])->toScale(4), (string) $venta->importe->amount);
 
     assertTransaccionPorVentaAlContado($data, $venta, "10530.96");
 });
@@ -128,13 +129,14 @@ it("Registra una venta al crédito", function(){
     $keys = [
         "fecha",
         "moneda",
-        "importe",
         "proyecto_id",
         "lote_id",
         "cliente_id",
         "vendedor_id",
     ];
     $this->assertEquals(Arr::only($data, $keys), Arr::only($venta->getAttributes(), $keys));
+    $this->assertEquals((string) BigDecimal::of($data["importe"])->toScale(4), (string) $venta->importe->amount);
+    $dataCredito["cuota_inicial"] = (string) BigDecimal::of($dataCredito["cuota_inicial"])->toScale(4);
     expect($venta->credito->getAttributes())->toMatchArray(Arr::except($dataCredito, ["creditable_id", "creditable_type"]));
 
     assertTransaccionPorVentaAlCredito($data, $venta->credito, "500");
@@ -182,13 +184,13 @@ test("Pagos programados el 31 de cada mes", function(){
     $keys = [
         "fecha",
         "moneda",
-        "importe",
         "proyecto_id",
         "lote_id",
         "cliente_id",
         "vendedor_id",
     ];
     $this->assertEquals(Arr::only($data, $keys), Arr::only($venta->getAttributes(), $keys));
+    $this->assertEquals((string) BigDecimal::of($data["importe"])->toScale(4), (string) $venta->importe->amount);
     
     /** @var FilesystemAdapter $disk */
     $disk = Storage::disk("tests");

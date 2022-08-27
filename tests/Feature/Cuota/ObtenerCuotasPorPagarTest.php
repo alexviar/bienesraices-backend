@@ -56,10 +56,10 @@ test('Fecha implicita', function () {
             "id" => $credito->cuotas[0]->id,
             "referencia" => $credito->cuotas[0]->getReferencia(),
             "moneda" => $credito->getCurrency()->code,
-            "importe" => "255.26",
-            "saldo" => "255.26",
-            "multa" => "0.00",
-            "total" => "255.26"
+            "importe" => "255.2600",
+            "saldo" => "255.2600",
+            "multa" => "0.0000",
+            "total" => "255.2600"
         ]
     ]);
 
@@ -74,10 +74,10 @@ test('Fecha implicita', function () {
             "id" => $credito->cuotas[0]->id,
             "referencia" => $credito->cuotas[0]->getReferencia(),
             "moneda" => $credito->getCurrency()->code,
-            "importe" => "255.26",
-            "saldo" => "255.26",
-            "multa" => "0.00",
-            "total" => "255.26"
+            "importe" => "255.2600",
+            "saldo" => "255.2600",
+            "multa" => "0.0000",
+            "total" => "255.2600"
         ]
     ]);
     
@@ -92,26 +92,25 @@ test('Fecha implicita', function () {
             "id" => $credito->cuotas[0]->id,
             "referencia" => $credito->cuotas[0]->getReferencia(),
             "moneda" => $credito->getCurrency()->code,
-            "importe" => "255.26",
-            "saldo" => "255.26",
-            "multa" => "0.02",
-            "total" => "255.28"
+            "importe" => "255.2600",
+            "saldo" => "255.2600",
+            "multa" => "0.0213",
+            "total" => "255.2813"
         ],
         [
             "id" => $credito->cuotas[1]->id,
             "referencia" => $credito->cuotas[1]->getReferencia(),
             "moneda" => $credito->getCurrency()->code,
-            "importe" => "255.26",
-            "saldo" => "255.26",
-            "multa" => "0.00",
-            "total" => "255.26"
+            "importe" => "255.2600",
+            "saldo" => "255.2600",
+            "multa" => "0.0000",
+            "total" => "255.2600"
         ]
     ]);
 
     $credito->cuotas[0]->update([
-        "saldo" => "155.28",
+        "saldo" => "155.2683",
         "total_pagos" => "100",
-        "total_multas" => "0.02"
     ]);
 
     $this->travelTo($credito->cuotas[1]->vencimiento);
@@ -125,19 +124,19 @@ test('Fecha implicita', function () {
             "id" => $credito->cuotas[0]->id,
             "referencia" => $credito->cuotas[0]->getReferencia(),
             "moneda" => $credito->getCurrency()->code,
-            "importe" => "255.26",
-            "saldo" => "155.28",
-            "multa" => "0.39",
-            "total" => "155.67"
+            "importe" => "255.2600",
+            "saldo" => "155.2683",
+            "multa" => "0.3882",
+            "total" => "155.6565"
         ],
         [
             "id" => $credito->cuotas[1]->id,
             "referencia" => $credito->cuotas[1]->getReferencia(),
             "moneda" => $credito->getCurrency()->code,
-            "importe" => "255.26",
-            "saldo" => "255.26",
-            "multa" => "0.00",
-            "total" => "255.26"
+            "importe" => "255.2600",
+            "saldo" => "255.2600",
+            "multa" => "0.0000",
+            "total" => "255.2600"
         ]
     ]);
 });
@@ -185,10 +184,10 @@ test('Fecha explicita', function () {
             "id" => $credito->cuotas[0]->id,
             "referencia" => $credito->cuotas[0]->getReferencia(),
             "moneda" => $credito->getCurrency()->code,
-            "importe" => "255.26",
-            "saldo" => "255.26",
-            "multa" => "0.00",
-            "total" => "255.26"
+            "importe" => "255.2600",
+            "saldo" => "255.2600",
+            "multa" => "0.0000",
+            "total" => "255.2600"
         ]
     ]);
     
@@ -202,10 +201,10 @@ test('Fecha explicita', function () {
             "id" => $credito->cuotas[0]->id,
             "referencia" => $credito->cuotas[0]->getReferencia(),
             "moneda" => $credito->getCurrency()->code,
-            "importe" => "255.26",
-            "saldo" => "255.26",
-            "multa" => "0.00",
-            "total" => "255.26"
+            "importe" => "255.2600",
+            "saldo" => "255.2600",
+            "multa" => "0.0000",
+            "total" => "255.2600"
         ]
     ]);
     
@@ -219,26 +218,25 @@ test('Fecha explicita', function () {
             "id" => $credito->cuotas[0]->id,
             "referencia" => $credito->cuotas[0]->getReferencia(),
             "moneda" => $credito->getCurrency()->code,
-            "importe" => "255.26",
-            "saldo" => "255.26",
-            "multa" => "0.02",
-            "total" => "255.28"
+            "importe" => "255.2600",
+            "saldo" => "255.2600",
+            "multa" => "0.0213",
+            "total" => "255.2813"
         ],
         [
             "id" => $credito->cuotas[1]->id,
             "referencia" => $credito->cuotas[1]->getReferencia(),
             "moneda" => $credito->getCurrency()->code,
-            "importe" => "255.26",
-            "saldo" => "255.26",
-            "multa" => "0.00",
-            "total" => "255.26"
+            "importe" => "255.2600",
+            "saldo" => "255.2600",
+            "multa" => "0.0000",
+            "total" => "255.2600"
         ]
     ]);
 
     $credito->cuotas[0]->update([
-        "saldo" => "155.28",
+        "saldo" => "155.2683",
         "total_pagos" => "100",
-        "total_multas" => "0.02"
     ]);
     
     $response = $this->actingAs(User::find(1))->getJson('/api/pagos/cuotas?'.http_build_query([
@@ -251,19 +249,19 @@ test('Fecha explicita', function () {
             "id" => $credito->cuotas[0]->id,
             "referencia" => $credito->cuotas[0]->getReferencia(),
             "moneda" => $credito->getCurrency()->code,
-            "importe" => "255.26",
-            "saldo" => "155.28",
-            "multa" => "0.39",
-            "total" => "155.67"
+            "importe" => "255.2600",
+            "saldo" => "155.2683",
+            "multa" => "0.3882",
+            "total" => "155.6565"
         ],
         [
             "id" => $credito->cuotas[1]->id,
             "referencia" => $credito->cuotas[1]->getReferencia(),
             "moneda" => $credito->getCurrency()->code,
-            "importe" => "255.26",
-            "saldo" => "255.26",
-            "multa" => "0.00",
-            "total" => "255.26"
+            "importe" => "255.2600",
+            "saldo" => "255.2600",
+            "multa" => "0.0000",
+            "total" => "255.2600"
         ]
     ]);
 });

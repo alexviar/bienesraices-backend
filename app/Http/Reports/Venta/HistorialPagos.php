@@ -39,11 +39,12 @@ class HistorialPagos {
         }
         $totalPagado = $totalPagado->plus($credito->cuotas[$i]->importe->minus($credito->cuotas[$i]->saldo));
         $totalMultas = $totalPagos->minus($credito->cuota_inicial)->minus($totalPagado);
-        $saldoPendiente = $credito->cuotas[$i]->saldo->plus($venta->credito->cuotas[$i]->saldo_capital)->plus($saldoMora);
+        $saldoPendiente = $credito->cuotas[$i]->saldo->plus($credito->cuotas[$i]->saldo_capital)->plus($saldoMora);
 
         return \Barryvdh\DomPDF\Facade\Pdf::loadView("pdf.historial_pagos", [
             "img" => $dataUri,
             "venta" => $venta,
+            "credito" => $credito,
             "pagos" => $pagos,
             "totalPagos" => $totalPagos,
             "totalMultas" => $totalMultas,

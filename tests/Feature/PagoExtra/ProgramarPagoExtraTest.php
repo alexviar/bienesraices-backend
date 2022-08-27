@@ -56,7 +56,7 @@ it('registra un pago extra', function () {
 
 
     $this->assertCount(1, $credito->pagosExtras);
-    $this->assertSame($body["importe"], $credito->pagosExtras[0]->getAttributes()["importe"]);
+    $this->assertSame($body["importe"], (string) $credito->pagosExtras[0]->importe->amount->toScale(2, RoundingMode::HALF_UP));
     $this->assertSame(5, $credito->pagosExtras[0]->periodo);
     $this->assertSame(1, $credito->pagosExtras[0]->tipo_ajuste);
 });
@@ -71,7 +71,7 @@ it('registra un segundo pago extra', function () {
     $credito = Credito::find($response->json("id"));
 
     $this->assertCount(2, $credito->pagosExtras);
-    $this->assertSame($body["importe"], $credito->pagosExtras[1]->getAttributes()["importe"]);
+    $this->assertSame($body["importe"], (string) $credito->pagosExtras[1]->importe->amount->toScale(2, RoundingMode::HALF_UP));
     $this->assertSame($body["periodo"], $credito->pagosExtras[1]->periodo);
     $this->assertSame($body["tipo_ajuste"], $credito->pagosExtras[1]->tipo_ajuste);
 });
@@ -140,12 +140,12 @@ it("actualiza el plan de pagos", function($data){
             "numero" => (string) $cuota->numero,
             "vencimiento" => $cuota->vencimiento->format("Y-m-d"),
             "dias" => (string) $cuota->dias,
-            "importe" => (string) $cuota->importe->amount,
-            "pago_extra" => (string) $cuota->pago_extra->amount,
-            "interes" => (string) $cuota->interes->amount,
-            "amortizacion" => (string) $cuota->amortizacion->amount,
-            "saldo_capital" => (string) $cuota->saldo_capital->amount,
-            "saldo" => (string) $cuota->saldo->amount,
+            "importe" => (string) $cuota->importe->amount->toScale(2, RoundingMode::HALF_UP),
+            "pago_extra" => (string) $cuota->pago_extra->amount->toScale(2, RoundingMode::HALF_UP),
+            "interes" => (string) $cuota->interes->amount->toScale(2, RoundingMode::HALF_UP),
+            "amortizacion" => (string) $cuota->amortizacion->amount->toScale(2, RoundingMode::HALF_UP),
+            "saldo_capital" => (string) $cuota->saldo_capital->amount->toScale(2, RoundingMode::HALF_UP),
+            "saldo" => (string) $cuota->saldo->amount->toScale(2, RoundingMode::HALF_UP),
         ], "Cuota n.º $cuota->numero");
         $i++;
     }

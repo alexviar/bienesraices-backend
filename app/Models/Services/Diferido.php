@@ -3,6 +3,7 @@
 namespace App\Models\Services;
 
 use App\Models\Cuota;
+use Brick\Math\BigDecimal;
 use Brick\Math\BigRational;
 use Brick\Math\RoundingMode;
 
@@ -33,23 +34,17 @@ class Diferido extends ProgramadorPagoExtra {
 
                 $saldo_capital = $saldoMasInteres->minus($pagoCuota);
 
-                $cuota->update([
-                    "importe" => (string) $pagoCuota,
-                    "saldo" => (string) $pagoCuota//->plus($cuota->getAttributes()["pago_extra"])
-                        ->minus($cuota->total_pagos->amount)
-                        ->plus($cuota->total_multas->amount),
-                    "saldo_capital" => (string) $saldo_capital,
-                ]);
                 $diferido = BigRational::zero();
             } 
             else{
                 $diferido = $diferido->plus($cuota->fas->minus("1")->multipliedBy($saldo_capital));
-                $cuota->update([
-                    "importe" => "0.00",
-                    "saldo" => (string) $cuota->total_multas->minus($cuota->total_pagos)->amount,
-                    "saldo_capital" => (string) $saldo_capital,
-                ]);
+                $pagoCuota = BigDecimal::zero();
             }
+            $cuota->update([
+                "importe" => $pagoCuota,
+                "saldo" => (string) $cuota->saldo->minus($cuota->importe)->amount->plus($pagoCuota),
+                "saldo_capital" => (string) $saldo_capital,
+            ]);
             $cuota = $cuota->siguiente;
         }
     }

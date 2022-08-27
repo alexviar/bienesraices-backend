@@ -32,7 +32,7 @@ function assertTransaccionPorVentaAlContado($data, Venta $venta, $pagoEsperado)
     $test->assertSame($venta->getReferencia(), $transacciones[0]->detalles[0]->referencia);
     $test->assertSame($venta->moneda, $transacciones[0]->detalles[0]->moneda);
     
-    $test->assertSame((string) BigDecimal::of($pagoEsperado)->toScale(2, RoundingMode::HALF_UP), (string) $transacciones[0]->detalles[0]->importe->amount);
+    $test->assertSame((string) BigDecimal::of($pagoEsperado)->toScale(4, RoundingMode::HALF_UP), (string) $transacciones[0]->detalles[0]->importe->amount);
 
     
     // $this->assertDatabaseCount("transacciones", 1);
@@ -65,7 +65,7 @@ function assertTransaccionPorVentaAlCredito($data, Credito $credito, $pagoEspera
     $test->assertSame(1, $transacciones[0]->detalles->count());
     $test->assertSame($credito->getReferencia(), $transacciones[0]->detalles[0]->referencia);
     
-    $test->assertSame((string) BigDecimal::of($pagoEsperado)->toScale(2, RoundingMode::HALF_UP), (string) $transacciones[0]->detalles[0]->importe->amount);
+    $test->assertSame((string) BigDecimal::of($pagoEsperado)->toScale(4, RoundingMode::HALF_UP), (string) $transacciones[0]->detalles[0]->importe->amount);
 
     
     // $this->assertDatabaseCount("transacciones", 1);

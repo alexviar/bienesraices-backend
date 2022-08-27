@@ -38,8 +38,9 @@ class Cuota extends Model
         "dias",
         "interes",
         "amortizacion",
-        "multa",
         "total",
+        "multa",
+        "total_multas",
         "vencida",
         "pendiente"
     ];
@@ -88,8 +89,8 @@ class Cuota extends Model
         return new Money($value, $this->getCurrency());
     }
 
-    function getTotalMultasAttribute($value){
-        return new Money($value, $this->getCurrency());
+    function getTotalMultasAttribute(){
+        return $this->total_pagos->minus($this->importe->plus($this->pago_extra)->minus($this->saldo));
     }
 
     function getTotalPagosAttribute($value){
@@ -102,10 +103,6 @@ class Cuota extends Model
 
     function getInteresAttribute(){
         return $this->importe->plus($this->pago_extra)->minus($this->amortizacion);
-        // $saldoAnterior = $this->anterior ?
-        //     $this->anterior->saldo_capital :
-        //     $this->credito->importe->minus($this->credito->cuota_inicial);
-        // return $saldoAnterior->multipliedBy($this->fas->minus("1")->toScale(20, RoundingMode::HALF_UP))->round();
     }
 
     function getAmortizacionAttribute(){
@@ -122,7 +119,7 @@ class Cuota extends Model
     }
 
     function getTotalAttribute(){
-        return new Money($this->calcularPago($this->fechaDeConsulta)->toScale(2, RoundingMode::HALF_UP), $this->getCurrency());
+        return new Money($this->calcularPago($this->fechaDeConsulta)->toScale(4, RoundingMode::HALF_UP), $this->getCurrency());
     }
 
     function getSaldoCapitalAttribute($value){
@@ -203,10 +200,8 @@ class Cuota extends Model
      */
     function recalcular($pago, $fechaPago){
         $saldo = $this->attributes["saldo"];
-        $nuevoSaldo = $this->calcularSaldo($saldo, $pago, $this->vencimiento, $fechaPago)->toScale(2, RoundingMode::HALF_UP);
-        $multa = $nuevoSaldo->plus($pago)->minus($saldo);
+        $nuevoSaldo = $this->calcularSaldo($saldo, $pago, $this->vencimiento, $fechaPago)->toScale(4, RoundingMode::HALF_UP);
         $this->saldo = $nuevoSaldo;
-        $this->total_multas = $multa->plus($this->attributes["total_multas"]);
         $this->total_pagos = BigDecimal::of($pago)->plus($this->attributes["total_pagos"]);
     }
 
@@ -259,21 +254,21 @@ class Cuota extends Model
         return $deudaActualizada->multipliedBy($fas);
     }
 
-    function toTransactableArray($fecha){
+    // function toTransactableArray($fecha){
 
-        $pago = $this->calcularPago(
-            $fecha
-        );
+    //     $pago = $this->calcularPago(
+    //         $fecha
+    //     );
 
-        return [
-            "id" => $this->id,
-            "type" => self::class,
-            "referencia" => $this->getReferencia(),
-            "importe" => (string) $pago->toScale(2, RoundingMode::HALF_UP),
-            "moneda" => $this->getCurrency()->code,
+    //     return [
+    //         "id" => $this->id,
+    //         "type" => self::class,
+    //         "referencia" => $this->getReferencia(),
+    //         "importe" => (string) $pago->toScale(2, RoundingMode::HALF_UP),
+    //         "moneda" => $this->getCurrency()->code,
 
-            "saldo" => $this->saldo->amount,
-            "multa" => (string) $pago->minus($this->saldo->amount)->toScale(2, RoundingMode::HALF_UP)
-        ];
-    }
+    //         "saldo" => $this->saldo->amount,
+    //         "multa" => (string) $pago->minus($this->saldo->amount)->toScale(2, RoundingMode::HALF_UP)
+    //     ];
+    // }
 }

@@ -116,25 +116,25 @@
                                     <table style="border-spacing:0.5rem;border-collapse:separate;table-layout:fixed">
                                         <thead>
                                             <tr class="bg-primary text-white">
-                                                <th colspan="2">Parametros del crédito</th>
+                                                <th colspan="2">Parámetros del crédito</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Plazo del crédito:</b></th>
-                                                <td class="text-left"> {{$venta->credito->plazo}} meses</td>
+                                                <td class="text-left"> {{$credito->plazo}} meses</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Periodo de pago:</b></th>
-                                                <td class="text-left"> {{$venta->credito->periodo_pago_text}}</td>
+                                                <td class="text-left"> {{$credito->periodo_pago_text}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Tasa de interés anual:</b></th>
-                                                <td class="text-left"> {{\Brick\Math\BigDecimal::of("100")->multipliedBy($venta->credito->tasa_interes)->toScale(2)}} %</td>
+                                                <td class="text-left"> {{\Brick\Math\BigDecimal::of("100")->multipliedBy($credito->tasa_interes)->toScale(2)}} %</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Importe del terreno:</b></th>
-                                                <td class="text-left"> {{$venta->importe}}</td>
+                                                <td class="text-left"> {{$venta->importe->round()}}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -149,19 +149,19 @@
                                         <tbody>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Total pagos:</b></th>
-                                                <td class="text-left"> {{$totalPagos}}</td>
+                                                <td class="text-left"> {{$totalPagos->round()}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Total multas:</b></th>
-                                                <td class="text-left"> {{$totalMultas}}</td>
+                                                <td class="text-left"> {{$totalMultas->round()}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Saldo en mora:</b></th>
-                                                <td class="text-left"> {{$saldoMora}}</td>
+                                                <td class="text-left"> {{$saldoMora->round()}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Saldo pendiente:</b></th>
-                                                <td class="text-left"> {{$saldoPendiente}}</td>
+                                                <td class="text-left"> {{$saldoPendiente->round()}}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -188,7 +188,7 @@
                 <th scope="row">{{$i+1}}</th>
                 <td>{{$pagos[$i]->transaccion->fecha->format("d/m/Y")}}</td>
                 <td class="text-left">{{$pagos[$i]->referencia}}</td>
-                <td class="text-right" style="white-space:nowrap">{{$pagos[$i]->importe}}</td>
+                <td class="text-right" style="white-space:nowrap">{{$pagos[$i]->importe->round()}}</td>
             </tr>
             @endfor
         </tbody>

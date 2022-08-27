@@ -35,9 +35,7 @@ class SoloInteres extends ProgramadorPagoExtra {
             }
             $cuota->update([
                 "importe" => (string) $pagoCuota,
-                "saldo" => (string) $pagoCuota//->plus($cuota->getAttributes()["pago_extra"])
-                    ->minus($cuota->total_pagos->amount)
-                    ->plus($cuota->total_multas->amount),
+                "saldo" => (string) $cuota->saldo->minus($cuota->importe)->amount->plus($pagoCuota),
                 "saldo_capital" => (string) $saldo_capital,
             ]);
             $diferido = BigDecimal::zero();

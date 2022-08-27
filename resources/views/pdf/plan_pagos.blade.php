@@ -136,7 +136,7 @@
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Importe del terreno:</b></th>
-                                                <td class="text-left"> {{$venta->importe}}</td>
+                                                <td class="text-left"> {{$credito->importe->round()}}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -151,7 +151,7 @@
                                         <tbody>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Cuota:</b></th>
-                                                <td class="text-left"> {{$credito->importe_cuotas}}</td>
+                                                <td class="text-left"> {{$credito->importe_cuotas->round()}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Nº de cuotas:</b></th>
@@ -159,11 +159,11 @@
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Total intereses:</b></th>
-                                                <td class="text-left"> {{$credito->total_intereses}}</td>
+                                                <td class="text-left"> {{$credito->total_intereses->round()}}</td>
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Total crédito:</b></th>
-                                                <td class="text-left"> {{$credito->total_credito}}</td>
+                                                <td class="text-left"> {{$credito->total_credito->round()}}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -193,25 +193,25 @@
                 <th scope="row">0</th>
                 <td>{{$venta->fecha->format("d/m/Y")}}</td>
                 <td class="text-right">-</td>
-                <td class="text-right">{{$credito->cuota_inicial}}</td>
+                <td class="text-right">{{$credito->cuota_inicial->round()}}</td>
                 <td class="text-right">0.00 {{$venta->moneda}}</td>
                 <td class="text-right">0.00 {{$venta->moneda}}</td>
-                <td class="text-right">{{$credito->cuota_inicial}}</td>
+                <td class="text-right">{{$credito->cuota_inicial->round()}}</td>
                 @php
-                $saldo = $venta->importe->minus($credito->cuota_inicial);
+                $saldo = $credito->importe->minus($credito->cuota_inicial);
                 @endphp
-                <td class="text-right">{{$saldo}}</td>
+                <td class="text-right">{{$saldo->round()}}</td>
             </tr>
             @foreach ($credito->cuotas as $cuota)
             <tr>
                 <th scope="row">{{$cuota->numero}}</th>
                 <td>{{$cuota->vencimiento->format("d/m/Y")}}</td>
                 <td class="text-right">{{$cuota->dias}}</td>
-                <td class="text-right">{{$cuota->importe}}</td>
-                <td class="text-right">{{$cuota->interes}}</td>
-                <td class="text-right">{{$cuota->pago_extra}}</td>
-                <td class="text-right">{{$cuota->amortizacion}}</td>
-                <td class="text-right">{{$cuota->saldo_capital}}</td>
+                <td class="text-right">{{$cuota->importe->round()}}</td>
+                <td class="text-right">{{$cuota->interes->round()}}</td>
+                <td class="text-right">{{$cuota->pago_extra->round()}}</td>
+                <td class="text-right">{{$cuota->amortizacion->round()}}</td>
+                <td class="text-right">{{$cuota->saldo_capital->round()}}</td>
             </tr>
             @endforeach
         </tbody>
