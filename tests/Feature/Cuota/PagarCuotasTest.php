@@ -331,3 +331,147 @@ test('Fecha explicita', function () {
     $this->assertSame((string)$credito->cuotas[1]->total_pagos->amount, "100.0000");
 
 });
+
+
+dataset("pagos_dataset", function(){
+    function prepareCredito1(){
+        $credito = Credito::factory([
+            "cuota_inicial" => "4000",
+            "plazo" => 36,
+            "periodo_pago" => 1,
+            "dia_pago" => 1
+        ])->for(Venta::factory([
+            "fecha" => "2022-02-13",
+            "moneda" => "USD",
+            "importe" => "25056.00"
+        ])->for(Cliente::factory()), "creditable")->create();
+        $credito->build();
+        return $credito;
+    }
+    return [
+        function(){
+            $credito = prepareCredito1();
+            return [
+                "credito" => $credito,
+                "requests" => [
+                    [
+                        "data" => Transaccion::factory([
+                                "fecha" => "2022-07-13",
+                                "moneda" => "USD",
+                                "importe" => "260",
+                                "comprobante" => UploadedFile::fake()->image("comprobante.png")
+                            ])->raw() + [
+                                "detalles" => [
+                                    [
+                                        "cuota_id" => $credito->cuotas[1]->id,
+                                        "importe" => "100",
+                                    ],
+                                    [
+                                        "cuota_id" => $credito->cuotas[3]->id,
+                                        "importe" => "160",
+                                    ]
+                                ]
+                            ],
+                        "expectations" => [
+                            [
+                                "numero" => 2,
+                                "saldo" => "584.6547",
+                                "total_pagos" => "100.0000",
+                                "total_multas" => "0.6047"
+                            ],
+                            [
+                                "numero" => 4,
+                                "saldo" => "524.2098",
+                                "total_pagos" => "160.0000",
+                                "total_multas" => "0.1598"
+                            ],
+                        ]
+                    ],
+                    [
+                        "data" => Transaccion::factory([
+                            "fecha" => "2022-08-22",
+                            "moneda" => "USD",
+                            "importe" => "1110.5",
+                            "comprobante" => UploadedFile::fake()->image("comprobante.png")
+                        ])->raw() + [
+                            "detalles" => [
+                                [
+                                    "cuota_id" => $credito->cuotas[1]->id,
+                                    "importe" => "590.01",
+                                ],
+                                [
+                                    "cuota_id" => $credito->cuotas[3]->id,
+                                    "importe" => "520.48",
+                                ]
+                            ]
+                        ],
+                        "expectations" => [
+                            [
+                                "numero" => 2,
+                                "saldo" => "0.1488",
+                                "total_pagos" => "690.0100",
+                                "total_multas" => "6.1088"
+                            ],
+                            [
+                                "numero" => 4,
+                                "saldo" => "5.9755",
+                                "total_pagos" => "680.4800",
+                                "total_multas" => "2.4055"
+                            ],
+                        ]
+                    ],
+                    [
+                        "data" => Transaccion::factory([
+                            "fecha" => "2022-08-22",
+                            "moneda" => "USD",
+                            "importe" => "6.15",
+                            "comprobante" => UploadedFile::fake()->image("comprobante.png")
+                        ])->raw() + [
+                            "detalles" => [
+                                [
+                                    "cuota_id" => $credito->cuotas[1]->id,
+                                    "importe" => "0.15",
+                                ],
+                                [
+                                    "cuota_id" => $credito->cuotas[3]->id,
+                                    "importe" => "6",
+                                ]
+                            ]
+                        ],
+                        "expectations" => [
+                            [
+                                "numero" => 2,
+                                "saldo" => "0.0002",
+                                "total_pagos" => "690.1600",
+                                "total_multas" => "6.1102"
+                            ],
+                            [
+                                "numero" => 4,
+                                "saldo" => "0.0014",
+                                "total_pagos" => "686.4800",
+                                "total_multas" => "2.4314"
+                            ],
+                        ]
+                    ]
+                ]
+            ];
+        }
+    ];
+});
+
+
+it('registra pagos', function ($dataset) {
+    /** @var TestCase $this  */
+    $credito = $dataset["credito"];
+    $requests = $dataset["requests"];
+    foreach($requests as ["data" => $data, "expectations" => $expectations]){
+        $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas', $data);
+        $response->assertCreated();
+        foreach($expectations as $expectation){
+            $cuota = $credito->cuotas->where("numero", $expectation["numero"])->first()->refresh();
+            $this->assertSame($expectation["saldo"], (string) $cuota->saldo->amount);
+            $this->assertSame($expectation["total_multas"], (string) $cuota->total_multas->amount);
+            $this->assertSame($expectation["total_pagos"], (string) $cuota->total_pagos->amount);
+        }
+    }
+})->with("pagos_dataset");

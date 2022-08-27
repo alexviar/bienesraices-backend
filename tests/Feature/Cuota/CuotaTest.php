@@ -47,3 +47,18 @@ it("Calcular pago actualizado", function(){
     $this->assertSame("81.3308", (string)$cuota->total->amount);
     
 });
+
+
+// it("Calcular pago actualizado 2", function(){
+//     $cuota = new Cuota([
+//         "importe" => "684.05",
+//         "saldo" => "684.05",
+//         "saldo_capital" => "20134.86",
+//         "total_pagos" => "0"
+//     ]);
+
+//     $cuota->projectTo(Carbon::createFromFormat("Y-m-d", "2022-07-13")->startOfDay());
+
+
+
+// });

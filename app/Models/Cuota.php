@@ -230,7 +230,7 @@ class Cuota extends Model
         $this->projectTo($fechaPago);
         // $nuevoSaldo = $this->calcularSaldo($saldo, $pago, $this->vencimiento, $fechaPago)->toScale(4, RoundingMode::HALF_UP);
         $pago = BigDecimal::of($pago)->toScale(2);
-        $pagoProyectado = $pago->dividedBy($this->getFactorActualizacion(), 4, RoundingMode::HALF_UP);
+        $pagoProyectado = $pago->toBigRational()->dividedBy($this->getFactorActualizacion())->toScale(4, RoundingMode::HALF_UP);
         $nuevoSaldo = $this->saldo->amount->minus($pagoProyectado);
         $this->saldo = $nuevoSaldo;
         $this->total_pagos = $pago->plus($this->attributes["total_pagos"]);

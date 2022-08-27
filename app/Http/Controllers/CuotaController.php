@@ -34,7 +34,7 @@ class CuotaController extends Controller
             throw new ModelNotFoundException("No existe un cliente con el código de pago dado.");
         }
 
-        $creditos =Credito::with("cuotas")->whereHasMorph("creditable", [Venta::class], function($query) use($cliente){
+        $creditos =Credito::with("cuotas")->where("estado", 1)->whereHasMorph("creditable", [Venta::class], function($query) use($cliente){
             $query->where("cliente_id", $cliente->id);
         })->get();
 
