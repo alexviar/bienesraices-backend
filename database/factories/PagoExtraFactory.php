@@ -11,10 +11,13 @@ class PagoExtraFactory extends Factory
      *
      * @return array
      */
-    public function definition()
+    public function definition($attributes)
     {
         return [
-            //
+            "tipo_ajuste" => $attributes["tipo_ajuste"] ?? 1,
+            "periodo" => $attributes["periodo"] ?? 1,
+            "importe" => $attributes["importe"] ?? "1000",
+            "credito_id" => $attributes["credito_id"]
         ];
     }
 }

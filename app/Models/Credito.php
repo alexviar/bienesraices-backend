@@ -152,4 +152,11 @@ class Credito extends Model
     function getReferencia(){
         return "Cuota inicial del crédito Nº {$this->id}";
     }
+    
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
+     */
+    function transacciones(){
+        return $this->morphToMany(DetalleTransaccion::class, "transactable");
+    }
 }

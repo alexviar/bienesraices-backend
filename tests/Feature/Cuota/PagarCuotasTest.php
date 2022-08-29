@@ -332,6 +332,59 @@ test('Fecha explicita', function () {
 
 });
 
+it('registra la transaccion', function () {
+    /** @var TestCase $this  */
+    $cliente = Cliente::factory()->create();
+    $credito = Credito::factory([
+        "cuota_inicial" => "500",
+        "plazo" => 48,
+        "periodo_pago" => 1,
+        "dia_pago" => 1
+    ])->for(Venta::factory([
+        "fecha" => "2022-02-28",
+        "moneda" => "USD",
+        "importe" => "10530.96"
+    ])->for($cliente), "creditable")->create();
+    $credito->build();
+
+    $this->travelTo($credito->cuotas[0]->vencimiento);
+
+    $data = Transaccion::factory([
+        "moneda" => "USD",
+        "importe" => "100.0000",
+        "comprobante" => UploadedFile::fake()->image("comprobante.png")
+    ])->raw() + [
+        "detalles" => [
+            [
+                "cuota_id" => $credito->cuotas[0]->id,
+                "importe" => "100",
+            ]
+        ]
+    ];
+    unset($data["fecha"]);
+    
+    $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas', $data);
+    $response->assertCreated();
+    $credito->cuotas[0]->refresh();
+    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "155.2600");
+    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.0000");
+    $this->assertSame((string)$credito->cuotas[0]->total_pagos->amount, "100.0000");
+
+    $transaccion = Transaccion::find($response->json("id"));
+    expect($transaccion->getAttributes())->toMatchArray([
+        "fecha" => $credito->cuotas[0]->vencimiento->format("Y-m-d"),
+        "moneda" => $data["moneda"],
+        "importe" => $data["importe"],
+        "comprobante" => "",
+    ]);
+
+    expect($transaccion->detalles[0]->getAttributes())->toMatchArray([
+        "moneda" => "USD",
+        "importe" => "100.0000",
+    ]);
+    expect($transaccion->detalles[0]->cuotas[0]->id)->toBe($credito->cuotas[0]->id);    
+});
+
 
 dataset("pagos_dataset", function(){
     function prepareCredito1(){

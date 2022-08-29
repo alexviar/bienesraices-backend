@@ -32,9 +32,11 @@ abstract class ProgramadorPagoExtra {
         $clone->cuotas()->saveMany($credito->cuotas->map([$this, "cloneCuota"]));
         $clone->cuotas->each->setRelation("credito", $clone);
         $clone->unsetRelation("pagos_extras");
-        $clone->pagosExtras()->saveMany($credito->pagosExtras->each->replicate());
-        // $clone->unsetRelation("transacciones");
-        // $clone->transacciones()->attach($credito->transacciones);
+        $clone->pagosExtras()->saveMany($credito->pagosExtras->map(function($pagoExtra){
+            return $pagoExtra->replicate();
+        }));
+        $clone->unsetRelation("transacciones");
+        $clone->transacciones()->attach($credito->transacciones);
         return $clone;
     }
 
@@ -61,6 +63,7 @@ abstract class ProgramadorPagoExtra {
      * 
      */
     function apply($credito, $pagoExtra){
+        $creditoOriginal = $credito;
         $credito = $this->cloneCredito($credito);
         $credito->pagosExtras()->save($pagoExtra);
         $cuota = $credito->cuotas->where("numero", $pagoExtra->periodo)->first();
