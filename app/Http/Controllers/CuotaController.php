@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Cliente;
 use App\Models\Credito;
 use App\Models\Cuota;
+use App\Models\DetalleTransaccion;
 use App\Models\Transaccion;
 use App\Models\Venta;
 use Brick\Math\BigDecimal;
@@ -141,7 +142,13 @@ class CuotaController extends Controller
             foreach($detalles as $detalle){
                 /** @var Cuota $cuota */
                 $cuota = $detalle["cuota"];
-                $cuota->recalcular($detalle["importe"], Carbon::createFromFormat("Y-m-d", $fecha));
+                $cuota->transacciones()->attach($transaccion->detalles()->create(Arr::only($detalle, ["importe"]) + [
+                    "moneda" => $cuota->getCurrency()->code,
+                    "referencia" => $cuota->getReferencia()
+                ]));
+                $cuota->load("transacciones");
+                $cuota->recalcularSaldo();
+                $cuota->total_pagos = $cuota->total_pagos->amount->plus($detalle["importe"]);
                 $cuota->save();
             }
 

@@ -65,6 +65,9 @@ class Cuota extends Model
     
     /** @var Carbon $projectionDate */
     protected $projectionDate;
+
+    /** @var BigRational $_saldo */
+    protected $_saldo;
    
     /**
      * @param Carbon
@@ -124,14 +127,13 @@ class Cuota extends Model
     }
 
     function getMultaAttribute(){
-        // $amount = $this->total->minus($this->attributes["saldo"]);
         return $this->total->minus($this->saldo);
     }
 
     function getTotalAttribute(){
-        $total = $this->getFactorActualizacion()
-            ->multipliedBy($this->saldo->amount)
-            ->toScale(4, RoundingMode::HALF_UP);
+        $total = $this->saldo_rational
+            ->multipliedBy($this->getFactorActualizacion())
+            ->toScale(2, RoundingMode::HALF_UP)->toScale(4);
         return new Money($total, $this->getCurrency());
     }
 
@@ -220,19 +222,27 @@ class Cuota extends Model
         return $fmv->multipliedBy($fas);
     }
 
-    /**
-     * @param string|BigNumber $pago
-     * @param Carbon $fechaPago
-     */
-    function recalcular($pago, $fechaPago){
-        if($this->saldo->round()->amount->isEqualTo("0")) 
-            throw new Exception("El saldo de la cuota es 0");
-        $this->projectTo($fechaPago);
-        // $nuevoSaldo = $this->calcularSaldo($saldo, $pago, $this->vencimiento, $fechaPago)->toScale(4, RoundingMode::HALF_UP);
-        $pago = BigDecimal::of($pago)->toScale(2);
-        $pagoProyectado = $pago->toBigRational()->dividedBy($this->getFactorActualizacion())->toScale(4, RoundingMode::HALF_UP);
-        $nuevoSaldo = $this->saldo->amount->minus($pagoProyectado);
-        $this->saldo = $nuevoSaldo;
-        $this->total_pagos = $pago->plus($this->attributes["total_pagos"]);
+    function recalcularSaldo(){
+        $this->_saldo = null;
+        $saldo = $this->saldo_rational;
+        $this->saldo = $saldo->toScale(2, RoundingMode::HALF_UP)->toScale(4);
+    }
+
+    function getSaldoRationalAttribute(){
+        if(!isset($this->_saldo)){
+            $saldo = BigRational::of($this->importe->plus($this->pago_extra)->amount);
+            $projectionDate = $this->projectionDate;
+            foreach($this->transacciones as $pago){
+                $fechaPago = $pago->transaccion->fecha;
+                $this->projectTo($fechaPago);
+    
+                $importePago = $pago->importe->amount->toBigRational();
+                $pagoProyectado = $importePago->dividedBy($this->getFactorActualizacion());
+                $saldo = $saldo->minus($pagoProyectado);
+            }
+            $this->projectTo($projectionDate);
+            $this->_saldo = $saldo;
+        }
+        return $this->_saldo;
     }
 }

@@ -255,8 +255,8 @@ test('Fecha implicita', function () {
     $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas', $data);
     $response->assertCreated();
     $credito->cuotas[0]->refresh();
-    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "0.3872");
-    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.3872");
+    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "0.3900");
+    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.3900");
     $this->assertSame((string)$credito->cuotas[0]->total_pagos->amount, "255.2600");
     $credito->cuotas[1]->refresh();
     $this->assertSame((string)$credito->cuotas[1]->saldo->amount, "155.2600");
@@ -322,8 +322,8 @@ test('Fecha explicita', function () {
     $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas', $data);
     $response->assertCreated();
     $credito->cuotas[0]->refresh();
-    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "0.3872");
-    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.3872");
+    $this->assertSame((string)$credito->cuotas[0]->saldo->amount, "0.3900");
+    $this->assertSame((string)$credito->cuotas[0]->total_multas->amount, "0.3900");
     $this->assertSame((string)$credito->cuotas[0]->total_pagos->amount, "255.2600");
     $credito->cuotas[1]->refresh();
     $this->assertSame((string)$credito->cuotas[1]->saldo->amount, "155.2600");
@@ -375,15 +375,15 @@ dataset("pagos_dataset", function(){
                         "expectations" => [
                             [
                                 "numero" => 2,
-                                "saldo" => "584.6547",
+                                "saldo" => "584.6500",
                                 "total_pagos" => "100.0000",
-                                "total_multas" => "0.6047"
+                                "total_multas" => "0.6000"
                             ],
                             [
                                 "numero" => 4,
-                                "saldo" => "524.2098",
+                                "saldo" => "524.2100",
                                 "total_pagos" => "160.0000",
-                                "total_multas" => "0.1598"
+                                "total_multas" => "0.1600"
                             ],
                         ]
                     ],
@@ -408,15 +408,15 @@ dataset("pagos_dataset", function(){
                         "expectations" => [
                             [
                                 "numero" => 2,
-                                "saldo" => "0.1488",
+                                "saldo" => "0.1500",
                                 "total_pagos" => "690.0100",
-                                "total_multas" => "6.1088"
+                                "total_multas" => "6.1100"
                             ],
                             [
                                 "numero" => 4,
-                                "saldo" => "5.9755",
+                                "saldo" => "5.9800",
                                 "total_pagos" => "680.4800",
-                                "total_multas" => "2.4055"
+                                "total_multas" => "2.4100"
                             ],
                         ]
                     ],
@@ -441,15 +441,15 @@ dataset("pagos_dataset", function(){
                         "expectations" => [
                             [
                                 "numero" => 2,
-                                "saldo" => "0.0002",
+                                "saldo" => "0.0000",
                                 "total_pagos" => "690.1600",
-                                "total_multas" => "6.1102"
+                                "total_multas" => "6.1100"
                             ],
                             [
                                 "numero" => 4,
-                                "saldo" => "0.0014",
+                                "saldo" => "0.0000",
                                 "total_pagos" => "686.4800",
-                                "total_multas" => "2.4314"
+                                "total_multas" => "2.4300"
                             ],
                         ]
                     ]

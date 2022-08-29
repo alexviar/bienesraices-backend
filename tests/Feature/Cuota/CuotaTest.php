@@ -23,6 +23,7 @@ it("Calcular pago actualizado", function(){
     $cuota->setRelation("credito", $credito);
     $cuota->vencimiento = Carbon::createFromFormat("Y-m-d", "2022-11-01")->startOfDay();
     $cuota->importe = "78.93";
+    $cuota->pago_extra = "0.00";
     $cuota->saldo = "78.93";
 
     $fecha = Carbon::createFromFormat("Y-m-d", "2022-11-01")->startOfDay();
@@ -36,15 +37,15 @@ it("Calcular pago actualizado", function(){
     $mock->shouldReceive("findByDate")->andReturn(BigDecimal::one());
 
     $cuota->projectTo($fecha);
-    $this->assertSame("78.9366", (string) $cuota->total->amount);
+    $this->assertSame("78.9400", (string) $cuota->total->amount);
 
     $fecha->addDays(89);
     $cuota->projectTo($fecha);
-    $this->assertSame("79.5220", (string) $cuota->total->amount);
+    $this->assertSame("79.5200", (string) $cuota->total->amount);
 
     $fecha->addDays(275);
     $cuota->projectTo($fecha);
-    $this->assertSame("81.3308", (string)$cuota->total->amount);
+    $this->assertSame("81.3300", (string)$cuota->total->amount);
     
 });
 

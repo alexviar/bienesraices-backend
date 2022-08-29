@@ -55,11 +55,13 @@ class Money implements Arrayable {
      * 
      * @return Money
      */
-    function plus($money){
-        if(!($money instanceof Money)) $money = new Money($money, $this->currency);
-        if($this->currency->code != $money->currency->code) throw new Exception("Currencies should to be the same but gets {$this->currency->code} and {$money->currency->code}");
-
-        return new Money($this->_amount->plus($money->amount), $this->currency);
+    function plus($amount){
+        if($amount instanceof Money){
+            if($this->currency->code != $amount->currency->code)
+                throw new Exception("Currencies should to be the same but gets {$this->currency->code} and {$amount->currency->code}");
+            $amount = $amount->amount;
+        }
+        return new Money($this->_amount->plus($amount), $this->currency);
     }
 
     /**
@@ -68,11 +70,14 @@ class Money implements Arrayable {
      * 
      * @return Money
      */
-    function minus($money){
-        if(!($money instanceof Money)) $money = new Money($money, $this->currency);
-        if($this->currency->code != $money->currency->code) throw new Exception("Currencies should to be the same but gets {$this->currency->code} and {$money->currency->code}");
+    function minus($amount){
+        if($amount instanceof Money){
+            if($this->currency->code != $amount->currency->code)
+                throw new Exception("Currencies should to be the same but gets {$this->currency->code} and {$amount->currency->code}");
+            $amount = $amount->amount;
+        }
 
-        return new Money($this->_amount->minus($money->amount), $this->currency);
+        return new Money($this->_amount->minus($amount), $this->currency);
     }
 
     /**

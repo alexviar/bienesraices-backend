@@ -10,6 +10,12 @@ class DetalleTransaccion extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        "importe",
+        "moneda",
+        "referencia"
+    ];
+
     protected $table = "detalles_transaccion";
 
     function getImporteAttribute($value){
