@@ -46,20 +46,54 @@ it("Calcular pago actualizado", function(){
     $fecha->addDays(275);
     $cuota->projectTo($fecha);
     $this->assertSame("81.3300", (string)$cuota->total->amount);
-    
+  
 });
 
+test("El mantenimiento de valor no puede disminuir", function(){
+    $venta = new Venta();
+    $venta->moneda = "USD";
+    $credito = new Credito([
+        "tasa_mora" => "0.00"
+    ]);
+    $credito->setRelation("creditable", $venta);
+    $cuota = new Cuota();
+    $cuota->setRelation("credito", $credito);
+    $cuota->vencimiento = Carbon::createFromFormat("Y-m-d", "2022-11-01")->startOfDay();
+    $cuota->importe = "78.93";
+    $cuota->pago_extra = "0.00";
+    $cuota->saldo = "78.93";
+    
+    $projectionDate = $cuota->vencimiento->subDays(100);
+    $cuota->projectTo($projectionDate);
 
-// it("Calcular pago actualizado 2", function(){
-//     $cuota = new Cuota([
-//         "importe" => "684.05",
-//         "saldo" => "684.05",
-//         "saldo_capital" => "20134.86",
-//         "total_pagos" => "0"
-//     ]);
+    $this->mock(UfvRepositoryInterface::class, function(\Mockery\MockInterface $mock) use($cuota, $projectionDate){
+        $mock->shouldReceive("findByDate")
+            ->andReturnUsing(function(Carbon $date) use($cuota, $projectionDate){
+                if($date->equalTo($cuota->vencimiento)){
+                    return BigDecimal::of("2.00000");
+                }
+                if($date->equalTo($projectionDate)){
+                    return BigDecimal::of("1.50000");
+                }
+            });
+    });
 
-//     $cuota->projectTo(Carbon::createFromFormat("Y-m-d", "2022-07-13")->startOfDay());
+    $this->assertSame("78.9300", (string) $cuota->total->amount);
 
+    $projectionDate = $cuota->vencimiento->addDays(100);
+    $cuota->projectTo($projectionDate);
 
+    $this->mock(UfvRepositoryInterface::class, function(\Mockery\MockInterface $mock) use($cuota, $projectionDate){
+        $mock->shouldReceive("findByDate")
+            ->andReturnUsing(function(Carbon $date) use($cuota, $projectionDate){
+                if($date->equalTo($cuota->vencimiento)){
+                    return BigDecimal::of("2.00000");
+                }
+                if($date->equalTo($projectionDate)){
+                    return BigDecimal::of("1.50000");
+                }
+            });
+    });
 
-// });
+    $this->assertSame("78.9300", (string) $cuota->total->amount);
+});
