@@ -10,4 +10,9 @@ class UFV extends Model
     use HasFactory;
 
     protected $table = "ufv";
+
+    protected $fillable = [
+        "fecha",
+        "valor"
+    ];
 }

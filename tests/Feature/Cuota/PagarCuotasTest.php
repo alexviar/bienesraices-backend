@@ -2,11 +2,14 @@
 
 use App\Models\Cliente;
 use App\Models\Credito;
+use App\Models\Interfaces\UfvRepositoryInterface;
 use App\Models\Transaccion;
 use App\Models\User;
 use App\Models\Venta;
+use Brick\Math\BigDecimal;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Mockery\MockInterface;
 
 test("Campos requeridos", function(){
     $response = $this->actingAs(User::find(1))->postJson("/api/pagos/cuotas", []);
@@ -209,6 +212,10 @@ test('Fecha implicita', function () {
     ])->for($cliente), "creditable")->create();
     $credito->build();
 
+    $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
+        $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
+    });
+    
     $this->travelTo($credito->cuotas[0]->vencimiento);
 
     $data = Transaccion::factory([
@@ -267,6 +274,9 @@ test('Fecha implicita', function () {
 
 test('Fecha explicita', function () {
     /** @var TestCase $this  */
+    $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
+        $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
+    });
     $cliente = Cliente::factory()->create();
     $credito = Credito::factory([
         "cuota_inicial" => "500",
@@ -517,6 +527,9 @@ it('registra pagos', function ($dataset) {
     /** @var TestCase $this  */
     $credito = $dataset["credito"];
     $requests = $dataset["requests"];
+    $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
+        $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
+    });
     foreach($requests as ["data" => $data, "expectations" => $expectations]){
         $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas', $data);
         $response->assertCreated();

@@ -10,6 +10,7 @@ use App\Http\Controllers\ManzanaController;
 use App\Http\Controllers\CreditoController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\ReservaController;
+use App\Http\Controllers\UFVController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\VentaController;
 use Illuminate\Http\Request;
@@ -64,6 +65,11 @@ Route::middleware('auth:sanctum')->post('/pagos/cuotas', [CuotaController::class
 Route::controller(CreditoController::class)->group(function(){
     Route::middleware('auth:sanctum')->get('/creditos/{id}', "show");
     Route::middleware('auth:sanctum')->post('/creditos/{id}/pagos-extras', "store_pago_extra");
+});
+
+Route::controller(UFVController::class)->group(function(){
+    Route::middleware('auth:sanctum')->get('/ufvs', 'index');
+    Route::middleware('auth:sanctum')->post('/ufvs', 'store');
 });
 
 

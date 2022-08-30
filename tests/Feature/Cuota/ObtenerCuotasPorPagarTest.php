@@ -3,10 +3,13 @@
 use App\Models\Cliente;
 use App\Models\Credito;
 use App\Models\DetalleTransaccion;
+use App\Models\Interfaces\UfvRepositoryInterface;
 use App\Models\Transaccion;
 use App\Models\User;
 use App\Models\Venta;
+use Brick\Math\BigDecimal;
 use Illuminate\Support\Carbon;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 // it('Falla si no se proporciona un codigo de pago', function () {
@@ -30,6 +33,10 @@ test('Fecha implicita', function () {
         "importe" => "10530.96"
     ])->for($cliente), "creditable")->create();
     $credito->build();
+    
+    $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
+        $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
+    });
 
     $this->travelTo($credito->creditable->fecha);
 
@@ -161,6 +168,10 @@ test('Fecha explicita', function () {
         "importe" => "10530.96"
     ])->for($cliente), "creditable")->create();
     $credito->build();
+
+    $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
+        $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
+    });
 
     $response = $this->actingAs(User::find(1))->getJson('/api/pagos/cuotas?'.http_build_query([
         "codigo_pago"=> $cliente->codigo_pago,

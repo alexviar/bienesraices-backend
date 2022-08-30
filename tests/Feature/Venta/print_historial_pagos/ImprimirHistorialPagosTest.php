@@ -5,15 +5,18 @@ use App\Http\Reports\Venta\HistorialPagos;
 use App\Models\Cliente;
 use App\Models\Credito;
 use App\Models\DetalleTransaccion;
+use App\Models\Interfaces\UfvRepositoryInterface;
 use App\Models\Lote;
 use App\Models\Manzana;
 use App\Models\Proyecto;
 use App\Models\Transaccion;
 use App\Models\User;
 use App\Models\Venta;
+use Brick\Math\BigDecimal;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 function comparePdf($generatedContent, $sampleContent){
@@ -28,6 +31,9 @@ function comparePdf($generatedContent, $sampleContent){
 
 it("Genera un reporte del historial de pagos", function(){
     /** @var TestCase $this */
+    $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
+        $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
+    });
     
     $maxId = Cliente::max("id") ?? 0;
     DB::statement('ALTER TABLE clientes AUTO_INCREMENT=' . intval($maxId + 1) . ';');

@@ -3,14 +3,20 @@
 use App\Models\Cliente;
 use App\Models\Credito;
 use App\Models\Cuota;
+use App\Models\Interfaces\UfvRepositoryInterface;
 use App\Models\User;
 use App\Models\Venta;
+use Brick\Math\BigDecimal;
 use Illuminate\Support\Carbon;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 it('Responde con la lista de mora', function () {
-    
     /** @var TestCase $this */
+    $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
+        $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
+    });
+    
     $this->travelTo(Carbon::createFromFormat("Y-m-d", "2020-09-01"));
 
     $cliente = Cliente::factory()->create();
