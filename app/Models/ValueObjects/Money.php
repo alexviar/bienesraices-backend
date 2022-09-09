@@ -94,7 +94,7 @@ class Money implements Arrayable {
      * @return Money
      */
     function dividedBy($value){
-        $amount = $this->_amount->dividedBy($value, 20, RoundingMode::HALF_UP);
+        $amount = $this->_amount->dividedBy($value, 20, RoundingMode::DOWN);
         return new Money($amount, $this->_currency);
     }
 

@@ -8,6 +8,7 @@ return [
     'attributes' => [
         'numero' => 'número',
         'manzana_id' => 'manzana',
+        'cliente_id' => 'cliente',
         "numero_transaccion" => "n.º de transacción"
     ]
 ];

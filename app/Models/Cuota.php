@@ -36,6 +36,7 @@ class Cuota extends Model
     use HasFactory, SaveToUpper;
 
     protected $fillable = [
+        "transactable_id",
         "numero",
         "vencimiento",
         "importe",
@@ -74,6 +75,7 @@ class Cuota extends Model
      */
     function projectTo(Carbon $fecha){
         $this->projectionDate = $fecha;
+        return $this;
     }
 
     function __construct(array $attributes = [])
@@ -87,7 +89,7 @@ class Cuota extends Model
     }
 
     function getPendienteAttribute(){
-        return !$this->anterior || $this->anterior->vencida;
+        return !$this->anterior || $this->anterior->projectTo($this->projectionDate)->vencida;
     }
 
     function getImporteAttribute($value){
@@ -169,17 +171,18 @@ class Cuota extends Model
             return $pe->id;
         });
     }
-
+    #region Relationships
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    function transacciones(){
-        return $this->morphToMany(DetalleTransaccion::class, "transactable");
+    function pagos(){
+        return $this->hasMany(PagoCuota::class);
     }
 
     function credito(){
         return $this->belongsTo(Credito::class);
     }
+    #endregion
 
     // function getAnteriorCuotaAttribute(){
     //     return $this->credito->cuotas->where("numero", $this->numero - 1)->first();
@@ -202,7 +205,7 @@ class Cuota extends Model
     }
 
     function getReferencia(){
-        return "Pago de la cuota {$this->numero} del crédito {$this->credito->id}";
+        return "Pago de la cuota {$this->numero} del crédito {$this->credito->numero}";
     }
 
     function getFactorActualizacion(){
@@ -232,11 +235,11 @@ class Cuota extends Model
         if(!isset($this->_saldo)){
             $saldo = BigRational::of($this->importe->plus($this->pago_extra)->amount);
             $projectionDate = $this->projectionDate;
-            foreach($this->transacciones as $pago){
-                $fechaPago = $pago->transaccion->fecha;
+            foreach($this->pagos as $pago){
+                $fechaPago = $pago->fecha;
                 $this->projectTo($fechaPago);
     
-                $importePago = $pago->importe->amount->toBigRational();
+                $importePago = BigRational::of($pago->getAttributeFromArray("importe"));
                 $pagoProyectado = $importePago->dividedBy($this->getFactorActualizacion());
                 $saldo = $saldo->minus($pagoProyectado);
             }

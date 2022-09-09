@@ -60,7 +60,7 @@ Route::middleware('auth:sanctum')->get('/transacciones', [CajaController::class,
 Route::middleware('auth:sanctum')->get('lista-mora', [ListaMoraController::class, "index"]);
 
 Route::middleware('auth:sanctum')->get('/pagos/cuotas', [CuotaController::class, "pendientes"]);
-Route::middleware('auth:sanctum')->post('/pagos/cuotas', [CuotaController::class, "pagar_cuotas"]);
+Route::middleware('auth:sanctum')->post('/pagos/cuotas/{id}', [CuotaController::class, "pagar"]);
 
 Route::controller(CreditoController::class)->group(function(){
     Route::middleware('auth:sanctum')->get('/creditos/{id}', "show");

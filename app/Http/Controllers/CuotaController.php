@@ -2,20 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\RegistrarTransaccion;
 use App\Models\Cliente;
 use App\Models\Credito;
 use App\Models\Cuota;
+use App\Models\Currency;
 use App\Models\DetalleTransaccion;
+use App\Models\SaldoFavor;
 use App\Models\Transaccion;
+use App\Models\ValueObjects\Money;
 use App\Models\Venta;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class CuotaController extends Controller
@@ -60,99 +66,114 @@ class CuotaController extends Controller
 
     function validatePagoRequest(Request $request) {
         $now = Carbon::today();
-        try{
-            $request->merge([
-                "detalles" => array_map(function($detalle){
-                    return Arr::only($detalle, ["importe", "cuota_id"]) + [
-                        "cuota" => isset($detalle["cuota_id"]) ? Cuota::find($detalle["cuota_id"]) : null
-                    ];
-                }, $request->detalles)
-            ]);
-        }
-        catch(Throwable $t){ }
+        $request->merge([
+            "fecha" => $request->fecha ?? $now->format("Y-m-d"),
+        ]);
 
-        return $request->validate([
-            "fecha" => "nullable|date|before_or_equal:".$now->format("Y-m-d"),
-            "moneda" => "required",
-            "importe" => "required",
-            "numero_transaccion" => "required|integer",
-            "comprobante" => "required|image",
+        $payload = $request->validate([
+            "fecha" => "date|before_or_equal:".$now->format("Y-m-d"),
+            "importe" => ["required", "numeric"],
+            
+            "observaciones" => "nullable|string|max:255",
+            "metodo_pago" => "required|in:1,2",
 
-            "detalles" => ["required", "array", function($attribute, $value, $fail) use($request){
-                try{
-                    $detalles = collect($value);
-                    $deposito = BigDecimal::of($request->input("importe"))->toScale(2, RoundingMode::HALF_UP);
-                    $totalPagos = $detalles->reduce(function($carry, $item){
-                        return $carry->plus($item["importe"]);
-                    }, BigDecimal::zero()->toScale(2, RoundingMode::HALF_UP));
-                    if($totalPagos->isGreaterThan($deposito)){
-                        // $fail("Los pagos exceden el monto depositado (Pagos: $totalPagos, Deposito: $deposito)");
-                        $fail("Los pagos exceden el monto depositado.");
-                    }
-                }
-                catch(Throwable $t){}
-            }],
-            "detalles.*.importe" => ["required", "numeric", function($attribute, $value, $fail) use($request, $now) {
-                /** @var Cuota $cuota */
-                $cuota = $request->input(Str::replace("importe", "cuota", $attribute));
+            "deposito.numero_transaccion" => "required_if:metodo_pago,2|integer",
+            "deposito.comprobante" => "nullable|image",
+            "deposito.moneda" => "nullable|exists:currencies,code",
+            "deposito.importe" => ["nullable", "numeric"]
+            // "detalles.*.importe" => ["required", "numeric", function($attribute, $value, $fail) use($request, $now) {
+            //     /** @var Cuota $cuota */
+            //     $cuota = $request->input(Str::replace("importe", "cuota", $attribute));
                 
-                if(!$cuota) return;
+            //     if(!$cuota) return;
 
-                $cuota->projectTo($request->fecha ? 
-                    Carbon::createFromFormat("Y-m-d", $request->fecha)->startOfDay() : 
-                    $now
-                );
-                $deuda = $cuota->total->round(2)->amount;
+            //     $cuota->projectTo($request->fecha ? 
+            //         Carbon::createFromFormat("Y-m-d", $request->fecha)->startOfDay() : 
+            //         $now
+            //     );
+            //     $deuda = $cuota->total->round(2)->amount;
 
-                if(BigDecimal::of($value)->isGreaterThan($deuda)){
-                    $fail("El pago excede el saldo de la cuota.");
-                }
-            }],
-            "detalles.*.cuota_id" => ["required", function($attribute, $value, $fail) use($request){
-                $cuota = $request->input(Str::replace("cuota_id", "cuota", $attribute));
-                if(!$cuota){
-                    $fail("No existe una cuota con el id proporcionado.");
-                }
-                else if(!$cuota->pendiente){
-                    $fail("Solo puede registrar pagos de cuotas pendientes.");
-                }
-            }]
+            //     if(BigDecimal::of($value)->isGreaterThan($deuda)){
+            //         $fail("El pago excede el saldo de la cuota.");
+            //     }
+            // }],
+            // "detalles.*.cuota_id" => ["required", function($attribute, $value, $fail) use($request){
+            //     $cuota = $request->input(Str::replace("cuota_id", "cuota", $attribute));
+            //     if(!$cuota){
+            //         $fail("No existe una cuota con el id proporcionado.");
+            //     }
+            //     else {
+            //         if(!$cuota->projectTo(Carbon::createFromFormat("Y-m-d", $request->fecha))->pendiente){
+            //             $fail("Solo puede registrar pagos de cuotas pendientes.");
+            //         }
+            //         if($request->credito_id && $cuota->credito->creditable->credito_id != $request->credito_id){
+            //             $fail("No es una cuota del cliente");
+            //         }
+            //     }
+            // }]
         ], [
             "fecha.before_or_equal" => "El campo ':attribute' no puede ser posterior a la fecha actual.",
+            "deposito.numero_transaccion.required_if" => "El campo ':attribute' es requerido.",
+            // "deposito.moneda.required_if" => "El campo ':attribute' es requerido.",
+            // "deposito.importe.required_if" => "El campo ':attribute' es requerido.",
+            // "deposito.comprobante.required_if" => "El campo ':attribute' es requerido.",
         ], [
-            "detalles.*.importe" => "importe",
+            "metodo_pago" => "método de pago",
+            "deposito.numero_transaccion" => "n.º de transacción",
+            "deposito.moneda" => "moneda",
+            "deposito.importe" => "importe",
+            "deposito.comprobante" => "comprobante"
         ]);
+        $payload["importe"] = (string) BigDecimal::of($payload["importe"])->toScale(2, RoundingMode::HALF_UP);
+        if($deposito = Arr::get($payload, "deposito.importe")){
+            Arr::set($payload, "deposito.importe", (string) BigDecimal::of($deposito)->toScale(2, RoundingMode::HALF_UP));
+        }
+        return $payload;
     }
 
-    function pagar_cuotas(Request $request){
-        
+    function findCuota($id){
+        $cuota = Cuota::find($id);
+        if(!$cuota){
+            throw new ModelNotFoundException("No existe una cuota con id '$id'");
+        }
+        return $cuota;
+    }
+
+    function pagar(Request $request, $id){
+        $cuota = $this->findCuota($id);
         $payload = $this->validatePagoRequest($request);
+        $cuota->projectTo(Carbon::createFromFormat("Y-m-d", $payload["fecha"]));
+        if($cuota->total->amount->isLessThan($payload["importe"])){
+            throw ValidationException::withMessages(["importe"=>["El pago excede el saldo de la cuota."]]);
+        }
 
-        $transaccion = DB::transaction(function() use($payload){
-            $detalles = $payload["detalles"];
-            $fecha = Arr::get($payload, "fecha", now()->format("Y-m-d"));
+        $this->authorize("pagar", [$cuota, $payload]);
 
-            $transaccion = Transaccion::create(Arr::only($payload, [
-                "fecha", "moneda", "importe"
+        $transaccion = DB::transaction(function() use($payload, $cuota){
+
+            $cuota->pagos()->create(Arr::only($payload, [
+                "fecha",
+                "importe"
+            ]));
+            $cuota->load("pagos");
+            $cuota->recalcularSaldo();
+            $cuota->total_pagos = (string) $cuota->total_pagos->amount->plus($payload["importe"]);
+            $cuota->update();
+
+            $this->dispatchSync(new RegistrarTransaccion(Arr::only($payload, [
+                "fecha",
+                "importe",
+                "observaciones",
+                "metodo_pago",
+                "deposito"
             ]) + [
-                "fecha" => $fecha,
-                "forma_pago" => 2
-            ]);
-            
-            foreach($detalles as $detalle){
-                /** @var Cuota $cuota */
-                $cuota = $detalle["cuota"];
-                $cuota->transacciones()->attach($transaccion->detalles()->create(Arr::only($detalle, ["importe"]) + [
-                    "moneda" => $cuota->getCurrency()->code,
-                    "referencia" => $cuota->getReferencia()
-                ]));
-                $cuota->load("transacciones");
-                $cuota->recalcularSaldo();
-                $cuota->total_pagos = $cuota->total_pagos->amount->plus($detalle["importe"]);
-                $cuota->save();
-            }
-
-            return $transaccion;
+                "moneda" => $cuota->getCurrency()->code,
+                "transactable_id" => $cuota->transactable_id,
+                "transactable_type" => Cuota::class,
+                "referencia" => $cuota->getReferencia(),
+                //Ley de Demeter?
+                "cliente_id" => $cuota->credito->creditable->cliente_id
+            ]));
         });
 
         return $transaccion;

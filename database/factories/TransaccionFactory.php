@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Cliente;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class TransaccionFactory extends Factory
@@ -17,9 +18,9 @@ class TransaccionFactory extends Factory
             "fecha" => $attributes["fecha"] ?? $this->faker->date(),
             "moneda" => $attributes["moneda"] ?? $this->faker->randomElement(["USD", "BOB"]),
             "importe" => $attributes["importe"] ?? $this->faker->numerify("###.##"),
-            "forma_pago" => $attributes["forma_pago"] ?? $this->faker->randomElement([1,2]),
-            "numero_transaccion" => $attributes["numero_transaccion"] ?? $this->faker->randomNumber(5, true),
-            "comprobante" => $attributes["comprobante"] ?? $this->faker->filePath()
+            "metodo_pago" => $attributes["forma_pago"] ?? $this->faker->randomElement([1,2]),
+            
+            "cliente_id" => $attributes["cliente_id"] ?? Cliente::factory()
         ];
     }
 }

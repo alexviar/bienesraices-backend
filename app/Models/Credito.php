@@ -17,6 +17,7 @@ class Credito extends Model
     use HasFactory;
 
     protected $fillable = [
+        "numero",
         "importe_cuotas",
         "cuota_inicial",
         "tasa_interes",
@@ -29,6 +30,11 @@ class Credito extends Model
     protected $hidden = ["creditable"];
 
     protected $appends = ["fecha", "importe", "url_plan_pago", "url_historial_pagos"];
+
+    function getMorphKeyName()
+    {
+        return "numero";
+    }
 
     function getUrlPlanPagoAttribute(){
         return route("creditos.plan_pago", [
@@ -133,6 +139,7 @@ class Credito extends Model
         $cuotas = $builder->build();
         foreach($cuotas as $cuota){
             $this->cuotas()->create([
+                "transactable_id" => $this->numero*1000 + $cuota["numero"],
                 "numero"=>$cuota["numero"],
                 "vencimiento" => $cuota["vencimiento"],
                 "importe" => (string) $cuota["pago"],
@@ -150,7 +157,7 @@ class Credito extends Model
     }
 
     function getReferencia(){
-        return "Cuota inicial del crédito Nº {$this->id}";
+        return "Cuota inicial del crédito Nº {$this->numero}";
     }
     
     /**
