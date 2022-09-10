@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\PagoCuotaCreated;
 use App\Jobs\RegistrarTransaccion;
 use App\Models\Cliente;
 use App\Models\Credito;
@@ -13,6 +14,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Event;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
@@ -56,23 +58,6 @@ test("Campos requeridos", function(){
     $response = $this->actingAs(User::find(1))->postJson("/api/pagos/cuotas/$cuota->id", []);
     $response->assertJsonValidationErrors([
         "importe" => "El campo 'importe' es requerido",
-        "metodo_pago" => "El campo 'método de pago' es requerido",
-    ]);
-    $response = $this->actingAs(User::find(1))->postJson("/api/pagos/cuotas/$cuota->id", [
-        "metodo_pago" => 1
-    ]);
-    $response->assertJsonValidationErrors([
-        "importe" => "El campo 'importe' es requerido",
-    ]);
-    $response = $this->actingAs(User::find(1))->postJson("/api/pagos/cuotas/$cuota->id", [
-        "metodo_pago" => 2
-    ]);
-    $response->assertJsonValidationErrors([
-        "importe" => "El campo 'importe' es requerido",
-        "deposito.numero_transaccion" => "El campo 'n.º de transacción' es requerido.",
-        // "deposito.moneda" => "El campo 'moneda' es requerido",
-        // "deposito.importe" => "El campo 'importe' es requerido",
-        // "deposito.comprobante" => "El campo 'comprobante' es requerido",
     ]);
 });
 
@@ -105,62 +90,62 @@ test('No es una cuota válida.', function () {
     $response->assertNotFound();
 });
 
-it('No permite pagos que excedan el monto del depósito', function ($dataset) {
-    /** @var TestCase $this */
-    $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
-        $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
-    });
-    // $credito = $dataset["credito"];
-    $cuota = $dataset["cuota"];
+// it('No permite pagos que excedan el monto del depósito', function ($dataset) {
+//     /** @var TestCase $this */
+//     $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
+//         $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
+//     });
+//     // $credito = $dataset["credito"];
+//     $cuota = $dataset["cuota"];
 
-    $this->travelTo($cuota->vencimiento);
-    $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas/'.$cuota->id, $dataset["data"]);
-    $response->assertStatus(409);
-    $response->assertJson(["message"=>"El pago excede el saldo del deposito."]);
-})->with([
-    function(){
-        $credito = buildCredito();
-        $cuota = $credito->cuotas[1];
-        $data = [
-            "importe" => "100",
-            "metodo_pago" => 2,
-            "deposito" => [
-                "numero_transaccion" => $this->faker->randomNumber(),
-                "moneda" => "USD",
-                "importe" => "99.99",
-                "comprobante" => UploadedFile::fake()->image("comprobante.png")
-            ]
-        ];
-        return [
-            "credito" => $credito,
-            "cuota" => $cuota,
-            "data" => $data
-        ];
-    },
-    function(){
-        $credito = buildCredito();
-        $cuota = $credito->cuotas[1];
-        $deposito = Deposito::factory([
-            "numero_transaccion" => $this->faker->randomNumber(),
-            "moneda" => "BOB",
-            "importe" => "1000",
-            "saldo" => "696.06",
-            "cliente_id" => $credito->creditable->cliente_id
-        ])->create();
-        $data = [
-            "importe" => "100.01",
-            "metodo_pago" => 2,
-            "deposito" => [
-                "numero_transaccion" => $deposito->numero_transaccion
-            ]
-        ];
-        return [
-            "credito" => $credito,
-            "cuota" => $cuota,
-            "data" => $data
-        ];
-    }
-]);
+//     $this->travelTo($cuota->vencimiento);
+//     $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas/'.$cuota->id, $dataset["data"]);
+//     $response->assertStatus(409);
+//     $response->assertJson(["message"=>"El pago excede el saldo del deposito."]);
+// })->with([
+//     function(){
+//         $credito = buildCredito();
+//         $cuota = $credito->cuotas[1];
+//         $data = [
+//             "importe" => "100",
+//             "metodo_pago" => 2,
+//             "deposito" => [
+//                 "numero_transaccion" => $this->faker->randomNumber(),
+//                 "moneda" => "USD",
+//                 "importe" => "99.99",
+//                 "comprobante" => UploadedFile::fake()->image("comprobante.png")
+//             ]
+//         ];
+//         return [
+//             "credito" => $credito,
+//             "cuota" => $cuota,
+//             "data" => $data
+//         ];
+//     },
+//     function(){
+//         $credito = buildCredito();
+//         $cuota = $credito->cuotas[1];
+//         $deposito = Deposito::factory([
+//             "numero_transaccion" => $this->faker->randomNumber(),
+//             "moneda" => "BOB",
+//             "importe" => "1000",
+//             "saldo" => "696.06",
+//             "cliente_id" => $credito->creditable->cliente_id
+//         ])->create();
+//         $data = [
+//             "importe" => "100.01",
+//             "metodo_pago" => 2,
+//             "deposito" => [
+//                 "numero_transaccion" => $deposito->numero_transaccion
+//             ]
+//         ];
+//         return [
+//             "credito" => $credito,
+//             "cuota" => $cuota,
+//             "data" => $data
+//         ];
+//     }
+// ]);
 
 test('El pago excede el saldo de la cuota', function($dataset) {
     /** @var TestCase $this */
@@ -239,21 +224,11 @@ test('Solo puede pagar cuotas pendientes o vencidas', function($dataset) {
     function(){
         $credito = buildCredito();
         $cuota = $credito->cuotas[1];
-        $deposito = Deposito::factory([
-            "importe" => "2000",
-
-        ])->create();
-        $data = Transaccion::factory()->raw([
-            "importe" => "100.00",
-        ]) + [
-            "deposito" => [
-                "numero_transaccion" => $deposito->numero_transaccion
-            ]
-        ];
-        unset($data["fecha"]);
         return [
             "cuota" => $cuota,
-            "data" => $data
+            "data" => [
+                "importe" => "100.00",
+            ]
         ];
     }
 ]);
@@ -287,7 +262,6 @@ test('registra un pago', function ($dataset) {
             "cuota" => $cuota,
             "fecha" => $cuota->vencimiento,
             "data" => [
-                "metodo_pago" => 1,
                 "importe" => "100",
             ],
             "expectations" => [
@@ -302,6 +276,7 @@ test('registra un pago', function ($dataset) {
         $cuota = $credito->cuotas[0];
         $cuota->pagos()->create([
             "fecha" => $cuota->vencimiento->format("Y-m-d"),
+            "moneda" => "USD",
             "importe" => "100"
         ]);
         $cuota->total_pagos = "100";
@@ -310,7 +285,6 @@ test('registra un pago', function ($dataset) {
             "cuota" => $cuota,
             "fecha" => $cuota->siguiente->vencimiento,
             "data" => [
-                "metodo_pago" => 1,
                 "importe" => "155.26",
             ],
             "expectations" => [
@@ -325,6 +299,7 @@ test('registra un pago', function ($dataset) {
         $cuota = $credito->cuotas[0];
         $cuota->pagos()->create([
             "fecha" => $cuota->vencimiento->format("Y-m-d"),
+            "moneda" => "USD",
             "importe" => "100"
         ]);
         $cuota->total_pagos = "100";
@@ -334,7 +309,6 @@ test('registra un pago', function ($dataset) {
             "fecha" => $cuota->siguiente->vencimiento->addDays(30),
             "data" => [
                 "fecha" => $cuota->siguiente->vencimiento->format("Y-m-d"),
-                "metodo_pago" => 1,
                 "importe" => "155.26",
             ],
             "expectations" => [
@@ -357,12 +331,13 @@ it('registra la transaccion', function ($dataset) {
     
     $this->travelTo($cuota->vencimiento);
 
-    Bus::fake();
+    Event::fake();
     
     $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas/'.$cuota->id, $data);
     $response->assertOk();
-    Bus::assertDispatchedSync(RegistrarTransaccion::class, function(RegistrarTransaccion $job) use($dataset){
-        $this->assertEquals($job->payload, $dataset["expectations"]);
+    Event::assertDispatched(PagoCuotaCreated::class, function(PagoCuotaCreated $event) use($cuota){
+        $this->assertEquals($event->userId, 1);
+        $this->assertEquals($event->pago->id, $cuota->pagos()->latest("id")->first()->id);
         return true;
     });
 })->with([
@@ -372,84 +347,7 @@ it('registra la transaccion', function ($dataset) {
         return [
             "cuota" => $cuota,
             "data" => [
-                "metodo_pago" => 1,
                 "importe" => "155.26",
-            ],
-            "expectations" => [
-                "fecha" => $cuota->vencimiento->format("Y-m-d"),
-                "moneda" => $cuota->getCurrency()->code,
-                "importe" => "155.26",
-                "metodo_pago" => 1,
-                "cliente_id" => $cuota->credito->creditable->cliente_id,
-                "referencia" => $cuota->getReferencia(),
-                "transactable_id" => $cuota->transactable_id,
-                "transactable_type" => $cuota->getMorphClass()
-            ]
-        ];
-    },
-    function(){
-        $credito = buildCredito();
-        $cuota = $credito->cuotas[0];
-        $deposito = Deposito::factory([
-            "moneda" => "USD",
-            "importe" => "1000",
-            "cliente_id" => $credito->creditable->cliente_id
-        ])->create();
-        return [
-            "cuota" => $cuota,
-            "data" => [
-                "metodo_pago" => 2,
-                "importe" => "155.26",
-                "deposito" => [
-                    "numero_transaccion" => $deposito->numero_transaccion
-                ]
-            ],
-            "expectations" => [
-                "fecha" => $cuota->vencimiento->format("Y-m-d"),
-                "moneda" => $cuota->getCurrency()->code,
-                "importe" => "155.26",
-                "metodo_pago" => 2,
-                "cliente_id" => $cuota->credito->creditable->cliente_id,
-                "referencia" => $cuota->getReferencia(),
-                "transactable_id" => $cuota->transactable_id,
-                "transactable_type" => $cuota->getMorphClass(),
-                "deposito" => [
-                    "numero_transaccion" => $deposito->numero_transaccion
-                ]
-            ]
-        ];
-    },
-    function(){
-        $credito = buildCredito();
-        $cuota = $credito->cuotas[0];
-        $depositoData = [
-            "numero_transaccion" => $this->faker->unique()->randomNumber(),
-            "moneda" => "USD",
-            "importe" => "1000",
-            "comprobante" => UploadedFile::fake()->image("comprabante.jpg")
-        ];
-        return [
-            "cuota" => $cuota,
-            "data" => [
-                "metodo_pago" => 2,
-                "importe" => "155.26",
-                "deposito" => $depositoData
-            ],
-            "expectations" => [
-                "fecha" => $cuota->vencimiento->format("Y-m-d"),
-                "moneda" => $cuota->getCurrency()->code,
-                "importe" => "155.26",
-                "metodo_pago" => 2,
-                "cliente_id" => $cuota->credito->creditable->cliente_id,
-                "referencia" => $cuota->getReferencia(),
-                "transactable_id" => $cuota->transactable_id,
-                "transactable_type" => $cuota->getMorphClass(),
-                "deposito" => [
-                    "numero_transaccion" => $depositoData["numero_transaccion"],
-                    "moneda" => "USD",
-                    "importe" => "1000.00",
-                    "comprobante" => $depositoData["comprobante"]->store("comprobantes")
-                ]
             ]
         ];
     }
@@ -481,7 +379,6 @@ it('registra pagos', function ($dataset) {
                     "data" => [
                             "fecha" => "2022-07-13",
                             "importe" => "100",
-                            "metodo_pago" => 1
                     ],
                     "expectations" => [
                         "saldo" => "584.6500",
@@ -494,7 +391,6 @@ it('registra pagos', function ($dataset) {
                     "data" => [
                             "fecha" => "2022-07-13",
                             "importe" => "160",
-                            "metodo_pago" => 1
                     ],
                     "expectations" => [
                         "saldo" => "524.2100",
@@ -507,7 +403,6 @@ it('registra pagos', function ($dataset) {
                     "data" => [
                             "fecha" => "2022-08-22",
                             "importe" => "590.01",
-                            "metodo_pago" => 1
                     ],
                     "expectations" => [
                         "saldo" => "0.1500",
@@ -520,7 +415,6 @@ it('registra pagos', function ($dataset) {
                     "data" => [
                             "fecha" => "2022-08-22",
                             "importe" => "520.48",
-                            "metodo_pago" => 1
                     ],
                     "expectations" => [
                         "saldo" => "5.9800",
@@ -533,7 +427,6 @@ it('registra pagos', function ($dataset) {
                     "data" => [
                             "fecha" => "2022-08-22",
                             "importe" => "0.15",
-                            "metodo_pago" => 1
                     ],
                     "expectations" => [
                         "saldo" => "0.0000",
@@ -546,7 +439,6 @@ it('registra pagos', function ($dataset) {
                     "data" => [
                             "fecha" => "2022-08-22",
                             "importe" => "6",
-                            "metodo_pago" => 1
                     ],
                     "expectations" => [
                         "saldo" => "0.0000",

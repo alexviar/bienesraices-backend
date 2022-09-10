@@ -4,6 +4,9 @@ use App\Models\Cliente;
 use App\Models\Deposito;
 use App\Models\DetalleTransaccion;
 use App\Models\Transaccion;
+use App\Models\User;
+use Doctrine\DBAL\Types\StringType;
+use Doctrine\DBAL\Types\Type;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -30,33 +33,46 @@ class AlterTransacciones extends Migration
      */
     public function up()
     {
+        if (!Type::hasType('char')) {
+            Type::addType('char', StringType::class);
+        }
         DB::statement("SET FOREIGN_KEY_CHECKS = 0");
-        Schema::create("depositos", function(Blueprint $table){
-            $table->id();
-            $table->date("fecha");
-            $table->unsignedBigInteger("numero_transaccion")->unique();
-            $table->char("moneda",3);
-            $table->decimal("importe", 19, 4);
-            $table->decimal("saldo", 19, 4);
-            $table->string("comprobante");
-            $table->foreignIdFor(Cliente::class)->constrained();
-            $table->foreign("moneda")->on("currencies")->references("code");
-            $table->timestamps();
-        });
+        // Schema::create("caja", function(Blueprint $table){
+        //     $table->id();
+        //     $table->date("fecha");
+        //     $table->unsignedBigInteger("numero_transaccion")->unique();
+        //     $table->char("moneda",3);
+        //     $table->decimal("importe", 19, 4);
+        //     $table->decimal("saldo", 19, 4);
+        //     $table->string("comprobante");
+        //     $table->foreignIdFor(Cliente::class)->constrained();
+        //     $table->foreign("moneda")->on("currencies")->references("code");
+        //     $table->timestamps();
+        // });
 
         Schema::table("transacciones", function(Blueprint $table){
-            $table->rename("transacciones_old");
+            $table->dropColumn("forma_pago");
+            $table->char("moneda", 3)->nullable()->change();
+            $table->decimal("importe", 19, 4)->nullable()->change();
+            $table->decimal("ajuste_redonde", 19, 4)->nullable();
+            $table->unsignedTinyInteger("metodo_pago")->nullable();
+            $table->string("observaciones")->default("");
+            $table->string("estado")->default(1);
+            $table->nullableMorphs("accountable");
+            $table->string("accountable_name")->nullable();
+            $table->foreignIdFor(User::class)->constrained();
+            // $table->rename("transacciones_old");
         });
 
         Schema::table("detalles_transaccion", function(Blueprint $table){
-            $table->dropConstrainedForeignId("transaccion_id");
-            $table->date("fecha");
-            $table->unsignedTinyInteger("metodo_pago");
-            $table->string("observaciones", 255)->default("");
+            // $table->dropConstrainedForeignId("transaccion_id");
+            // $table->date("fecha");
+            // $table->unsignedTinyInteger("metodo_pago");
+            // $table->string("observaciones", 255)->default("");
             $table->morphs("transactable");
-            $table->foreignIdFor(Cliente::class)->constrained();
-            $table->foreignIdFor(Deposito::class)->nullable()->constrained();
-            $table->rename("transacciones");
+            // $table->foreignIdFor(Cliente::class)->constrained();
+            // $table->foreignIdFor(Deposito::class)->nullable()->constrained();
+            // $table->rename("transacciones");
         });
         // /** @var \Illuminate\Database\Eloquent\Collection<mixed, Transaccion> $transacciones */
         // $transacciones = Transaccion::with(["detalles.reservas", "detalles.ventas", "detalles.creditos", "detalles.cuotas"])->get();

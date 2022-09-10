@@ -11,9 +11,11 @@ class DetalleTransaccion extends Model
     use HasFactory;
 
     protected $fillable = [
-        "importe",
         "moneda",
-        "referencia"
+        "importe",
+        "referencia",
+        "transactable_id",
+        "transactable_type"
     ];
 
     protected $table = "detalles_transaccion";

@@ -17,8 +17,10 @@ class CreatePagoCuotasTable extends Migration
         Schema::create('pago_cuotas', function (Blueprint $table) {
             $table->id();
             $table->date("fecha");
+            $table->char("moneda", 3);
             $table->decimal("importe", 19, 4);
             $table->foreignIdFor(Cuota::class);
+            $table->foreign("moneda")->on("currencies")->references("code");
             $table->timestamps();
         });
     }

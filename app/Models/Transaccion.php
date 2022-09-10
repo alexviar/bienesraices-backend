@@ -18,12 +18,13 @@ class Transaccion extends Model
         "fecha",
         "moneda",
         "importe",
+        "ajuste_redondeo",
         "metodo_pago",
         "observaciones",
-        "cliente_id",
-        "deposito_id",
-        "transactable_id",
-        "transactable_type",
+        "accountable_id",
+        "accountable_type",
+        "accountable_name",
+        "user_id"
     ];
 
     protected $casts = [
@@ -34,25 +35,19 @@ class Transaccion extends Model
         return new Money($value, $this->currency);
     }
 
-    // /**
-    //  * @return HasMany
-    //  */
-    // function detalles(){
-    //     return $this->hasMany(DetalleTransaccion::class);
-    // }
-
-    function transactable(){
-        return $this->morphTo();
+    #region Relationships
+    /**
+     * @return HasMany
+     */
+    function detalles(){
+        return $this->hasMany(DetalleTransaccion::class);
     }
 
     /**
      * @return BelongsTo
      */
-    function deposito(){
-        return $this->belongsTo(Deposito::class);
-    }
-
     function currency(){
         return $this->belongsTo(Currency::class, "moneda");
     }
+    #endregion
 }

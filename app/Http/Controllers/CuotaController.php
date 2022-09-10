@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PagoCuotaCreated;
 use App\Jobs\RegistrarTransaccion;
 use App\Models\Cliente;
 use App\Models\Credito;
@@ -72,62 +73,11 @@ class CuotaController extends Controller
 
         $payload = $request->validate([
             "fecha" => "date|before_or_equal:".$now->format("Y-m-d"),
-            "importe" => ["required", "numeric"],
-            
-            "observaciones" => "nullable|string|max:255",
-            "metodo_pago" => "required|in:1,2",
-
-            "deposito.numero_transaccion" => "required_if:metodo_pago,2|integer",
-            "deposito.comprobante" => "nullable|image",
-            "deposito.moneda" => "nullable|exists:currencies,code",
-            "deposito.importe" => ["nullable", "numeric"]
-            // "detalles.*.importe" => ["required", "numeric", function($attribute, $value, $fail) use($request, $now) {
-            //     /** @var Cuota $cuota */
-            //     $cuota = $request->input(Str::replace("importe", "cuota", $attribute));
-                
-            //     if(!$cuota) return;
-
-            //     $cuota->projectTo($request->fecha ? 
-            //         Carbon::createFromFormat("Y-m-d", $request->fecha)->startOfDay() : 
-            //         $now
-            //     );
-            //     $deuda = $cuota->total->round(2)->amount;
-
-            //     if(BigDecimal::of($value)->isGreaterThan($deuda)){
-            //         $fail("El pago excede el saldo de la cuota.");
-            //     }
-            // }],
-            // "detalles.*.cuota_id" => ["required", function($attribute, $value, $fail) use($request){
-            //     $cuota = $request->input(Str::replace("cuota_id", "cuota", $attribute));
-            //     if(!$cuota){
-            //         $fail("No existe una cuota con el id proporcionado.");
-            //     }
-            //     else {
-            //         if(!$cuota->projectTo(Carbon::createFromFormat("Y-m-d", $request->fecha))->pendiente){
-            //             $fail("Solo puede registrar pagos de cuotas pendientes.");
-            //         }
-            //         if($request->credito_id && $cuota->credito->creditable->credito_id != $request->credito_id){
-            //             $fail("No es una cuota del cliente");
-            //         }
-            //     }
-            // }]
+            "importe" => ["required", "numeric"]
         ], [
             "fecha.before_or_equal" => "El campo ':attribute' no puede ser posterior a la fecha actual.",
-            "deposito.numero_transaccion.required_if" => "El campo ':attribute' es requerido.",
-            // "deposito.moneda.required_if" => "El campo ':attribute' es requerido.",
-            // "deposito.importe.required_if" => "El campo ':attribute' es requerido.",
-            // "deposito.comprobante.required_if" => "El campo ':attribute' es requerido.",
-        ], [
-            "metodo_pago" => "método de pago",
-            "deposito.numero_transaccion" => "n.º de transacción",
-            "deposito.moneda" => "moneda",
-            "deposito.importe" => "importe",
-            "deposito.comprobante" => "comprobante"
         ]);
         $payload["importe"] = (string) BigDecimal::of($payload["importe"])->toScale(2, RoundingMode::HALF_UP);
-        if($deposito = Arr::get($payload, "deposito.importe")){
-            Arr::set($payload, "deposito.importe", (string) BigDecimal::of($deposito)->toScale(2, RoundingMode::HALF_UP));
-        }
         return $payload;
     }
 
@@ -149,31 +99,35 @@ class CuotaController extends Controller
 
         $this->authorize("pagar", [$cuota, $payload]);
 
-        $transaccion = DB::transaction(function() use($payload, $cuota){
-
-            $cuota->pagos()->create(Arr::only($payload, [
+        $transaccion = DB::transaction(function() use($payload, $cuota, $request){
+            $pago = $cuota->pagos()->create(Arr::only($payload, [
                 "fecha",
                 "importe"
-            ]));
+            ]) + [
+                "moneda" => $cuota->getCurrency()->code
+            ]);
+
+            PagoCuotaCreated::dispatch($pago, $request->user()->id);
+
             $cuota->load("pagos");
             $cuota->recalcularSaldo();
             $cuota->total_pagos = (string) $cuota->total_pagos->amount->plus($payload["importe"]);
             $cuota->update();
 
-            $this->dispatchSync(new RegistrarTransaccion(Arr::only($payload, [
-                "fecha",
-                "importe",
-                "observaciones",
-                "metodo_pago",
-                "deposito"
-            ]) + [
-                "moneda" => $cuota->getCurrency()->code,
-                "transactable_id" => $cuota->transactable_id,
-                "transactable_type" => Cuota::class,
-                "referencia" => $cuota->getReferencia(),
-                //Ley de Demeter?
-                "cliente_id" => $cuota->credito->creditable->cliente_id
-            ]));
+            // $this->dispatchSync(new RegistrarTransaccion(Arr::only($payload, [
+            //     "fecha",
+            //     "importe",
+            //     "observaciones",
+            //     "metodo_pago",
+            //     "deposito"
+            // ]) + [
+            //     "moneda" => $cuota->getCurrency()->code,
+            //     "transactable_id" => $cuota->transactable_id,
+            //     "transactable_type" => Cuota::class,
+            //     "referencia" => $cuota->getReferencia(),
+            //     //Ley de Demeter?
+            //     "cliente_id" => $cuota->credito->creditable->cliente_id
+            // ]));
         });
 
         return $transaccion;
