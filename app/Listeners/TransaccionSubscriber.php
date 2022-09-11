@@ -45,7 +45,7 @@ class TransaccionSubscriber {
             "moneda" => $event->pago->getAttributes()["moneda"],
             "importe" => $event->pago->getAttributes()["importe"],
             "referencia" => $event->pago->cuota->getReferencia(),
-            "transactable_id" => $event->pago->cuota->transactable_id,
+            "transactable_id" => $event->pago->cuota->getMorphKey(),
             "transactable_type" => $event->pago->cuota->getMorphClass()
         ]);
     }

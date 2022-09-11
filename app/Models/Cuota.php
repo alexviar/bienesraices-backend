@@ -210,7 +210,7 @@ class Cuota extends Model
     }
 
     function getReferencia(){
-        return "Pago de la cuota {$this->numero} del crédito {$this->credito->numero}";
+        return "Pago de la cuota {$this->numero} del crédito {$this->credito->codigo}";
     }
 
     function getFactorActualizacion(){

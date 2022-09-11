@@ -139,7 +139,7 @@ class Credito extends Model
         $cuotas = $builder->build();
         foreach($cuotas as $cuota){
             $this->cuotas()->create([
-                "codigo" => $this->numero*1000 + $cuota["numero"],
+                "codigo" => $this->codigo*1000 + $cuota["numero"],
                 "numero"=>$cuota["numero"],
                 "vencimiento" => $cuota["vencimiento"],
                 "importe" => (string) $cuota["pago"],
@@ -157,7 +157,7 @@ class Credito extends Model
     }
 
     function getReferencia(){
-        return "Cuota inicial del crédito Nº {$this->numero}";
+        return "Cuota inicial del crédito Nº {$this->codigo}";
     }
     
     /**
