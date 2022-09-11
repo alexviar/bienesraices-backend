@@ -51,6 +51,12 @@ class VentaFactory extends Factory
         ]);
     }
 
+    function withoutReserva(){
+        return $this->state([
+            "reserva_id" => null
+        ]);
+    }
+
     /**
      * @param bool $with
      */

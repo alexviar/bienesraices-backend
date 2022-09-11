@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\VentaCreated;
 use App\Models\Credito;
 use App\Models\Lote;
 use App\Models\Proyecto;
@@ -12,7 +13,9 @@ use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 require(__DIR__."/assertTransaccion.php");
@@ -50,24 +53,10 @@ test('La fecha no puede estar en el futuro', function(){
     ]);
 });
 
-it('Registra una venta al contado', function () {
+it('Registra una venta', function ($dataset) {
     /** @var TestCase $this */
 
-    //Venta al contado
-    $data = Venta::factory([
-        "moneda" => "USD",
-        "importe" => "10530.96",
-    ])->contado()->withReserva(false)->raw();
-
-    $data += [
-        "pago" => [
-            "moneda" => "USD",
-            "monto" => "10530.96",
-            "numero_transaccion" => "12423325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ];
-
+    $data = $dataset["data"];
     $proyectoId = $data["proyecto_id"];
 
     $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
@@ -77,76 +66,242 @@ it('Registra una venta al contado', function () {
 
     $venta = Venta::find($id);
 
-    $this->assertSame(1, $venta->estado);
-    $this->assertSame(1, $venta->tipo);
-    $keys = [
-        "fecha",
-        "moneda",
-        "proyecto_id",
-        "lote_id",
-        "cliente_id",
-        "vendedor_id",
-    ];
-    $this->assertEquals(Arr::only($data, $keys), Arr::only($venta->getAttributes(), $keys));
-    $this->assertEquals((string) BigDecimal::of($data["importe"])->toScale(4), (string) $venta->importe->amount);
+    $expectations = $dataset["expectations"];
 
-    assertTransaccionPorVentaAlContado($data, $venta, "10530.96");
-});
-
-it("Registra una venta al crédito", function(){
-    $data = Venta::factory([
-        "fecha" => "2022-02-28",
-        "moneda" => "USD",
-        "importe" => "10530.96",
-    ])->credito()->withReserva(false)->raw();
-    $dataCredito = Credito::factory([
-        "plazo" => 48,
-        "periodo_pago" => 1,
-        "dia_pago" => 1,
-    ])->raw();
-    $data += [
-        "credito" => $dataCredito
-    ] + [
-        "pago" => [
-            "moneda" => "USD",
-            "monto" => "500",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ];
-
-    $proyectoId = $data["proyecto_id"];
-
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
-
-    $response->assertCreated();
-    $id = $response->json("id");
-
-    $venta = Venta::find($id);
-
-    $this->assertSame(1, $venta->estado);
-    $this->assertSame(2, $venta->tipo);
-    $keys = [
-        "fecha",
-        "moneda",
-        "proyecto_id",
-        "lote_id",
-        "cliente_id",
-        "vendedor_id",
-    ];
-    $this->assertEquals(Arr::only($data, $keys), Arr::only($venta->getAttributes(), $keys));
-    $this->assertEquals((string) BigDecimal::of($data["importe"])->toScale(4), (string) $venta->importe->amount);
-    $dataCredito["cuota_inicial"] = (string) BigDecimal::of($dataCredito["cuota_inicial"])->toScale(4);
-    expect($venta->credito->getAttributes())->toMatchArray(Arr::except($dataCredito, ["creditable_id", "creditable_type"]));
-
-    assertTransaccionPorVentaAlCredito($data, $venta->credito, "500");
-    
-    /** @var FilesystemAdapter $disk */
-    $disk = Storage::disk("tests");
-    foreach(read_csv($disk->path("Feature/Venta/csv/plan_pagos_1.csv")) as $row){
-        $this->assertDatabaseHas("cuotas", ["vencimiento" => $row[1], "credito_id" => $venta->credito->id, "numero" => $row[0], "importe" => $row[3], "saldo" => $row[3], "saldo_capital" => $row[6]]);
+    $this->assertEquals($expectations["venta"], Arr::only($venta->getAttributes(), array_keys($expectations["venta"])));
+    if($venta->tipo == 2){
+        $expectedCreditoData = [
+            "creditable_id" => $venta->id,
+            "creditable_type" => $venta->getMorphClass()
+        ] + $expectations["credito"] ;
+        $this->assertEquals($expectedCreditoData, Arr::only($venta->credito->getAttributes(), array_keys($expectedCreditoData)));
+        
+        if(isset($dataset["plan_pagos_path"])){
+            /** @var FilesystemAdapter $disk */
+            $disk = Storage::disk("tests");
+            foreach(read_csv($disk->path($dataset["plan_pagos_path"])) as $row){
+                $this->assertDatabaseHas("cuotas", ["vencimiento" => $row[1], "credito_id" => $venta->credito->id, "numero" => $row[0], "importe" => $row[3], "saldo" => $row[3], "saldo_capital" => $row[6]]);
+            }
+        }
     }
-});
+})->with([
+    function(){
+        //Venta al contado
+        $data = Venta::factory([
+            "moneda" => "USD",
+            "importe" => "10530.96",
+        ])->contado()->withoutReserva()->raw();
+        return [
+            "data" => $data,
+            "expectations" => [
+                "venta" => Arr::only($data, [
+                    "fecha",
+                    "tipo",
+                    "moneda",
+                    "cliente_id",
+                    "vendedor_id",
+                    "lote_id"
+                ]) + [
+                    "importe" => "10530.9600"
+                ]
+            ]
+        ];
+    },
+    function(){
+        //Venta al credito
+        $data = Venta::factory([
+            "fecha" => "2022-02-28",
+            "moneda" => "USD",
+            "importe" => "10530.96",
+        ])->credito()->withoutReserva()->raw();
+        $dataCredito = Credito::factory([
+            "plazo" => 48,
+            "periodo_pago" => 1,
+            "dia_pago" => 1,
+        ])->raw();
+        $data["credito"] = $dataCredito;
+
+        return [
+            "data" => $data,
+            "plan_pagos_path" => "Feature/Venta/csv/plan_pagos_1.csv",
+            "expectations" => [
+                "venta" => Arr::only($data, [
+                    "fecha",
+                    "tipo",
+                    "moneda",
+                    "cliente_id",
+                    "vendedor_id",
+                    "proyecto_id",
+                    "lote_id"
+                ]) + [
+                    "importe" => "10530.9600"
+                ],
+                "credito" => Arr::except($dataCredito, ["cuota_inicial"]) + [
+                    "cuota_inicial" => "500.0000",
+                ]
+            ]
+        ];
+    },
+    function(){
+        //Venta al contado
+        $reserva = Reserva::factory([
+            "moneda" => "USD",
+            "importe" => "100",
+            "saldo_contado" => "10430.96",
+            "saldo_credito" => "400",
+        ])->create();
+        $data = Venta::factory([
+            "moneda" => "USD",
+            "importe" => "10530.96",
+        ])->contado()->for($reserva)->raw();
+        return [
+            "data" => $data,
+            "expectations" => [
+                "venta" => Arr::only($data, [
+                    "fecha",
+                    "tipo",
+                    "moneda"
+                ]) + [
+                    "importe" => "10430.9600",
+                    "reserva_id" => $reserva->id,
+                    "cliente_id" => $reserva->cliente_id,
+                    "vendedor_id" => $reserva->vendedor_id,
+                    "lote_id" => $reserva->lote_id
+                ]
+            ]
+        ];
+    },
+    function(){
+        //Venta al contado
+        $reserva = Reserva::factory([
+            "moneda" => "USD",
+            "importe" => "100",
+            "saldo_contado" => "10430.96",
+            "saldo_credito" => "400",
+        ])->create();
+        $data = Venta::factory([
+            "moneda" => "BOB",
+        ])->contado()->for($reserva)->raw();
+        return [
+            "data" => $data,
+            "expectations" => [
+                "venta" => Arr::only($data, [
+                    "fecha",
+                    "tipo",
+                    "moneda"
+                ]) + [
+                    "importe" => "72599.4800",
+                    "reserva_id" => $reserva->id,
+                    "cliente_id" => $reserva->cliente_id,
+                    "vendedor_id" => $reserva->vendedor_id,
+                    "lote_id" => $reserva->lote_id
+                ]
+            ]
+        ];
+    },
+    function(){
+        //Venta al contado
+        $reserva = Reserva::factory([
+            "moneda" => "BOB",
+            "importe" => "100",
+            "saldo_contado" => "10430.96",
+            "saldo_credito" => "400",
+        ])->create();
+        $data = Venta::factory([
+            "moneda" => "USD",
+        ])->contado()->for($reserva)->raw();
+        return [
+            "data" => $data,
+            "expectations" => [
+                "venta" => Arr::only($data, [
+                    "fecha",
+                    "tipo",
+                    "moneda"
+                ]) + [
+                    "importe" => "1520.5500",
+                    "reserva_id" => $reserva->id,
+                    "cliente_id" => $reserva->cliente_id,
+                    "vendedor_id" => $reserva->vendedor_id,
+                    "lote_id" => $reserva->lote_id
+                ]
+            ]
+        ];
+    },
+    function(){
+        //Venta al contado
+        $reserva = Reserva::factory([
+            "moneda" => "USD",
+            "importe" => "100",
+            "saldo_contado" => "10430.96",
+            "saldo_credito" => "400",
+        ])->create();
+        $data = Venta::factory([
+            "moneda" => "BOB",
+        ])->credito()->for($reserva)->raw();
+        $dataCredito = Credito::factory([
+            "plazo" => 48,
+            "periodo_pago" => 1,
+            "dia_pago" => 1,
+        ])->raw();
+        $data["credito"] = $dataCredito;
+        return [
+            "data" => $data,
+            "expectations" => [
+                "venta" => Arr::only($data, [
+                    "fecha",
+                    "tipo",
+                    "moneda"
+                ]) + [
+                    "importe" => "72599.4800",
+                    "reserva_id" => $reserva->id,
+                    "cliente_id" => $reserva->cliente_id,
+                    "vendedor_id" => $reserva->vendedor_id,
+                    "lote_id" => $reserva->lote_id
+                ],
+                "credito" => Arr::except($dataCredito, ["cuota_inicial"]) + [
+                    "cuota_inicial" => "2784.0000",
+                ]
+            ]
+        ];
+    },
+    function(){
+        //Venta al contado
+        $reserva = Reserva::factory([
+            "moneda" => "BOB",
+            "importe" => "100",
+            "saldo_contado" => "10430.96",
+            "saldo_credito" => "400",
+        ])->create();
+        $data = Venta::factory([
+            "moneda" => "USD",
+        ])->credito()->for($reserva)->raw();
+        $dataCredito = Credito::factory([
+            "plazo" => 48,
+            "periodo_pago" => 1,
+            "dia_pago" => 1,
+        ])->raw();
+        $data["credito"] = $dataCredito;
+        return [
+            "data" => $data,
+            "expectations" => [
+                "venta" => Arr::only($data, [
+                    "fecha",
+                    "tipo",
+                    "moneda"
+                ]) + [
+                    "importe" => "1520.5500",
+                    "reserva_id" => $reserva->id,
+                    "cliente_id" => $reserva->cliente_id,
+                    "vendedor_id" => $reserva->vendedor_id,
+                    "lote_id" => $reserva->lote_id
+                ],
+                "credito" => Arr::except($dataCredito, ["cuota_inicial"]) + [
+                    "cuota_inicial" => "58.3100",
+                ]
+            ]
+        ];
+    },
+]);
 
 test("Pagos programados el 31 de cada mes", function(){
     $data = Venta::factory([
@@ -204,7 +359,9 @@ test("Un lote que ha sido reservado por un cliente no puede ser vendido a otro, 
     $lote = Lote::factory()->create();
     $now = Carbon::now();
     $reserva = Reserva::factory([
-        "fecha" => $now->format("Y-m-d")
+        "fecha" => $now->format("Y-m-d"),
+        "saldo_contado" => "0",
+        "saldo_credito" => "0",
     ])->for($lote)->create();
 
     //Venta al contado
@@ -212,14 +369,7 @@ test("Un lote que ha sido reservado por un cliente no puede ser vendido a otro, 
 
     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
-        "pago" => [
-            "moneda" => $data["moneda"],
-            "monto" => $data["importe"],
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ]);
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
 
     $response->assertJsonValidationErrors([
         "lote_id" => "El lote ha sido reservado por otro cliente."
@@ -227,29 +377,37 @@ test("Un lote que ha sido reservado por un cliente no puede ser vendido a otro, 
 
     $this->travelTo($reserva->vencimiento);
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
-        "pago" => [
-            "moneda" => $data["moneda"],
-            "monto" => $data["importe"],
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ]);
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
 
     $response->assertJsonValidationErrors([
         "lote_id" => "El lote ha sido reservado por otro cliente."
     ]);
 
     $this->travel(1)->days();
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data + [
-        "pago" => [
-            "moneda" => $data["moneda"],
-            "monto" => $data["importe"],
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ]);
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
 
     $response->assertCreated();
 
+});
+
+it('registra la transaccion', function () {
+    /** @var TestCase $this  */
+
+    $data = Venta::factory([
+        "moneda" => "USD",
+        "importe" => "10530.96",
+    ])->contado()->withReserva(false)->raw();
+    $proyectoId = $data["proyecto_id"];
+
+    Event::fake();
+    
+    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+    $response->assertCreated();
+    $id = $response->json("id");
+    $venta = Venta::find($id);
+    Event::assertDispatched(VentaCreated::class, function(VentaCreated $event) use($venta){
+        $this->assertEquals($event->userId, 1);
+        $this->assertEquals($event->venta->id, $venta->id);
+        return true;
+    });
 });

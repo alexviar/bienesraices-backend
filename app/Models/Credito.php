@@ -17,7 +17,7 @@ class Credito extends Model
     use HasFactory;
 
     protected $fillable = [
-        "numero",
+        "codigo",
         "importe_cuotas",
         "cuota_inicial",
         "tasa_interes",
@@ -33,7 +33,7 @@ class Credito extends Model
 
     function getMorphKeyName()
     {
-        return "numero";
+        return "codigo";
     }
 
     function getUrlPlanPagoAttribute(){
@@ -139,7 +139,7 @@ class Credito extends Model
         $cuotas = $builder->build();
         foreach($cuotas as $cuota){
             $this->cuotas()->create([
-                "transactable_id" => $this->numero*1000 + $cuota["numero"],
+                "codigo" => $this->numero*1000 + $cuota["numero"],
                 "numero"=>$cuota["numero"],
                 "vencimiento" => $cuota["vencimiento"],
                 "importe" => (string) $cuota["pago"],

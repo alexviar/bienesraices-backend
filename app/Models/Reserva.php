@@ -24,8 +24,8 @@ class Reserva extends Model
         "cliente_id",
         "moneda",
         "importe",
-        // "saldo_credito",
-        // "saldo_contado",
+        "saldo_credito",
+        "saldo_contado",
         "vencimiento"
     ];
 
@@ -35,6 +35,14 @@ class Reserva extends Model
     ];
 
     function getImporteAttribute($value){
+        return new Money($value, Currency::find($this->moneda));
+    }
+
+    function getSaldoCreditoAttribute($value){
+        return new Money($value, Currency::find($this->moneda));
+    }
+
+    function getSaldoContadoAttribute($value){
         return new Money($value, Currency::find($this->moneda));
     }
 

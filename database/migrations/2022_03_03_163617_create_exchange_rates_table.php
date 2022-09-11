@@ -29,7 +29,7 @@ class CreateExchangeRatesTable extends Migration
         ExchangeRate::create([
             "source" => "USD",
             "target" => "BOB",
-            "buy_rate" => "6.89",
+            "buy_rate" => "6.86",
             "sell_rate" => "6.96"
         ]);
     }

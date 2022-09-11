@@ -1,237 +1,274 @@
 <?php
 
+use App\Events\VentaCreated;
+use App\Listeners\TransaccionSubscriber;
 use App\Models\Credito;
 use App\Models\Reserva;
 use App\Models\User;
 use App\Models\Venta;
 use Illuminate\Http\UploadedFile;
 
-test("Venta al contado en dolares, reserva en dolares y pago en dolares", function(){
-    /** @var TestCase $this */
-    $data = Venta::factory([
-        "moneda" => "USD",
-        "importe" => "10530.96",
-    ])->contado()->for(Reserva::factory([
-        "moneda" => "USD",
-        "importe" => "100"
-    ]))->raw() + [
-        "pago" => [
+test("registra transaccion por venta", function($dataset){
+    $venta = $dataset["venta"];
+
+    $event = new VentaCreated($venta, User::find(1)->id);
+    $subscriber = new TransaccionSubscriber();
+    $subscriber->handleVentaCreated($event);
+
+    assertTransaccionPorVenta($venta);
+})->with([
+    function(){
+        $venta = Venta::factory([
             "moneda" => "USD",
-            "monto" => "10431",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ];
+            "importe" => "10530.9600",
+        ])->contado()->withoutReserva()->create();
+        return [
+            "venta" => $venta,
+        ];
+    },
+    function(){
+        $venta = Venta::factory([
+            "moneda" => "USD",
+            "importe" => "10530.9600",
+        ])->credito()->has(Credito::factory([
+            "cuota_inicial" => "500.0000"
+        ]))->withoutReserva()->create();
+        return [
+            "venta" => $venta,
+        ];
+    }
+]);
+// test("Venta al contado en dolares, reserva en dolares y pago en dolares", function(){
+//     /** @var TestCase $this */
+//     $data = Venta::factory([
+//         "moneda" => "USD",
+//         "importe" => "10530.96",
+//     ])->contado()->for(Reserva::factory([
+//         "moneda" => "USD",
+//         "importe" => "100"
+//     ]))->raw() + [
+//         "pago" => [
+//             "moneda" => "USD",
+//             "monto" => "10431",
+//             "numero_transaccion" => "1242325848",
+//             "comprobante" => UploadedFile::fake()->image("comprobante.png")
+//         ]
+//     ];
 
-    $proyectoId = $data["proyecto_id"];
+//     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);    
-    $response->assertCreated();
-    $venta = Venta::find($response->json("id"));
-    assertTransaccionPorVentaAlContado($data, $venta, "10430.96");
-});
+//     $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);    
+//     $response->assertCreated();
+//     $venta = Venta::find($response->json("id"));
+//     assertTransaccionPorVentaAlContado($data, $venta, "10430.96");
+// });
 
-test("Venta al contado en dolares, reserva en dolares y pago en bolivianos", function(){
-    /** @var TestCase $this */
-    $data = Venta::factory([
-        "moneda" => "USD",
-        "importe" => "10530.96",
-    ])->contado()->for(Reserva::factory([
-        "moneda" => "USD",
-        "importe" => "100"
-    ]))->raw() + [
-        "pago" => [
-            "moneda" => "BOB",
-            "monto" => "72600",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ];
+// test("Venta al contado en dolares, reserva en dolares y pago en bolivianos", function(){
+//     /** @var TestCase $this */
+//     $data = Venta::factory([
+//         "moneda" => "USD",
+//         "importe" => "10530.96",
+//     ])->contado()->for(Reserva::factory([
+//         "moneda" => "USD",
+//         "importe" => "100"
+//     ]))->raw() + [
+//         "pago" => [
+//             "moneda" => "BOB",
+//             "monto" => "72600",
+//             "numero_transaccion" => "1242325848",
+//             "comprobante" => UploadedFile::fake()->image("comprobante.png")
+//         ]
+//     ];
 
-    $proyectoId = $data["proyecto_id"];
+//     $proyectoId = $data["proyecto_id"];
     
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);    
-    $response->assertCreated();
-    $venta = Venta::find($response->json("id"));
-    assertTransaccionPorVentaAlContado($data, $venta, "10430.96");
-});
+//     $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);    
+//     $response->assertCreated();
+//     $venta = Venta::find($response->json("id"));
+//     assertTransaccionPorVentaAlContado($data, $venta, "10430.96");
+// });
 
-test("Venta al contado en dolares, reserva en bolivianos y pago en dolares", function(){
+// test("Venta al contado en dolares, reserva en bolivianos y pago en dolares", function(){
     
-    $data = Venta::factory([
-        "moneda" => "USD",
-        "importe" => "10530.96",
-    ])->contado()->for(Reserva::factory([
-        "moneda" => "BOB",
-        "importe" => "696"
-    ]))->raw() + [
-        "pago" => [
-            "moneda" => "USD",
-            "monto" => "10431",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ];
+//     $data = Venta::factory([
+//         "moneda" => "USD",
+//         "importe" => "10530.96",
+//     ])->contado()->for(Reserva::factory([
+//         "moneda" => "BOB",
+//         "importe" => "696"
+//     ]))->raw() + [
+//         "pago" => [
+//             "moneda" => "USD",
+//             "monto" => "10431",
+//             "numero_transaccion" => "1242325848",
+//             "comprobante" => UploadedFile::fake()->image("comprobante.png")
+//         ]
+//     ];
 
-    $proyectoId = $data["proyecto_id"];
+//     $proyectoId = $data["proyecto_id"];
     
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);    
-    $response->assertCreated();
-    $venta = Venta::find($response->json("id"));
-    assertTransaccionPorVentaAlContado($data, $venta, "10430.96");
-});
+//     $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);    
+//     $response->assertCreated();
+//     $venta = Venta::find($response->json("id"));
+//     assertTransaccionPorVentaAlContado($data, $venta, "10430.96");
+// });
 
-test("Venta al contado en dolares, reserva en bolivianos y pago en bolivianos", function(){
-    $data = Venta::factory([
-        "moneda" => "USD",
-        "importe" => "10530.96",
-    ])->contado()->for(Reserva::factory([
-        "moneda" => "BOB",
-        "importe" => "696"
-    ]))->raw() + [
-        "pago" => [
-            "moneda" => "BOB",
-            "monto" => "72600",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ];
+// test("Venta al contado en dolares, reserva en bolivianos y pago en bolivianos", function(){
+//     $data = Venta::factory([
+//         "moneda" => "USD",
+//         "importe" => "10530.96",
+//     ])->contado()->for(Reserva::factory([
+//         "moneda" => "BOB",
+//         "importe" => "696"
+//     ]))->raw() + [
+//         "pago" => [
+//             "moneda" => "BOB",
+//             "monto" => "72600",
+//             "numero_transaccion" => "1242325848",
+//             "comprobante" => UploadedFile::fake()->image("comprobante.png")
+//         ]
+//     ];
 
-    $proyectoId = $data["proyecto_id"];
+//     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);  
-    $response->assertCreated();
-    $venta = Venta::find($response->json("id"));
-    assertTransaccionPorVentaAlContado($data, $venta, "10430.96");
-});
+//     $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);  
+//     $response->assertCreated();
+//     $venta = Venta::find($response->json("id"));
+//     assertTransaccionPorVentaAlContado($data, $venta, "10430.96");
+// });
 
-test("Venta al contado en bolivianos, reserva en dolares y pago en dolares", function(){
-    $data = Venta::factory([
-        "moneda" => "BOB",
-        "importe" => "73295.48",
-    ])->contado()->for(Reserva::factory([
-        "moneda" => "USD",
-        "importe" => "100"
-    ]))->raw() + [
-        "pago" => [
-            "moneda" => "USD",
-            "monto" => "10538",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ];
+// test("Venta al contado en bolivianos, reserva en dolares y pago en dolares", function(){
+//     $data = Venta::factory([
+//         "moneda" => "BOB",
+//         "importe" => "73295.48",
+//     ])->contado()->for(Reserva::factory([
+//         "moneda" => "USD",
+//         "importe" => "100"
+//     ]))->raw() + [
+//         "pago" => [
+//             "moneda" => "USD",
+//             "monto" => "10538",
+//             "numero_transaccion" => "1242325848",
+//             "comprobante" => UploadedFile::fake()->image("comprobante.png")
+//         ]
+//     ];
 
-    $proyectoId = $data["proyecto_id"];
+//     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data); 
-    $response->assertCreated();
-    $venta = Venta::find($response->json("id"));
-    assertTransaccionPorVentaAlContado($data, $venta, "72606.48");
-});
+//     $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data); 
+//     $response->assertCreated();
+//     $venta = Venta::find($response->json("id"));
+//     assertTransaccionPorVentaAlContado($data, $venta, "72606.48");
+// });
 
-test("Venta al contado en bolivianos, reserva en dolares y pago en bolivianos", function(){
-    $data = Venta::factory([
-        "moneda" => "BOB",
-        "importe" => "73295.48",
-    ])->contado()->for(Reserva::factory([
-        "moneda" => "USD",
-        "importe" => "100"
-    ]))->raw() + [
-        "pago" => [
-            "moneda" => "BOB",
-            "monto" => "72607",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ];
+// test("Venta al contado en bolivianos, reserva en dolares y pago en bolivianos", function(){
+//     $data = Venta::factory([
+//         "moneda" => "BOB",
+//         "importe" => "73295.48",
+//     ])->contado()->for(Reserva::factory([
+//         "moneda" => "USD",
+//         "importe" => "100"
+//     ]))->raw() + [
+//         "pago" => [
+//             "moneda" => "BOB",
+//             "monto" => "72607",
+//             "numero_transaccion" => "1242325848",
+//             "comprobante" => UploadedFile::fake()->image("comprobante.png")
+//         ]
+//     ];
 
-    $proyectoId = $data["proyecto_id"];
+//     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
-    $response->assertCreated();
-    $venta = Venta::find($response->json("id"));
-    assertTransaccionPorVentaAlContado($data, $venta, "72606.48");
-});
+//     $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+//     $response->assertCreated();
+//     $venta = Venta::find($response->json("id"));
+//     assertTransaccionPorVentaAlContado($data, $venta, "72606.48");
+// });
 
-test("Venta al contado en bolivianos, reserva en bolivianos y pago en dolares", function(){
-    $data = Venta::factory([
-        "moneda" => "BOB",
-        "importe" => "73295.48",
-    ])->contado()->for(Reserva::factory([
-        "moneda" => "BOB",
-        "importe" => "696"
-    ]))->raw() + [
-        "pago" => [
-            "moneda" => "USD",
-            "monto" => "10537",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ];
+// test("Venta al contado en bolivianos, reserva en bolivianos y pago en dolares", function(){
+//     $data = Venta::factory([
+//         "moneda" => "BOB",
+//         "importe" => "73295.48",
+//     ])->contado()->for(Reserva::factory([
+//         "moneda" => "BOB",
+//         "importe" => "696"
+//     ]))->raw() + [
+//         "pago" => [
+//             "moneda" => "USD",
+//             "monto" => "10537",
+//             "numero_transaccion" => "1242325848",
+//             "comprobante" => UploadedFile::fake()->image("comprobante.png")
+//         ]
+//     ];
 
-    $proyectoId = $data["proyecto_id"];
+//     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
-    $response->assertCreated();
-    $venta = Venta::find($response->json("id"));
-    assertTransaccionPorVentaAlContado($data, $venta, "72599.48");
-});
+//     $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+//     $response->assertCreated();
+//     $venta = Venta::find($response->json("id"));
+//     assertTransaccionPorVentaAlContado($data, $venta, "72599.48");
+// });
 
-test("Venta al contado en bolivianos, reserva en bolivianos y pago en bolivianos", function(){
-    $data = Venta::factory([
-        "moneda" => "BOB",
-        "importe" => "73295.48",
-    ])->contado()->for(Reserva::factory([
-        "moneda" => "BOB",
-        "importe" => "696"
-    ]))->raw() + [
-        "pago" => [
-            "moneda" => "BOB",
-            "monto" => "72600",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ];
+// test("Venta al contado en bolivianos, reserva en bolivianos y pago en bolivianos", function(){
+//     $data = Venta::factory([
+//         "moneda" => "BOB",
+//         "importe" => "73295.48",
+//     ])->contado()->for(Reserva::factory([
+//         "moneda" => "BOB",
+//         "importe" => "696"
+//     ]))->raw() + [
+//         "pago" => [
+//             "moneda" => "BOB",
+//             "monto" => "72600",
+//             "numero_transaccion" => "1242325848",
+//             "comprobante" => UploadedFile::fake()->image("comprobante.png")
+//         ]
+//     ];
 
-    $proyectoId = $data["proyecto_id"];
+//     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
-    $response->assertCreated();
-    $venta = Venta::find($response->json("id"));
-    assertTransaccionPorVentaAlContado($data, $venta, "72599.48");
-});
+//     $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+//     $response->assertCreated();
+//     $venta = Venta::find($response->json("id"));
+//     assertTransaccionPorVentaAlContado($data, $venta, "72599.48");
+// });
 
-// //Credito---------------------------------------------------------------------------------------------------------
+// // //Credito---------------------------------------------------------------------------------------------------------
 
-test("Venta al credito en dolares, reserva en dolares y pago en dolares", function(){
-    /** @var TestCase $this */
+// test("Venta al credito en dolares, reserva en dolares y pago en dolares", function(){
+//     /** @var TestCase $this */
 
-    //Venta al credito
-    $data = Venta::factory([
-        "moneda" => "USD",
-        "importe" => "10530.96",
-    ])->credito()->for(Reserva::factory([
-        "moneda" => "USD",
-        "importe" => "100"
-    ]))->raw() + [
-        "credito" => Credito::factory([
-            "cuota_inicial" => "500",
-        ])->raw(),
-        "pago" => [
-            "moneda" => "USD",
-            "monto" => "401.00",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
-    ];
+//     //Venta al credito
+//     $data = Venta::factory([
+//         "moneda" => "USD",
+//         "importe" => "10530.96",
+//     ])->credito()->for(Reserva::factory([
+//         "moneda" => "USD",
+//         "importe" => "100"
+//     ]))->raw() + [
+//         "credito" => Credito::factory([
+//             "cuota_inicial" => "500",
+//         ])->raw(),
+//         "pago" => [
+//             "moneda" => "USD",
+//             "monto" => "401.00",
+//             "numero_transaccion" => "1242325848",
+//             "comprobante" => UploadedFile::fake()->image("comprobante.png")
+//         ]
+//     ];
 
-    $proyectoId = $data["proyecto_id"];
+//     $proyectoId = $data["proyecto_id"];
 
-    $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
-    $response->assertCreated();
-    $venta = Venta::find($response->json("id"));
-    assertTransaccionPorVentaAlCredito($data, $venta->credito, "400.00");
-});
+//     $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
+//     $response->assertCreated();
+//     $venta = Venta::find($response->json("id"));
+//     assertTransaccionPorVentaAlCredito($data, $venta->credito, "400.00");
+// });
+
+
+
+
+
 
 // test("Venta al credito en dolares, reserva en dolares y pago en bolivianos", function(){
 //     $data = Venta::factory([

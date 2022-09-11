@@ -4,29 +4,8 @@ use App\Models\Credito;
 use App\Models\Reserva;
 use App\Models\User;
 use App\Models\Venta;
+use Brick\Math\BigDecimal;
 use Illuminate\Http\UploadedFile;
-
-// it("Verifica que el pago sea mayor o igual que el monto a pagar", function($dataset){
-
-// })->with([
-//     function(){
-//         $data = Venta::factory([
-//             "moneda" => "USD",
-//             "importe" => "10530.96",
-//         ])->contado()->for(Reserva::factory([
-//             "moneda" => "USD",
-//             "importe" => "100"
-//         ]))->raw() + [
-//             "pago" => [
-//                 "metodo_pago" => 2,
-//                 "moneda" => "USD",
-//                 "monto" => "10430.95",
-//                 "numero_transaccion" => "1242325848",
-//                 "comprobante" => UploadedFile::fake()->image("comprobante.png")
-//             ]
-//         ];
-//     }
-// ])
 
 // test("Venta al contado en dolares, reserva en dolares y pago en dolares", function(){
 //     /** @var TestCase $this */

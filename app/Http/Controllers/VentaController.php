@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\VentaCreated;
 use App\Http\Reports\Venta\HistorialPagos;
 use App\Http\Reports\Venta\PlanPagosPdfReporter;
 use App\Models\Credito;
@@ -15,6 +16,8 @@ use App\Models\ValueObjects\Money;
 use App\Models\Venta;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
+use Carbon\Carbon;
+use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -45,33 +48,13 @@ class VentaController extends Controller
     }
 
     function preprocesStoreRequest(Request $request){
-        $montoAPagar = null;
-        try{
-            $reserva = Reserva::find($request->get("reserva_id"));
-            $monedaPago = Currency::find($request->input("pago.moneda"));
-            $monedaVenta = Currency::find($request->input("moneda"));
-            $importeVenta = new Money(
-                BigDecimal::of($request->get("tipo") == 2 ? 
-                    $request->input("credito.cuota_inicial") : 
-                    $request->get("importe")
-                )->toScale(2, RoundingMode::HALF_UP),
-                $monedaVenta
-            );
-            $importeReserva = $reserva ? $reserva->importe : new Money("0", $importeVenta->currency);
-
-            if($importeVenta->currency->code !== $importeReserva->currency->code){
-                $importeVenta = $importeVenta->exchangeTo($monedaPago)->round(2);
-                $importeReserva = $importeReserva->exchangeTo($monedaPago, [
-                    "exchangeMode" => Money::BUY
-                ])->round(2);
-            }
-            $montoAPagar = $importeVenta->minus($importeReserva)->exchangeTo($monedaPago)->round(2);
-        }catch(Throwable $e){ }
-        return [$montoAPagar, $monedaVenta, $monedaPago, $reserva];
+        $reserva = Reserva::find($request->get("reserva_id"));
+        $monedaVenta = Currency::find($request->input("moneda"));
+        return [$monedaVenta, $reserva];
     }
 
     function validateStoreRequest(Request $request, $proyectoId){        
-        [$montoAPagar, $monedaVenta, $monedaPago, $reserva] = $this->preprocesStoreRequest($request);
+        [$monedaVenta, $reserva] = $this->preprocesStoreRequest($request);
         $payload = $request->validate([
             "tipo" => "required|in:1,2",
             "fecha" => "required|date|before_or_equal:".now()->format("Y-m-d"),
@@ -114,19 +97,7 @@ class VentaController extends Controller
             // "credito.tasa_interes" => "required_with:credito|numeric",
             "credito.plazo" => "required_with:credito|numeric|integer",
             "credito.periodo_pago" => "required_with:credito|in:1,2,3,4,6",
-            "credito.dia_pago" => "required_with:credito|min:1|max:31",
-
-            "pago.moneda" => ["required", function($attribute, $value, $fail) use($monedaPago){
-                if(!$monedaPago) $fail("Moneda de pago invalida.");
-            }],
-            "pago.monto" => ["required", "numeric", function ($attribute, $value, $fail) use($montoAPagar){
-                if($montoAPagar && $montoAPagar->amount->isGreaterThan($value)){
-                    // $fail("El pago ({$pago->toScale(2)} {$monedaPago->code}) es menor al monto a pagar ({$montoAPagar->toScale(2)} {$monedaPago->code}).");
-                    $fail("El pago es menor al monto a pagar.");
-                }
-            }],
-            "pago.comprobante" => "required|image",
-            "pago.numero_transaccion" => "required|integer"
+            "credito.dia_pago" => "required_with:credito|min:1|max:31"
         ], [
             "fecha.before_or_equal" => "El campo ':attribute' no puede ser posterior a la fecha actual."
         ]);
@@ -140,58 +111,46 @@ class VentaController extends Controller
             throw new ModelNotFoundException("El proyecto no existe");
         }    
         [$payload, $reserva] = $this->validateStoreRequest($request, $proyectoId);
-        if($reserva && $reserva->estado == 1){
+        if($reserva){
+            $payload["importe"] = (string) $reserva->saldo_contado->exchangeTo($payload["moneda"])->round(2)->amount;
             $payload["lote_id"] = $reserva->lote->id;
             $payload["cliente_id"] = $reserva->cliente_id;
             $payload["vendedor_id"] = $reserva->vendedor_id;
         }
+        $payload["proyecto_id"] = $proyecto->id;
 
-        $record = DB::transaction(function() use($proyecto, $reserva, $payload){
+        $this->authorize("create", [Venta::class, $payload]);
+
+        $record = DB::transaction(function() use($proyecto, $reserva, $payload, $request){
             /** @var Venta $record */
-            $record = Venta::create([
-                "proyecto_id" => $proyecto->id
-            ]+$payload);
+            $record = Venta::create($payload);
 
             if($record->tipo == 2) {
                 /** @var Credito $credito */
+                if($reserva){
+                    $payload["credito"]["cuota_inicial"] = (string) $reserva->saldo_credito->exchangeTo($payload["moneda"])->round(2)->amount;
+                }
+
+                $año = $record->fecha->year;
+                $codigo = $año * 10000 + Credito::whereBetween("codigo", $año * 10000, ($año + 1) * 10000)->max("codigo") + 1;
+                $codigo = retry(3, function() use(&$codigo){
+                    if(Credito::where("codigo", $codigo)->lockForUpdate()->exists()){
+                        $codigo++;
+                        throw new Exception("Codigo ya usado");
+                    }
+                }, function(){
+                    return rand(0, 100);
+                });
                 $credito = $record->credito()->create($payload["credito"]+[
+                    // "fecha" => $payload["fecha"],
+                    "codigo" => $codigo,
                     "tasa_mora" => $proyecto->tasa_mora,
                     "tasa_interes" => $proyecto->tasa_interes,
                 ]);
                 $credito->build();
             }
 
-            //Aqui idealmente deberiamos despachar un evento para desencadenar otras acciones
-            //pero por ahora esas acciones vamos a realizarlas aqui directamente
-
-            //Registrar la transacción
-            $transaccion = Transaccion::create([
-                "fecha" => $record->fecha,
-                "moneda" => Arr::get($payload,"pago.moneda"),
-                "importe" => Arr::get($payload, "pago.monto"),
-                "numero_transaccion" => Arr::get($payload, "pago.numero_transaccion"),
-                "comprobante" => Arr::get($payload, "pago.comprobante")->store("comprobantes"),
-                "forma_pago" => 2,
-            ]);
-            
-            $importeReserva = $reserva ? $reserva->importe->exchangeTo($record->getCurrency(), [
-                "exchangeMode" => Money::BUY
-            ])->round() : "0";
-            $detailModel = new DetalleTransaccion();
-            $detailModel->moneda = $record->getCurrency()->code;
-            if($record->tipo == 1){
-                $detailModel->referencia = $record->getReferencia();
-                $detailModel->importe = $record->importe->minus($importeReserva)->amount;
-                $transaccion->detalles()->save($detailModel);
-                $detailModel->ventas()->save($record);
-            }
-            else {
-                $credito = $record->credito;
-                $detailModel->referencia = $credito->getReferencia();
-                $detailModel->importe = $credito->cuota_inicial->minus($importeReserva)->amount;
-                $transaccion->detalles()->save($detailModel);
-                $detailModel->creditos()->save($credito);
-            }
+            VentaCreated::dispatch($record, $request->user()->id);
 
             //Actualizar el estado de la reserva, si existe
             if($reserva){

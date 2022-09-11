@@ -36,7 +36,7 @@ class Cuota extends Model
     use HasFactory, SaveToUpper;
 
     protected $fillable = [
-        "transactable_id",
+        "codigo",
         "numero",
         "vencimiento",
         "importe",
@@ -69,19 +69,16 @@ class Cuota extends Model
 
     /** @var BigRational $_saldo */
     protected $_saldo;
-   
-    /**
-     * @param Carbon
-     */
-    function projectTo(Carbon $fecha){
-        $this->projectionDate = $fecha;
-        return $this;
-    }
 
     function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
         $this->projectionDate = Carbon::today();
+    }
+    
+    function getMorphKeyName()
+    {
+        return "codigo";
     }
 
     function getVencidaAttribute(){
@@ -171,6 +168,7 @@ class Cuota extends Model
             return $pe->id;
         });
     }
+
     #region Relationships
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -183,7 +181,14 @@ class Cuota extends Model
         return $this->belongsTo(Credito::class);
     }
     #endregion
-
+   
+    /**
+     * @param Carbon
+     */
+    function projectTo(Carbon $fecha){
+        $this->projectionDate = $fecha;
+        return $this;
+    }
     // function getAnteriorCuotaAttribute(){
     //     return $this->credito->cuotas->where("numero", $this->numero - 1)->first();
     // }    

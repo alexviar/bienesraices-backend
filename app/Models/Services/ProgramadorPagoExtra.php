@@ -20,8 +20,10 @@ abstract class ProgramadorPagoExtra {
     function cloneCuota(Cuota $cuota){
         $clone = $cuota->replicate();
         $clone->save();
-        $clone->unsetRelation("transacciones");
-        $clone->transacciones()->attach($cuota->transacciones);
+        $clone->unsetRelation("pagos");
+        $clone->pagos()->saveMany($cuota->pagos->map(function($pago){
+            return $pago->replicate();
+        }));
         return $clone;
     }
 
@@ -35,8 +37,6 @@ abstract class ProgramadorPagoExtra {
         $clone->pagosExtras()->saveMany($credito->pagosExtras->map(function($pagoExtra){
             return $pagoExtra->replicate();
         }));
-        $clone->unsetRelation("transacciones");
-        $clone->transacciones()->attach($credito->transacciones);
         return $clone;
     }
 

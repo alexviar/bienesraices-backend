@@ -147,17 +147,20 @@ it('copia las referencias del credito anterior', function(){
     ->for(Transaccion::factory([
         "fecha" => "2022-02-28",
         "moneda" => "USD",
-        "importe" => "500"
-    ]))->create();
-    $transaccionCuotaInicial->creditos()->attach($credito);
+        "importe" => "500",
+    ]))->for($credito, "transactable")->create();
 
     $transaccionPagoCuota1 = DetalleTransaccion::factory()
     ->for(Transaccion::factory([
         "fecha" => "2022-03-05",
         "moneda" => "USD",
         "importe" => "100"
-    ]))->create();
-    $transaccionPagoCuota1->cuotas()->attach($credito->cuotas[0]);
+    ]))->for($credito->cuotas[0], "transactable")->create();
+    $credito->cuotas[0]->pagos()->create([
+        "fecha" => "2022-03-05",
+        "moneda" => "USD",
+        "importe" => "100"
+    ]);
 
     PagoExtra::factory(["periodo" => 1])->for($credito)->create();
     PagoExtra::factory(["periodo" => 2])->for($credito)->create();
@@ -165,10 +168,18 @@ it('copia las referencias del credito anterior', function(){
 
     $response = makeRequest($credito, $body);
     $nuevoCredito = Credito::find($response->json("id"));
-    $this->assertTrue($transaccionCuotaInicial->creditos->contains("id", $nuevoCredito->id), "No se copió la referencia al pago de la cuota inicial.");
-    $this->assertTrue($transaccionPagoCuota1->cuotas->contains("id", $nuevoCredito->cuotas[0]->id), "No se copió la referencia al pago de la cuota inicial.");
+    $this->assertTrue($transaccionCuotaInicial->is(DetalleTransaccion::whereMorphedTo("transactable", $nuevoCredito)->first()), "No se copió la referencia al pago de la cuota inicial.");
+    $this->assertTrue($transaccionPagoCuota1->is(DetalleTransaccion::whereMorphedTo("transactable", $nuevoCredito->cuotas[0])->first()), "No se copió la referencia al pago de la primer cuota.");
     
+    expect($nuevoCredito->cuotas->count())->toBe($credito->cuotas->count());
     expect($nuevoCredito->cuotas->pluck("id"))->not->toMatchArray($credito->cuotas->pluck("id"));
+    expect($nuevoCredito->cuotas->pluck("transactable_id"))->toMatchArray($credito->cuotas->pluck("transactable_id"));
+    expect($nuevoCredito->cuotas[0]->pagos[0]->getAttributes())->toMatchArray([
+        "fecha" => "2022-03-05",
+        "moneda" => "USD",
+        "importe" => "100.0000"
+    ]);
+    expect($nuevoCredito->cuotas[0]->pagos[0]->id)->not->toBe($credito->cuotas[0]->pagos[0]->id);
     
     expect($nuevoCredito->pagosExtras->count()-1)->toBe($credito->pagosExtras->count());
     expect($nuevoCredito->pagosExtras->pluck(["importe", "tipo_ajuste", "periodo"]))

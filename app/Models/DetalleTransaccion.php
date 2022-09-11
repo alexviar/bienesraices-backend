@@ -28,19 +28,23 @@ class DetalleTransaccion extends Model
         return $this->belongsTo(Transaccion::class);
     }
 
-    function reservas(){
-        return $this->morphedByMany(Reserva::class, "transactable");
-    }
+    // function reservas(){
+    //     return $this->morphedByMany(Reserva::class, "transactable");
+    // }
 
-    function ventas(){
-        return $this->morphedByMany(Venta::class, "transactable");
-    }
+    // function ventas(){
+    //     return $this->morphedByMany(Venta::class, "transactable");
+    // }
     
-    function creditos(){
-        return $this->morphedByMany(Credito::class, "transactable");
-    }
+    // function creditos(){
+    //     return $this->morphedByMany(Credito::class, "transactable");
+    // }
     
-    function cuotas(){
-        return $this->morphedByMany(Cuota::class, "transactable");
+    // function cuotas(){
+    //     return $this->morphedByMany(Cuota::class, "transactable");
+    // }
+
+    function transactable(){
+        return $this->morphTo();
     }
 }

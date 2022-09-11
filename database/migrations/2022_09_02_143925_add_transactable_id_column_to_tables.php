@@ -26,13 +26,15 @@ class AddTransactableIdColumnToTables extends Migration
         // });
 
         Schema::table('creditos', function (Blueprint $table) {
-            $table->unsignedBigInteger("numero");
+            // $table->date("fecha");
+            $table->unsignedBigInteger("codigo");
             // $table->unsignedBigInteger("transactable_id")->virtualAs("`numero`");
             // $table->unsignedBigInteger("transactable_id");
         });
 
         Schema::table('cuotas', function (Blueprint $table) {
-            $table->unsignedBigInteger("transactable_id");
+            // $table->unsignedBigInteger("transactable_id");
+            $table->unsignedBigInteger("codigo");
         });
     }
 
