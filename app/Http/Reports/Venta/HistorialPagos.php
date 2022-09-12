@@ -3,7 +3,10 @@
 namespace App\Http\Reports\Venta;
 
 use App\Models\Credito;
+use App\Models\Cuota;
 use App\Models\DetalleTransaccion;
+use App\Models\Reserva;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 
 class HistorialPagos {
@@ -16,13 +19,16 @@ class HistorialPagos {
 
         $venta = $credito->creditable;
 
-        $pagos = DetalleTransaccion::whereHas("reservas", function($query) use($venta){
-            $query->where("id", $venta->reserva_id);
-        })->union(DetalleTransaccion::whereHas("creditos", function($query) use($credito){
-            $query->where("id", $credito->id);
-        }))->union(DetalleTransaccion::whereHas("cuotas", function($query) use($credito){
-            $query->where("credito_id", $credito->id);
-        }))->get();
+        /** @var Builder $query */
+        $query = DetalleTransaccion::query();
+        $reserva = $venta->reserva;
+        if($reserva) {
+            $query->whereMorphedTo("transactable", $reserva);
+        }
+        $query->orWhereMorphedTo("transactable", $credito);
+        $query->orWhereMorphedTo("transactable", $credito->cuotas->pluck("pagos")->flatten());
+
+        $pagos = $query->get();
         
         $zero = new \App\Models\ValueObjects\Money("0", $venta->currency);
         $totalPagos = $pagos->reduce(function($carry, $pago){

@@ -132,7 +132,7 @@ class VentaController extends Controller
                 }
 
                 $año = $record->fecha->year;
-                $codigo = $año * 10000 + Credito::whereBetween("codigo", $año * 10000, ($año + 1) * 10000)->max("codigo") + 1;
+                $codigo = $año * 10000 + Credito::whereBetween("codigo", [$año * 10000, ($año + 1) * 10000])->max("codigo") + 1;
                 $codigo = retry(3, function() use(&$codigo){
                     if(Credito::where("codigo", $codigo)->lockForUpdate()->exists()){
                         $codigo++;

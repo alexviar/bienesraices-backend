@@ -8,36 +8,7 @@ use App\Models\User;
 use App\Models\Venta;
 use Illuminate\Http\UploadedFile;
 
-test("registra transaccion por venta", function($dataset){
-    $venta = $dataset["venta"];
 
-    $event = new VentaCreated($venta, User::find(1)->id);
-    $subscriber = new TransaccionSubscriber();
-    $subscriber->handleVentaCreated($event);
-
-    assertTransaccionPorVenta($venta);
-})->with([
-    function(){
-        $venta = Venta::factory([
-            "moneda" => "USD",
-            "importe" => "10530.9600",
-        ])->contado()->withoutReserva()->create();
-        return [
-            "venta" => $venta,
-        ];
-    },
-    function(){
-        $venta = Venta::factory([
-            "moneda" => "USD",
-            "importe" => "10530.9600",
-        ])->credito()->has(Credito::factory([
-            "cuota_inicial" => "500.0000"
-        ]))->withoutReserva()->create();
-        return [
-            "venta" => $venta,
-        ];
-    }
-]);
 // test("Venta al contado en dolares, reserva en dolares y pago en dolares", function(){
 //     /** @var TestCase $this */
 //     $data = Venta::factory([

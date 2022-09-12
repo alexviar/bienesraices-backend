@@ -14,7 +14,8 @@ class PagoCuota extends Model
     protected $fillable = [
         "fecha",
         "moneda",
-        "importe"
+        "importe",
+        "codigo_cuota"
     ];
 
     protected $casts = [
@@ -30,7 +31,7 @@ class PagoCuota extends Model
      * @return BelongsTo
      */
     function cuota(){
-        return $this->belongsTo(Cuota::class);
+        return $this->belongsTo(Cuota::class, "codigo_cuota", "codigo");
     }
     #endregion
 }

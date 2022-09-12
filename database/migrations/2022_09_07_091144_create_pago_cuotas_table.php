@@ -19,7 +19,7 @@ class CreatePagoCuotasTable extends Migration
             $table->date("fecha");
             $table->char("moneda", 3);
             $table->decimal("importe", 19, 4);
-            $table->foreignIdFor(Cuota::class);
+            $table->unsignedBigInteger("codigo_cuota");
             $table->foreign("moneda")->on("currencies")->references("code");
             $table->timestamps();
         });

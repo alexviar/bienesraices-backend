@@ -73,6 +73,16 @@ class Proyecto extends Model
         return new Money($value, $this->currency);
     }
 
+    public function getPrecioReservasAttribute($value)
+    {
+        return new Money($value, $this->currency);
+    }
+
+    public function getCuotaInicialAttribute($value)
+    {
+        return new Money($value, $this->currency);
+    }
+
     public function currency()
     {
         return $this->belongsTo(Currency::class, "moneda");
@@ -100,7 +110,7 @@ class Proyecto extends Model
     function toArray()
     {
         $array = parent::toArray();
-        $array["precio_mt2"] = $this->attributes["precio_mt2"];
+        // $array["precio_mt2"] = $this->attributes["precio_mt2"];
         $array["ubicacion"] = [
             "latitud" => $this->ubicacion->getLat(),
             "longitud" => $this->ubicacion->getLng()

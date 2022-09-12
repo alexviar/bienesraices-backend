@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ReservaCreated;
 use App\Models\DetalleTransaccion;
 use App\Models\Lote;
 use App\Models\Reserva;
 use App\Models\Transaccion;
+use Brick\Math\BigDecimal;
+use Brick\Math\RoundingMode;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +23,7 @@ class ReservaController extends Controller
     function index(Request $request, $proyectoId)
     {
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        return $this->buildResponse(Reserva::with(["cliente", "vendedor", "lote.manzana"])->where("proyecto_id", $proyectoId), $queryArgs);
+        return $this->buildResponse(Reserva::with(["cliente", "vendedor", "lote.manzana"])->where("proyecto_id", $proyectoId)->latest("updated_at"), $queryArgs);
     }
 
     function store(Request $request, $proyectoId){
@@ -39,32 +42,23 @@ class ReservaController extends Controller
             "vendedor_id" => "required|exists:vendedores,id",
             "moneda" => "required|exists:currencies,code",
             "importe" => "required|numeric",
-            // "precio" => "string",
-            // "cuota_inicial" => "string",
+            "saldo_contado" => "required|numeric",
+            "saldo_credito" => "required|numeric",
             "vencimiento" => "required|date"
         ]);
 
-        $reserva = DB::transaction(function() use($payload, $proyectoId){
+        $payload["importe"] = (string) BigDecimal::of($payload["importe"])->toScale(2, RoundingMode::HALF_UP);
+        $payload["saldo_contado"] = (string) BigDecimal::of($payload["saldo_contado"])->toScale(2, RoundingMode::HALF_UP);
+        $payload["saldo_credito"] = (string) BigDecimal::of($payload["saldo_credito"])->toScale(2, RoundingMode::HALF_UP);
+
+        $reserva = DB::transaction(function() use($payload, $proyectoId, $request){
             $reserva = Reserva::create($payload+[
-                // "saldo_credito" => $payload["cuota_inicial"],
-                // "saldo_contado" => $payload["precio"],
                 "proyecto_id" => $proyectoId
             ]);
-            $reserva->refresh();
-            
-            $transaccion = Transaccion::create([
-                "fecha" => Carbon::now(),
-                "moneda" => $reserva->moneda,
-                "importe" => $reserva->importe->amount,
-                "forma_pago" => 1,
-            ]);
-            $detailModel = new DetalleTransaccion();
-            $detailModel->referencia = $reserva->getReferencia();
-            $detailModel->moneda = $reserva->getCurrency()->code;
-            $detailModel->importe = $reserva->importe->amount;
-            $detailModel->transactable()->associate($reserva);
-    
-            $transaccion->detalles()->save($detailModel);
+
+            ReservaCreated::dispatch($reserva, $request->user()->id);
+
+            return $reserva;
         });
         
         return $reserva;

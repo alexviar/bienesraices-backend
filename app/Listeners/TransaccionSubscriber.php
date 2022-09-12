@@ -3,10 +3,26 @@
 namespace App\Listeners;
 
 use App\Events\PagoCuotaCreated;
+use App\Events\ReservaCreated;
 use App\Events\VentaCreated;
 use App\Models\Transaccion;
 
 class TransaccionSubscriber {
+
+    public function handleReservaCreated(ReservaCreated $event){
+        $transaccion = Transaccion::firstOrCreate([
+            "user_id" => $event->userId,
+            "fecha" => $event->reserva->fecha,
+            "estado" => 0
+        ]);
+        $transaccion->detalles()->create([
+            "moneda" => $event->reserva->getAttributes()["moneda"],
+            "importe" => $event->reserva->getAttributes()["importe"],
+            "referencia" => $event->reserva->getReferencia(),
+            "transactable_id" => $event->reserva->getMorphKey(),
+            "transactable_type" => $event->reserva->getMorphClass()
+        ]);
+    }
 
     public function handleVentaCreated(VentaCreated $event){
         $transaccion = Transaccion::firstOrCreate([
@@ -45,8 +61,8 @@ class TransaccionSubscriber {
             "moneda" => $event->pago->getAttributes()["moneda"],
             "importe" => $event->pago->getAttributes()["importe"],
             "referencia" => $event->pago->cuota->getReferencia(),
-            "transactable_id" => $event->pago->cuota->getMorphKey(),
-            "transactable_type" => $event->pago->cuota->getMorphClass()
+            "transactable_id" => $event->pago->getMorphKey(),
+            "transactable_type" => $event->pago->getMorphClass()
         ]);
     }
 

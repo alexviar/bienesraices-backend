@@ -42,7 +42,8 @@ class Cuota extends Model
         "importe",
         "pago_extra",
         "saldo",
-        "saldo_capital"
+        "saldo_capital",
+        "total_pagos"
     ];
 
     protected $appends = [
@@ -174,7 +175,7 @@ class Cuota extends Model
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     function pagos(){
-        return $this->hasMany(PagoCuota::class);
+        return $this->hasMany(PagoCuota::class, "codigo_cuota", "codigo");
     }
 
     function credito(){
