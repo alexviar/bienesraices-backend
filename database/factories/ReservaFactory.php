@@ -28,6 +28,7 @@ class ReservaFactory extends Factory
             "vencimiento" => $attributes["vencimiento"] ?? Carbon::parse($fecha)->addDays($proyecto->duracion_reservas)->format("Y-m-d"),
             "moneda" => $attributes["moneda"] ??  $proyecto->moneda,
             "importe" => $attributes["importe"] ?? (string) $proyecto->precio_reservas->amount,
+            "saldo" => "0.00",
             "saldo_contado" => $attributes["saldo_contado"] ?? (string) ($lote->precio ?? $lote->precio_sugerido)->amount,
             "saldo_credito" => $attributes["saldo_credito"] ?? (string) $proyecto->cuota_inicial->amount,
             "proyecto_id" => $proyecto,

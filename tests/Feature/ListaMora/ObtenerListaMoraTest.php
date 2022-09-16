@@ -27,9 +27,9 @@ it('Responde con la lista de mora', function () {
     ])->for(Venta::factory([
         "fecha" => "2020-04-20",
         "moneda" => "BOB",
-        "importe" => "10530.96",
+        "importe" => "500",
         "estado"=>1
-    ])->for($cliente)->credito(), "creditable")->create();
+    ])->for($cliente)->credito("10030.96"), "creditable")->create();
     $credito->build();
     Cuota::where("credito_id", $credito->id)->whereIn("numero", [1,2])->update([
         "saldo" => "0"

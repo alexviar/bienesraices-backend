@@ -18,6 +18,7 @@ it('registra una nueva reserva', function ($dataset) {
     $reserva = Reserva::find($response->json("id"));
     expect($reserva->getAttributes())->toMatchArray([
         "importe" => (string) BigDecimal::of($data["importe"])->toScale(4, RoundingMode::HALF_UP),
+        "saldo" => (string) BigDecimal::of($data["importe"])->toScale(4, RoundingMode::HALF_UP),
         "saldo_contado" => (string) BigDecimal::of($data["saldo_contado"])->toScale(4, RoundingMode::HALF_UP),
         "saldo_credito" => (string) BigDecimal::of($data["saldo_credito"])->toScale(4, RoundingMode::HALF_UP),
     ] + $data);

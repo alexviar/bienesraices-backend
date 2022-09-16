@@ -29,14 +29,16 @@ it("Genera un reporte del plan de pagos", function(){
     ])->create();
     $venta = Venta::factory([
         "fecha" => "2022/07/28",
-        "importe" => "3600",
+        "importe" => "500",
         "moneda" => "USD",
     ])->for($proyecto)->for(Cliente::factory([
         "nombre" => "JOAQUIN",
         "apellido_paterno" => "CHUMACERO",
         "apellido_materno" => "YUPANQUI",
 
-    ]))->for(Lote::factory(["numero" => 2])->for(Manzana::factory(["numero"=>"100"])->for($proyecto)))->create();
+    ]))->for(Lote::factory(["numero" => 2])->for(Manzana::factory(["numero"=>"100"])->for($proyecto)))
+    ->credito("3100")
+    ->create();
     $credito = Credito::factory([
         "cuota_inicial" => "500",
         "plazo" => "48",
@@ -47,7 +49,7 @@ it("Genera un reporte del plan de pagos", function(){
     $credito->build();
     
     $pdf = $report->generate($credito->refresh());
-    // $pdf->save(__DIR__."/plan_pagos_sample_1.pdf");
+    // $pdf->save(__DIR__."/plan_pagos_sample_10.pdf");
 
     $generatedContent = $pdf->output();
     $sampleContent = file_get_contents(__DIR__."/plan_pagos_sample_1.pdf");
@@ -58,7 +60,7 @@ it("imprime el plan de pagos en pantalla", function(){
     /** @var TestCase $this */
 
     $user = User::find(1);
-    $venta = Venta::factory()->credito()->create();
+    $venta = Venta::factory()->credito("4000")->create();
     $credito = Credito::factory()->for($venta, "creditable")->create();
     $credito->build();
     $id = $credito->id;

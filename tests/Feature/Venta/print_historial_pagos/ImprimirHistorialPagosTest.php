@@ -40,8 +40,8 @@ it("Genera un reporte del historial de pagos", function(){
     DB::statement('START TRANSACTION;');
     $report = new HistorialPagos();
     $venta = Venta::factory([
-        "fecha" => "2022/07/28",
-        "importe" => "3600",
+        "fecha" => "2022-07-28",
+        "importe" => "500",
         "moneda" => "USD",
     ])->for(Cliente::factory([
         "nombre" => "JOAQUIN",
@@ -50,9 +50,8 @@ it("Genera un reporte del historial de pagos", function(){
 
     ]))->for(Lote::factory(["numero" => 2])->for(Manzana::factory(["numero"=>"100"])->for(Proyecto::factory([
         "nombre" => "OPORTUNIDAD IV"
-    ]))))->create();
+    ]))))->credito("3100")->create();
     $credito = Credito::factory([
-        "cuota_inicial" => "500",
         "plazo" => "48",
         "dia_pago" => 1,
         "periodo_pago" => 1,
@@ -122,7 +121,7 @@ it("Genera un reporte del historial de pagos", function(){
     $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-09-30"));    
     $credito->cuotas->each->refresh();
     $pdf = $report->generate($credito->refresh());
-    // $pdf->save(__DIR__."/historial_pagos_sample_10.pdf");
+    $pdf->save(__DIR__."/historial_pagos_sample_10.pdf");
 
     $generatedContent = $pdf->output();
     $sampleContent = file_get_contents(__DIR__."/historial_pagos_sample_1.pdf");
@@ -150,7 +149,7 @@ it("imprime el historial de pagos en pantalla", function(){
     /** @var TestCase $this */
 
     $user = User::find(1);
-    $venta = Venta::factory()->credito()->create();
+    $venta = Venta::factory()->credito("3100")->create();
     $credito = Credito::factory()->for($venta, "creditable")->create();
     $credito->build();
     $id = $credito->id;

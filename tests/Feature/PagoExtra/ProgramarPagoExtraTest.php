@@ -30,8 +30,8 @@ function makeRequest(?Credito &$credito, ?array &$body = [])
         ])->for(Venta::factory([
             "fecha" => "2022-02-28",
             "moneda" => "USD",
-            "importe" => "10530.96",
-        ])->credito(), "creditable")->create();
+            "importe" => "500",
+        ])->credito("10030.96"), "creditable")->create();
         $credito->build();
     }
 
@@ -135,8 +135,8 @@ it('copia las referencias del credito anterior', function(){
     ])->for(Venta::factory([
         "fecha" => "2022-02-28",
         "moneda" => "USD",
-        "importe" => "10530.96",
-    ])->credito(), "creditable")->create();
+        "importe" => "500",
+    ])->credito("10030.96"), "creditable")->create();
     $credito->build();
 
     $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){

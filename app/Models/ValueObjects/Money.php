@@ -30,7 +30,7 @@ class Money implements Arrayable {
      */
     function __construct($amount, $currency){
         $this->_amount = BigDecimal::of($amount);
-        $this->_currency = $currency;
+        $this->_currency = is_string($currency) ? Currency::find($currency) : $currency;
         $this->originalValue = null;
     }
 

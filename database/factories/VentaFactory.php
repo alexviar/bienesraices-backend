@@ -6,6 +6,7 @@ use App\Models\Cliente;
 use App\Models\Lote;
 use App\Models\Reserva;
 use App\Models\Vendedor;
+use Brick\Math\BigDecimal;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class VentaFactory extends Factory
@@ -31,6 +32,8 @@ class VentaFactory extends Factory
             "moneda" => $attributes["moneda"] ?? $proyecto->moneda,
             "lote_id" => $lote->id,
             "importe" => $attributes["importe"] ?? $lote->getAttributes()["precio"] ?? (string) $lote->precio_sugerido->amount,
+            "importe_pendiente" => $attributes["importe_pendiente"] ??  "0.00",
+            "saldo" => "0.00",
             "estado" => $attributes["estado"] ?? $this->faker->randomElement([1,2]),
             "cliente_id" => $reserva->cliente ?? $attributes["cliente_id"] ?? Cliente::factory(),
             "vendedor_id" => $reserva->vendedor ?? $attributes["vendedor_id"] ?? Vendedor::factory(),
@@ -41,13 +44,15 @@ class VentaFactory extends Factory
 
     public function contado(){
         return $this->state([
-            "tipo" => 1
+            "tipo" => 1,
+            "importe_pendiente" => "0.00"
         ]);
     }
 
-    public function credito(){
+    public function credito($importePendiente){
         return $this->state([
-            "tipo" => 2
+            "tipo" => 2,
+            "importe_pendiente" => $importePendiente
         ]);
     }
 

@@ -53,7 +53,8 @@ class ReservaController extends Controller
 
         $reserva = DB::transaction(function() use($payload, $proyectoId, $request){
             $reserva = Reserva::create($payload+[
-                "proyecto_id" => $proyectoId
+                "proyecto_id" => $proyectoId,
+                "saldo" => $payload["importe"]
             ]);
 
             ReservaCreated::dispatch($reserva, $request->user()->id);

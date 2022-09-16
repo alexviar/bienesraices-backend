@@ -5,6 +5,7 @@ use App\Models\Credito;
 use App\Models\Lote;
 use App\Models\Proyecto;
 use App\Models\Reserva;
+use App\Models\Talonario;
 use App\Models\Transaccion;
 use App\Models\User;
 use App\Models\Venta;
@@ -91,6 +92,7 @@ it('Registra una venta', function ($dataset) {
             "moneda" => "USD",
             "importe" => "10530.96",
         ])->contado()->withoutReserva()->raw();
+        unset($data["importe_pendiente"]);
         return [
             "data" => $data,
             "expectations" => [
@@ -109,11 +111,15 @@ it('Registra una venta', function ($dataset) {
     },
     function(){
         //Venta al credito
+        Talonario::create([
+            "tipo" => Credito::class,
+            "siguiente" => 1
+        ]);
         $data = Venta::factory([
             "fecha" => "2022-02-28",
             "moneda" => "USD",
-            "importe" => "10530.96",
-        ])->credito()->withoutReserva()->raw();
+            "importe" => "500",
+        ])->credito("10030.96")->withoutReserva()->raw();
         $dataCredito = Credito::factory([
             "plazo" => 48,
             "periodo_pago" => 1,
@@ -134,11 +140,10 @@ it('Registra una venta', function ($dataset) {
                     "proyecto_id",
                     "lote_id"
                 ]) + [
-                    "importe" => "10530.9600"
+                    "importe" => "500.0000",
+                    "importe_pendiente" => "10030.9600"
                 ],
-                "credito" => Arr::except($dataCredito, ["cuota_inicial"]) + [
-                    "cuota_inicial" => "500.0000",
-                ]
+                "credito" => Arr::except($dataCredito, ["cuota_inicial"])
             ]
         ];
     },
@@ -154,6 +159,7 @@ it('Registra una venta', function ($dataset) {
             "moneda" => "USD",
             "importe" => "10530.96",
         ])->contado()->for($reserva)->raw();
+        unset($data["importe_pendiente"]);
         return [
             "data" => $data,
             "expectations" => [
@@ -182,6 +188,7 @@ it('Registra una venta', function ($dataset) {
         $data = Venta::factory([
             "moneda" => "BOB",
         ])->contado()->for($reserva)->raw();
+        unset($data["importe_pendiente"]);
         return [
             "data" => $data,
             "expectations" => [
@@ -210,6 +217,7 @@ it('Registra una venta', function ($dataset) {
         $data = Venta::factory([
             "moneda" => "USD",
         ])->contado()->for($reserva)->raw();
+        unset($data["importe_pendiente"]);
         return [
             "data" => $data,
             "expectations" => [
@@ -228,7 +236,10 @@ it('Registra una venta', function ($dataset) {
         ];
     },
     function(){
-        //Venta al contado
+        Talonario::create([
+            "tipo" => Credito::class,
+            "siguiente" => 1
+        ]);
         $reserva = Reserva::factory([
             "moneda" => "USD",
             "importe" => "100",
@@ -237,7 +248,7 @@ it('Registra una venta', function ($dataset) {
         ])->create();
         $data = Venta::factory([
             "moneda" => "BOB",
-        ])->credito()->for($reserva)->raw();
+        ])->credito("100")->for($reserva)->raw();
         $dataCredito = Credito::factory([
             "plazo" => 48,
             "periodo_pago" => 1,
@@ -252,20 +263,22 @@ it('Registra una venta', function ($dataset) {
                     "tipo",
                     "moneda"
                 ]) + [
-                    "importe" => "72599.4800",
+                    "importe_pendiente" => "69815.4800",
+                    "importe" => "2784.0000",
                     "reserva_id" => $reserva->id,
                     "cliente_id" => $reserva->cliente_id,
                     "vendedor_id" => $reserva->vendedor_id,
                     "lote_id" => $reserva->lote_id
                 ],
-                "credito" => Arr::except($dataCredito, ["cuota_inicial"]) + [
-                    "cuota_inicial" => "2784.0000",
-                ]
+                "credito" => Arr::except($dataCredito, ["cuota_inicial"])
             ]
         ];
     },
     function(){
-        //Venta al contado
+        Talonario::create([
+            "tipo" => Credito::class,
+            "siguiente" => 1
+        ]);
         $reserva = Reserva::factory([
             "moneda" => "BOB",
             "importe" => "100",
@@ -274,7 +287,7 @@ it('Registra una venta', function ($dataset) {
         ])->create();
         $data = Venta::factory([
             "moneda" => "USD",
-        ])->credito()->for($reserva)->raw();
+        ])->credito("100")->for($reserva)->raw();
         $dataCredito = Credito::factory([
             "plazo" => 48,
             "periodo_pago" => 1,
@@ -289,26 +302,30 @@ it('Registra una venta', function ($dataset) {
                     "tipo",
                     "moneda"
                 ]) + [
-                    "importe" => "1520.5500",
+                    // "importe" => "1520.5500",
+                    "importe_pendiente" => "1462.2400",
+                    "importe" => "58.3100",
                     "reserva_id" => $reserva->id,
                     "cliente_id" => $reserva->cliente_id,
                     "vendedor_id" => $reserva->vendedor_id,
                     "lote_id" => $reserva->lote_id
                 ],
-                "credito" => Arr::except($dataCredito, ["cuota_inicial"]) + [
-                    "cuota_inicial" => "58.3100",
-                ]
+                "credito" => Arr::except($dataCredito, ["cuota_inicial"])
             ]
         ];
     },
 ]);
 
 test("Pagos programados el 31 de cada mes", function(){
+    Talonario::create([
+        "tipo" => Credito::class,
+        "siguiente" => 1
+    ]);
     $data = Venta::factory([
         "fecha" => "2022-02-28",
         "moneda" => "USD",
-        "importe" => "10530.96",
-    ])->credito()->withReserva(false)->raw();
+        "importe" => "500",
+    ])->credito("10030.96")->withReserva(false)->raw();
     $dataCredito = Credito::factory([
         "plazo" => 48,
         "periodo_pago" => 1,
@@ -316,13 +333,6 @@ test("Pagos programados el 31 de cada mes", function(){
     ])->raw();
     $data += [
         "credito" => $dataCredito
-    ] + [
-        "pago" => [
-            "moneda" => "USD",
-            "monto" => "500",
-            "numero_transaccion" => "1242325848",
-            "comprobante" => UploadedFile::fake()->image("comprobante.png")
-        ]
     ];
 
     $proyectoId = $data["proyecto_id"];
@@ -346,6 +356,7 @@ test("Pagos programados el 31 de cada mes", function(){
     ];
     $this->assertEquals(Arr::only($data, $keys), Arr::only($venta->getAttributes(), $keys));
     $this->assertEquals((string) BigDecimal::of($data["importe"])->toScale(4), (string) $venta->importe->amount);
+    $this->assertEquals((string) BigDecimal::of($data["importe_pendiente"])->toScale(4), (string) $venta->importe_pendiente->amount);
     
     /** @var FilesystemAdapter $disk */
     $disk = Storage::disk("tests");
@@ -366,6 +377,7 @@ test("Un lote que ha sido reservado por un cliente no puede ser vendido a otro, 
 
     //Venta al contado
     $data = Venta::factory()->for($lote)->contado()->withReserva(false)->raw();
+    unset($data["importe_pendiente"]);
 
     $proyectoId = $data["proyecto_id"];
 
@@ -398,6 +410,7 @@ it('registra la transaccion', function () {
         "importe" => "10530.96",
     ])->contado()->withReserva(false)->raw();
     $proyectoId = $data["proyecto_id"];
+    unset($data["importe_pendiente"]);
 
     Event::fake();
     

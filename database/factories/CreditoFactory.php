@@ -37,7 +37,7 @@ class CreditoFactory extends Factory
             // "moneda" => $importe->currency->code,
             // "importe" => (string) $importe->amount,
             "codigo" => $attributes["codigo"] ?? $this->faker->unique()->randomNumber(),
-            "cuota_inicial" => $attributes["cuota_inicial"] ?? "500.00",
+            // "cuota_inicial" => $attributes["cuota_inicial"] ?? "500.00",
             "tasa_interes" => $attributes["tasa_interes"] ?? "0.1000",
             "tasa_mora" => "0.0300",
             "plazo" => $plazo,

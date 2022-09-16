@@ -38,7 +38,7 @@ function assertTransaccionPorVenta(Venta $venta)
         $credito = $venta->credito;
         $test->assertEquals([
             "moneda" => $venta->getAttributes()["moneda"],
-            "importe" => $credito->getAttributes()["cuota_inicial"],
+            "importe" => (string) $credito->cuota_inicial->amount,
             "referencia" => $credito->getReferencia(),
             "transactable_type" => $credito->getMorphClass(),
             "transactable_id" => $credito->{$credito->getMorphKeyName()}

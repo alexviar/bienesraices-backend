@@ -24,6 +24,7 @@ class Reserva extends Model
         "cliente_id",
         "moneda",
         "importe",
+        "saldo",
         "saldo_credito",
         "saldo_contado",
         "vencimiento"

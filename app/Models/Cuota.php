@@ -121,7 +121,7 @@ class Cuota extends Model
     function getAmortizacionAttribute(){
         $saldoAnterior = $this->anterior ?
             $this->anterior->saldo_capital :
-            $this->credito->importe->minus($this->credito->cuota_inicial);
+            $this->credito->importe;
         $amortizacion = $saldoAnterior->minus($this->saldo_capital);
         return $amortizacion;
     }

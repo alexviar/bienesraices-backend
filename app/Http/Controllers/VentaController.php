@@ -11,6 +11,7 @@ use App\Models\DetalleTransaccion;
 use App\Models\Lote;
 use App\Models\Proyecto;
 use App\Models\Reserva;
+use App\Models\Talonario;
 use App\Models\Transaccion;
 use App\Models\ValueObjects\Money;
 use App\Models\Venta;
@@ -79,6 +80,7 @@ class VentaController extends Controller
                 }
             }],
             "importe" => "required|numeric",
+            "importe_pendiente" => "prohibited_unless:tipo,2|numeric",
             "cliente_id" => "required_without:reserva_id|nullable|exists:clientes,id",
             "vendedor_id" => "required_without:reserva_id|nullable||exists:vendedores,id",
             "reserva_id" => ["nullable", function ($attribute, $value, $fail) use($reserva){
@@ -93,8 +95,8 @@ class VentaController extends Controller
             }],
 
             "credito" => "required_if:tipo,2",
-            "credito.cuota_inicial" => "required_with:credito|numeric",
-            // "credito.tasa_interes" => "required_with:credito|numeric",
+            // "credito.cuota_inicial" => "required_with:credito|numeric",
+            "credito.tasa_interes" => "required_with:credito|numeric",
             "credito.plazo" => "required_with:credito|numeric|integer",
             "credito.periodo_pago" => "required_with:credito|in:1,2,3,4,6",
             "credito.dia_pago" => "required_with:credito|min:1|max:31"
@@ -112,11 +114,14 @@ class VentaController extends Controller
         }    
         [$payload, $reserva] = $this->validateStoreRequest($request, $proyectoId);
         if($reserva){
-            $payload["importe"] = (string) $reserva->saldo_contado->exchangeTo($payload["moneda"])->round(2)->amount;
+            $importe = $payload["tipo"] == 2 ? $reserva->saldo_credito : $reserva->saldo_contado;
+            $payload["importe"] = (string) $importe->exchangeTo($payload["moneda"])->round(2)->amount;
+            $payload["importe_pendiente"] = (string) $reserva->saldo_contado->minus($importe)->exchangeTo($payload["moneda"])->round(2)->amount;
             $payload["lote_id"] = $reserva->lote->id;
             $payload["cliente_id"] = $reserva->cliente_id;
             $payload["vendedor_id"] = $reserva->vendedor_id;
         }
+        $payload["saldo"] = $payload["importe"];
         $payload["proyecto_id"] = $proyecto->id;
 
         $this->authorize("create", [Venta::class, $payload]);
@@ -127,23 +132,19 @@ class VentaController extends Controller
 
             if($record->tipo == 2) {
                 /** @var Credito $credito */
-                if($reserva){
-                    $payload["credito"]["cuota_inicial"] = (string) $reserva->saldo_credito->exchangeTo($payload["moneda"])->round(2)->amount;
-                }
 
-                $año = $record->fecha->year;
-                $codigo = $año * 10000 + Credito::whereBetween("codigo", [$año * 10000, ($año + 1) * 10000])->max("codigo") + 1;
-                $codigo = retry(3, function() use(&$codigo){
-                    if(Credito::where("codigo", $codigo)->lockForUpdate()->exists()){
-                        $codigo++;
-                        throw new Exception("Codigo ya usado");
-                    }
-                }, function(){
-                    return rand(0, 100);
-                });
+                do{
+                    $talonario = Talonario::where("tipo", Credito::class)->latest("id")->first();
+                    $siguiente = $talonario->siguiente;
+                    $updated = Talonario::where("id", $talonario->id)
+                        ->where("updated_at", $talonario->updated_at)
+                        ->update([
+                            "siguiente" => $siguiente + 1
+                        ]);
+                }while(!$updated);
                 $credito = $record->credito()->create($payload["credito"]+[
                     // "fecha" => $payload["fecha"],
-                    "codigo" => $codigo,
+                    "codigo" => $siguiente,
                     "tasa_mora" => $proyecto->tasa_mora,
                     "tasa_interes" => $proyecto->tasa_interes,
                 ]);

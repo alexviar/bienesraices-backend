@@ -7,22 +7,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Saldo a favor de los clientes
+ * Account de los clientes
  */
-class Saldo extends Model
+class Account extends Model
 {
     use HasFactory;
 
-    protected $table = "saldos";
-
     protected $fillable = [
+        "balance",
+        "moneda",
         "cliente_id",
-        "importe",
-        "moneda"
     ];
 
     
-    function getImporteAttribute($value){
+    function getBalanceAttribute($value){
         return new Money($value, $this->currency);
     }
 

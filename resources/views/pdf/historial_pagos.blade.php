@@ -134,7 +134,7 @@
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Importe del terreno:</b></th>
-                                                <td class="text-left"> {{$venta->importe->round()}}</td>
+                                                <td class="text-left"> {{$venta->importe->plus($venta->importe_pendiente)->round()}}</td>
                                             </tr>
                                         </tbody>
                                     </table>

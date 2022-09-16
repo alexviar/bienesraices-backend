@@ -62,10 +62,8 @@ test("registra transaccion por venta", function($dataset){
     function(){
         $venta = Venta::factory([
             "moneda" => "USD",
-            "importe" => "10530.9600",
-        ])->credito()->has(Credito::factory([
-            "cuota_inicial" => "500.0000"
-        ]))->withoutReserva()->create();
+            "importe" => "500",
+        ])->credito("10030.96")->has(Credito::factory())->withoutReserva()->create();
         return [
             "venta" => $venta,
         ];
@@ -97,8 +95,8 @@ test("registra transaccion por pago de cuotas", function($dataset){
     function(){
         $venta = Venta::factory([
             "moneda" => "USD",
-            "importe" => "10530.9600",
-        ])->credito()->has(Credito::factory([
+            "importe" => "500",
+        ])->credito("10030.96")->has(Credito::factory([
             "cuota_inicial" => "500.0000"
         ]))->withoutReserva()->create();
         $venta->credito->build();

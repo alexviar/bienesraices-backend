@@ -53,15 +53,15 @@ class Credito extends Model
     }
 
     function getImporteAttribute(){
-        return $this->creditable->importe;
+        return $this->creditable->importe_pendiente;
     }
 
     function getImporteCuotasAttribute($value){
-        return new Money($value, $this->creditable->getCurrency());
+        return new Money($value, $this->importe->currency);
     }
 
-    function getCuotaInicialAttribute($value){
-        return new Money($value, $this->creditable->getCurrency());
+    function getCuotaInicialAttribute(){
+        return $this->creditable->importe;
     }
 
     function getPeriodoPagoTextAttribute(){
@@ -129,8 +129,8 @@ class Credito extends Model
     
     function build(){
         $builder = new PlanPagosBuilder(
-            $this->creditable->fecha,
-            $this->creditable->importe->minus($this->cuota_inicial)->amount,
+            $this->fecha,
+            $this->importe->amount,
             BigDecimal::of($this->tasa_interes),
             $this->plazo,
             $this->periodo_pago,

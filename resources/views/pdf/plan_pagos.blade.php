@@ -136,7 +136,7 @@
                                             </tr>
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Importe del terreno:</b></th>
-                                                <td class="text-left"> {{$credito->importe->round()}}</td>
+                                                <td class="text-left"> {{$credito->importe->plus($credito->cuota_inicial)->round()}}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -197,10 +197,7 @@
                 <td class="text-right">0.00 {{$venta->moneda}}</td>
                 <td class="text-right">0.00 {{$venta->moneda}}</td>
                 <td class="text-right">{{$credito->cuota_inicial->round()}}</td>
-                @php
-                $saldo = $credito->importe->minus($credito->cuota_inicial);
-                @endphp
-                <td class="text-right">{{$saldo->round()}}</td>
+                <td class="text-right">{{$credito->importe->round()}}</td>
             </tr>
             @foreach ($credito->cuotas as $cuota)
             <tr>

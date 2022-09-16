@@ -24,11 +24,18 @@ class Venta extends Model
 {
     use HasFactory, SaveToUpper;
 
+    protected $attributes = [
+        "estado" => 1,
+        "importe_pendiente" => 0
+    ];
+
     protected $fillable = [
         "tipo",
         "fecha",
         "moneda",
         "importe",
+        "importe_pendiente",
+        "saldo",
         "proyecto_id",
         "lote_id",
         "cliente_id",
@@ -36,6 +43,11 @@ class Venta extends Model
         "reserva_id",
         "estado"
     ];
+
+    // static function create($attributes){
+    //     dd($attributes);
+    //     return static::create($attributes);
+    // }
 
     protected $hidden = [ "currency" ];
 
@@ -53,7 +65,11 @@ class Venta extends Model
     }
 
     function getImporteAttribute($value){
-        return new Money($value, Currency::find($this->moneda));
+        return new Money($value, $this->moneda);
+    }
+
+    function getImportePendienteAttribute($value){
+        return new Money($value, $this->moneda);
     }
 
     // static function find($id){
