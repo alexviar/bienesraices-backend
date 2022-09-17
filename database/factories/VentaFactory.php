@@ -33,7 +33,7 @@ class VentaFactory extends Factory
             "lote_id" => $lote->id,
             "importe" => $attributes["importe"] ?? $lote->getAttributes()["precio"] ?? (string) $lote->precio_sugerido->amount,
             "importe_pendiente" => $attributes["importe_pendiente"] ??  "0.00",
-            "saldo" => "0.00",
+            "saldo" => $attributes["saldo"] ?? "0.00",
             "estado" => $attributes["estado"] ?? $this->faker->randomElement([1,2]),
             "cliente_id" => $reserva->cliente ?? $attributes["cliente_id"] ?? Cliente::factory(),
             "vendedor_id" => $reserva->vendedor ?? $attributes["vendedor_id"] ?? Vendedor::factory(),

@@ -68,6 +68,10 @@ class Venta extends Model
         return new Money($value, $this->moneda);
     }
 
+    function getSaldoAttribute($value){
+        return new Money($value, Currency::find($this->moneda));
+    }
+
     function getImportePendienteAttribute($value){
         return new Money($value, $this->moneda);
     }

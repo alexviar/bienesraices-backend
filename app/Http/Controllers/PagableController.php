@@ -28,13 +28,14 @@ class PagableController extends Controller
         $reservas = Reserva::whereBelongsTo($cliente)
         ->where("estado", 1)
         ->where("saldo", ">", "0")
+        ->oldest("id")
         ->get();
 
         //Ventas
         $ventas = Venta::whereBelongsTo($cliente)
         ->where("estado", 1)
-        ->where("tipo", 1)
         ->where("saldo", ">", "0")
+        ->oldest("id")
         ->get();
         
         // //Creditos
@@ -45,20 +46,23 @@ class PagableController extends Controller
         // ->get();
 
         //Cuotas
-        $cuotas = Cuota::leftJoin("cuotas", function($join){
-            $join->as("anterior")
-                ->where("anterior.numero", DB::raw("cuotas.numero - 1"));
-        })->select("cuotas.*")
-        ->where("saldo", ">", "0")
+        $cuotas = Cuota::leftJoin("cuotas as anterior", function($join){
+            $join->where("anterior.numero", DB::raw("cuotas.numero - 1"));
+        })
+        ->select("cuotas.*")
+        ->where("cuotas.saldo", ">", "0")
         ->where(function($query) use($fecha) {
             $query->whereNull("anterior.vencimiento")
                 ->orWhere("anterior.vencimiento", "<", $fecha);
         })
         ->whereHas("credito", function($query) use($cliente){
-            $query->whereHasMorph("creditable", function($query) use($cliente){
+            $query->whereHasMorph("creditable", '*', function($query) use($cliente){
                 $query->whereBelongsTo($cliente);
-            })->where("estado", 1);
-        })->get();
+            });
+            $query->where("estado", 1);
+        })
+        ->oldest("id")
+        ->get();
 
         $cuotas->each->projectTo($fecha);
 
@@ -70,10 +74,10 @@ class PagableController extends Controller
                 "moneda" => $reserva->getCurrency()->code,
                 "importe" => (string) $reserva->importe->amount,
                 "saldo" => (string) $reserva->saldo->amount,
-                "multa" => "0.00",
+                "multa" => "0.0000",
                 "total" => (string) $reserva->saldo->amount
             ];
-        })->toArray() + $ventas->map(function($venta){
+        })->concat($ventas->map(function($venta){
             return [
                 "id" => $venta->id,
                 "type" => $venta->getMorphClass(),
@@ -81,21 +85,10 @@ class PagableController extends Controller
                 "moneda" => $venta->getCurrency()->code,
                 "importe" => (string) $venta->importe->amount,
                 "saldo" => (string) $venta->saldo->amount,
-                "multa" => "0.00",
+                "multa" => "0.0000",
                 "total" => (string) $venta->saldo->amount
             ];
-        })->toArray() /*+ $creditos->map(function($credito){
-            return [
-                "id" => $credito->id,
-                "type" => $credito->getMorphClass(),
-                "referencia" => $credito->getReferencia(),
-                "moneda" => $credito->getCurrency()->code,
-                "importe" => (string) $credito->importe->amount,
-                "saldo" => (string) $credito->saldo->amount,
-                "multa" => "0.00",
-                "total" => (string) $credito->saldo->amount
-            ];
-        })->toArray()*/ + $cuotas->map(function($cuota) use($fecha){
+        }))->concat($cuotas->map(function($cuota) use($fecha){
             return [
                 "id" => $cuota->id,
                 "type" => $cuota->getMorphClass(),
@@ -106,7 +99,7 @@ class PagableController extends Controller
                 "multa" => (string) $cuota->multa->amount,
                 "total" => (string) $cuota->total->amount
             ];
-        })->toArray();
+        }))->toArray();
 
         return [
             "fecha" => $fecha->format("Y-m-d"),

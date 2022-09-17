@@ -39,6 +39,10 @@ class Reserva extends Model
         return new Money($value, Currency::find($this->moneda));
     }
 
+    function getSaldoAttribute($value){
+        return new Money($value, Currency::find($this->moneda));
+    }
+
     function getSaldoCreditoAttribute($value){
         return new Money($value, Currency::find($this->moneda));
     }

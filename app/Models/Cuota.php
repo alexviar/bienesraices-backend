@@ -217,7 +217,7 @@ class Cuota extends Model
     function getFactorActualizacion(){
         if(!$this->projectionDate->isAfter($this->vencimiento)) return BigRational::one();
         /** @var UfvRepositoryInterface $ufvRepository */
-        $ufvRepository = Container::getInstance()->make(UfvRepositoryInterface::class);
+        $ufvRepository = app()->make(UfvRepositoryInterface::class);
         $ufvVencimiento = $ufvRepository->findByDate($this->vencimiento);
         if(!$ufvVencimiento) throw new Exception("No se encontro el valor de la UFV en la fecha ".$this->vencimiento->format("Y-m-d"));
         $ufvPago = $ufvRepository->findByDate($this->projectionDate);

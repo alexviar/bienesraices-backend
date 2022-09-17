@@ -8,6 +8,7 @@ use App\Http\Controllers\ListaMoraController;
 use App\Http\Controllers\LoteController;
 use App\Http\Controllers\ManzanaController;
 use App\Http\Controllers\CreditoController;
+use App\Http\Controllers\PagableController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\UFVController;
@@ -59,6 +60,7 @@ Route::middleware('auth:sanctum')->get('/transacciones', [CajaController::class,
 
 Route::middleware('auth:sanctum')->get('lista-mora', [ListaMoraController::class, "index"]);
 
+Route::middleware('auth:sanctum')->get('pagables', [PagableController::class, "index"]);
 Route::middleware('auth:sanctum')->get('/pagos/cuotas', [CuotaController::class, "pendientes"]);
 Route::middleware('auth:sanctum')->post('/pagos/cuotas/{id}', [CuotaController::class, "pagar"]);
 
