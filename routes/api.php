@@ -56,7 +56,7 @@ Route::middleware('auth:sanctum')->get('/proyectos', [ProyectoController::class,
 Route::middleware('auth:sanctum')->post('/proyectos', [ProyectoController::class, "store"]);
 
 Route::middleware('auth:sanctum')->get('/transacciones', [CajaController::class, "index"]);
-// Route::middleware('auth:sanctum')->post('/transacciones', [CajaController::class, "store"]);
+Route::middleware('auth:sanctum')->post('/transacciones', [CajaController::class, "store"]);
 
 Route::middleware('auth:sanctum')->get('lista-mora', [ListaMoraController::class, "index"]);
 

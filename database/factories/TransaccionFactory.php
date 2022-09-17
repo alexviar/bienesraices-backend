@@ -19,9 +19,8 @@ class TransaccionFactory extends Factory
             "fecha" => $attributes["fecha"] ?? $this->faker->date(),
             "moneda" => $attributes["moneda"] ?? $this->faker->randomElement(["USD", "BOB"]),
             "importe" => $attributes["importe"] ?? $this->faker->numerify("###.##"),
-            "metodo_pago" => $attributes["forma_pago"] ?? $this->faker->randomElement([1,2]),
             
-            // "cliente_id" => $attributes["cliente_id"] ?? Cliente::factory()
+            "cliente_id" => $attributes["cliente_id"] ?? Cliente::factory(),
             "user_id" => $attributes["user_id"] ?? User::find(1)
         ];
     }

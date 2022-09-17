@@ -34,19 +34,19 @@ function buildCredito(){
     return $credito;
 }
 
-function buildCredito2(){
-    $credito = Credito::factory([
-        "plazo" => 36,
-        "periodo_pago" => 1,
-        "dia_pago" => 1
-    ])->for(Venta::factory([
-        "fecha" => "2022-02-13",
-        "moneda" => "USD",
-        "importe" => "25056.00"
-    ])->for(Cliente::factory())->credito("21056.00"), "creditable")->create();
-    $credito->build();
-    return $credito;
-}
+// function buildCredito2(){
+//     $credito = Credito::factory([
+//         "plazo" => 36,
+//         "periodo_pago" => 1,
+//         "dia_pago" => 1
+//     ])->for(Venta::factory([
+//         "fecha" => "2022-02-13",
+//         "moneda" => "USD",
+//         "importe" => "25056.00"
+//     ])->for(Cliente::factory())->credito("21056.00"), "creditable")->create();
+//     $credito->build();
+//     return $credito;
+// }
 
 
 // test("Campos requeridos", function(){
@@ -352,100 +352,100 @@ function buildCredito2(){
 //     }
 // ]);
 
-it('registra pagos', function ($dataset) {
-    /** @var TestCase $this  */
-    $requests = $dataset["requests"];
-    $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
-        $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
-    });
-    foreach($requests as ["cuota" => $cuota, "data" => $data, "expectations" => $expectations]){
-        $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas/'.$cuota->id, $data);
-        $response->assertOk();
-        $cuota->refresh();
-        $this->assertEquals($expectations, [
-            "saldo" => (string) $cuota->saldo->amount,
-            "total_multas" => (string) $cuota->total_multas->amount,
-            "total_pagos" => (string) $cuota->total_pagos->amount
-        ]);
-    }
-})->with([
-    function(){
-        $credito = buildCredito2();
-        return [
-            "requests" => [
-                [
-                    "cuota" => $credito->cuotas[1],
-                    "data" => [
-                            "fecha" => "2022-07-13",
-                            "importe" => "100",
-                    ],
-                    "expectations" => [
-                        "saldo" => "584.6500",
-                        "total_pagos" => "100.0000",
-                        "total_multas" => "0.6000"
-                    ],
-                ],
-                [
-                    "cuota" => $credito->cuotas[3],
-                    "data" => [
-                            "fecha" => "2022-07-13",
-                            "importe" => "160",
-                    ],
-                    "expectations" => [
-                        "saldo" => "524.2100",
-                        "total_pagos" => "160.0000",
-                        "total_multas" => "0.1600"
-                    ],                    
-                ],
-                [
-                    "cuota" => $credito->cuotas[1],
-                    "data" => [
-                            "fecha" => "2022-08-22",
-                            "importe" => "590.01",
-                    ],
-                    "expectations" => [
-                        "saldo" => "0.1500",
-                        "total_pagos" => "690.0100",
-                        "total_multas" => "6.1100"
-                    ],                    
-                ],
-                [
-                    "cuota" => $credito->cuotas[3],
-                    "data" => [
-                            "fecha" => "2022-08-22",
-                            "importe" => "520.48",
-                    ],
-                    "expectations" => [
-                        "saldo" => "5.9800",
-                        "total_pagos" => "680.4800",
-                        "total_multas" => "2.4100"
-                    ],                    
-                ],
-                [
-                    "cuota" => $credito->cuotas[1],
-                    "data" => [
-                            "fecha" => "2022-08-22",
-                            "importe" => "0.15",
-                    ],
-                    "expectations" => [
-                        "saldo" => "0.0000",
-                        "total_pagos" => "690.1600",
-                        "total_multas" => "6.1100"
-                    ],                    
-                ],
-                [
-                    "cuota" => $credito->cuotas[3],
-                    "data" => [
-                            "fecha" => "2022-08-22",
-                            "importe" => "6",
-                    ],
-                    "expectations" => [
-                        "saldo" => "0.0000",
-                        "total_pagos" => "686.4800",
-                        "total_multas" => "2.4300"
-                    ],                    
-                ]
-            ]
-        ];
-    }
-]);
+// it('registra pagos', function ($dataset) {
+//     /** @var TestCase $this  */
+//     $requests = $dataset["requests"];
+//     $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
+//         $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
+//     });
+//     foreach($requests as ["cuota" => $cuota, "data" => $data, "expectations" => $expectations]){
+//         $response = $this->actingAs(User::find(1))->postJson('/api/pagos/cuotas/'.$cuota->id, $data);
+//         $response->assertOk();
+//         $cuota->refresh();
+//         $this->assertEquals($expectations, [
+//             "saldo" => (string) $cuota->saldo->amount,
+//             "total_multas" => (string) $cuota->total_multas->amount,
+//             "total_pagos" => (string) $cuota->total_pagos->amount
+//         ]);
+//     }
+// })->with([
+//     function(){
+//         $credito = buildCredito2();
+//         return [
+//             "requests" => [
+//                 [
+//                     "cuota" => $credito->cuotas[1],
+//                     "data" => [
+//                             "fecha" => "2022-07-13",
+//                             "importe" => "100",
+//                     ],
+//                     "expectations" => [
+//                         "saldo" => "584.6500",
+//                         "total_pagos" => "100.0000",
+//                         "total_multas" => "0.6000"
+//                     ],
+//                 ],
+//                 [
+//                     "cuota" => $credito->cuotas[3],
+//                     "data" => [
+//                             "fecha" => "2022-07-13",
+//                             "importe" => "160",
+//                     ],
+//                     "expectations" => [
+//                         "saldo" => "524.2100",
+//                         "total_pagos" => "160.0000",
+//                         "total_multas" => "0.1600"
+//                     ],                    
+//                 ],
+//                 [
+//                     "cuota" => $credito->cuotas[1],
+//                     "data" => [
+//                             "fecha" => "2022-08-22",
+//                             "importe" => "590.01",
+//                     ],
+//                     "expectations" => [
+//                         "saldo" => "0.1500",
+//                         "total_pagos" => "690.0100",
+//                         "total_multas" => "6.1100"
+//                     ],                    
+//                 ],
+//                 [
+//                     "cuota" => $credito->cuotas[3],
+//                     "data" => [
+//                             "fecha" => "2022-08-22",
+//                             "importe" => "520.48",
+//                     ],
+//                     "expectations" => [
+//                         "saldo" => "5.9800",
+//                         "total_pagos" => "680.4800",
+//                         "total_multas" => "2.4100"
+//                     ],                    
+//                 ],
+//                 [
+//                     "cuota" => $credito->cuotas[1],
+//                     "data" => [
+//                             "fecha" => "2022-08-22",
+//                             "importe" => "0.15",
+//                     ],
+//                     "expectations" => [
+//                         "saldo" => "0.0000",
+//                         "total_pagos" => "690.1600",
+//                         "total_multas" => "6.1100"
+//                     ],                    
+//                 ],
+//                 [
+//                     "cuota" => $credito->cuotas[3],
+//                     "data" => [
+//                             "fecha" => "2022-08-22",
+//                             "importe" => "6",
+//                     ],
+//                     "expectations" => [
+//                         "saldo" => "0.0000",
+//                         "total_pagos" => "686.4800",
+//                         "total_multas" => "2.4300"
+//                     ],                    
+//                 ]
+//             ]
+//         ];
+//     }
+// ]);

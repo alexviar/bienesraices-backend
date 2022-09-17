@@ -17,8 +17,8 @@ class DetalleTransaccionFactory extends Factory
             "moneda" => $attributes["moneda"] ?? $this->faker->randomElement(["USD", "BOB"]),
             "importe" => $attributes["importe"] ?? $this->faker->numerify("###.##"),
             "transaccion_id" => $attributes["transaccion_id"],
-            "transactable_id" => $attributes["transactable_id"],
-            "transactable_type" => $attributes["transactable_type"],
+            "pagable_id" => $attributes["pagable_id"],
+            "pagable_type" => $attributes["pagable_type"],
         ];
     }
 }

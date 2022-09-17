@@ -4,8 +4,12 @@ namespace App\Listeners;
 
 use App\Events\PagoCuotaCreated;
 use App\Events\ReservaCreated;
+use App\Events\TransaccionRegistrada;
 use App\Events\VentaCreated;
+use App\Models\Cuota;
+use App\Models\DetalleTransaccion;
 use App\Models\Transaccion;
+use Exception;
 
 class TransaccionSubscriber {
 
@@ -66,6 +70,62 @@ class TransaccionSubscriber {
         ]);
     }
 
+    function actualizarCuota(Cuota $pagable, $fecha, $importe){
+        $pagable->pagos()->create([
+            "fecha" => $fecha,
+            "moneda" => $pagable->getCurrency()->code,
+            "importe" => $importe
+        ]);
+        do{
+            $pagable->refresh();
+            $pagable->projectTo($fecha);
+            if(!$pagable->pendiente){
+                throw new Exception("No se pueden pagar cuotas antes del plazo");
+            }
+            if($pagable->total->amount->isNegative()){
+                throw new Exception("El pago excede el importe a pagar");
+            }
+            
+            $pagable->recalcularSaldo();
+            $updated = Cuota::where("id", $pagable->id)
+                ->where("updated_at", $pagable->updated_at)
+                ->update([
+                    "saldo" => $pagable->saldo->amount,
+                    "total_pagos" => $pagable->total_pagos->plus($importe)->amount
+                ]);
+        } while(!$updated);
+    }
+
+    function actualizarPagable(DetalleTransaccion $detalleTransacccion){
+        dd($detalleTransacccion->getAttributes());
+        $pagable = $detalleTransacccion->pagable;
+        $importe = $detalleTransacccion->getAttributes()["importe"];
+        do{
+            $pagable->refresh();
+            if($pagable->saldo->amount->isLessThan($importe)){
+                throw new Exception("El pago excede el importe a pagar");
+            }
+            $updated = $detalleTransacccion->pagable_type::where("id", $pagable->id)
+                ->where("updated_at", $pagable->updated_at)
+                ->update([
+                    "saldo" => $pagable->saldo->minus($importe)->amount
+                ]);
+        } while(!$updated);
+    }
+
+
+
+    public function handleTransaccionRegistrada(TransaccionRegistrada $event){
+        foreach($event->transaccion->detalles as $detalle){
+            if($detalle->pagable_type == Cuota::class){
+                $this->actualizarCuota($detalle->pagable, $event->transaccion->fecha, $detalle->getAttributes()["importe"]);
+            }
+            else{
+                $this->actualizarPagable($detalle);
+            }
+        }
+    }
+
     /**
      * Register the listeners for the subscriber.
      *
@@ -73,13 +133,18 @@ class TransaccionSubscriber {
      */
     public function subscribe($events)
     {
+        // $events->listen(
+        //     PagoCuotaCreated::class,
+        //     [self::class, "handlePagoCuotaCreated"]
+        // );
+        // $events->listen(
+        //     VentaCreated::class,
+        //     [self::class, "handleVentaCreated"]
+        // );
+
         $events->listen(
-            PagoCuotaCreated::class,
-            [self::class, "handlePagoCuotaCreated"]
-        );
-        $events->listen(
-            VentaCreated::class,
-            [self::class, "handleVentaCreated"]
+            TransaccionRegistrada::class,
+            [self::class, "handleTransaccionRegistrada"]
         );
     }
 }

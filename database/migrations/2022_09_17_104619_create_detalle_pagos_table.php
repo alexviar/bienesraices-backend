@@ -1,11 +1,11 @@
 <?php
 
-use App\Models\Cliente;
+use App\Models\Transaccion;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAccountTable extends Migration
+class CreateDetallePagosTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,11 +14,11 @@ class CreateAccountTable extends Migration
      */
     public function up()
     {
-        Schema::create('accounts', function (Blueprint $table) {
+        Schema::create('detalles_pagos', function (Blueprint $table) {
             $table->id();
-            $table->char("moneda", 3);
-            $table->decimal("balance", 19, 4);
-            $table->foreignIdFor(Cliente::class)->constrained();
+            $table->tinyInteger("forma_pago");
+            $table->decimal("importe", 19,4);
+            $table->foreignIdFor(Transaccion::class)->constrained("transacciones");
             $table->timestamps();
         });
     }
@@ -30,6 +30,6 @@ class CreateAccountTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('accounts');
+        Schema::dropIfExists('detalles_pagos');
     }
 }

@@ -14,8 +14,8 @@ class DetalleTransaccion extends Model
         "moneda",
         "importe",
         "referencia",
-        "transactable_id",
-        "transactable_type"
+        "pagable_id",
+        "pagable_type"
     ];
 
     protected $table = "detalles_transaccion";
@@ -44,7 +44,7 @@ class DetalleTransaccion extends Model
     //     return $this->morphedByMany(Cuota::class, "transactable");
     // }
 
-    function transactable(){
+    function pagable(){
         return $this->morphTo();
     }
 }

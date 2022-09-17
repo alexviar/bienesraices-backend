@@ -1,13 +1,337 @@
 <?php
 
-// use App\Models\Cuota;
-// use App\Models\Credito;
-// use App\Models\Transaccion;
-// use App\Models\User;
-// use App\Models\Venta;
-// use Illuminate\Http\UploadedFile;
-// use Illuminate\Support\Carbon;
-// use Tests\TestCase;
+use App\Models\Account;
+use App\Models\Cliente;
+use App\Models\Cuota;
+use App\Models\Credito;
+use App\Models\Interfaces\UfvRepositoryInterface;
+use App\Models\Transaccion;
+use App\Models\User;
+use App\Models\Venta;
+use Brick\Math\BigDecimal;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
+use Mockery\MockInterface;
+use Tests\TestCase;
+
+function buildCredito2(){
+    $credito = Credito::factory([
+        "plazo" => 36,
+        "periodo_pago" => 1,
+        "dia_pago" => 1
+    ])->for(Venta::factory([
+        "fecha" => "2022-02-13",
+        "moneda" => "USD",
+        "importe" => "25056.00"
+    ])->for(Cliente::factory())->credito("21056.00"), "creditable")->create();
+    $credito->build();
+    return $credito;
+}
+
+it('registra pagos', function ($dataset) {
+    /** @var TestCase $this  */
+    $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
+        $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
+    });
+
+    $pagables = collect($dataset["pagables"]);
+    $data = $dataset["data"];
+    $expectations = $dataset["expectations"];
+
+    $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', $data);
+    
+    $response->assertCreated();
+    $pagables->each->refresh();
+    $this->assertEquals($expectations["pagables"], collect($pagables)->map(function($pagable){
+        return $pagable instanceof Cuota ? [
+            "saldo" => (string) $pagable->saldo->amount,
+            // "total" => (string) $pagable->total->amount,
+            "total_multas" => (string) $pagable->total_multas->amount,
+            "total_pagos" => (string) $pagable->total_pagos->amount
+        ] : [
+            "saldo" => (string) $pagable->saldo->amount,
+        ];
+    })->toArray());
+    $cuenta = Account::where("cliente_id", $data["cliente_id"])
+        ->where("moneda", $data["moneda"])
+        ->first();
+    $this->assertEquals(
+        $expectations["cuenta"],
+        $cuenta ? [
+            "balance" => $cuenta->getAttributes()["balance"]
+        ] : []
+    );
+})->with([
+    function(){
+        $credito = buildCredito2();
+        $pagables = [$credito->cuotas[1], $credito->cuotas[3]];
+        return [
+            "pagables" => $pagables,
+            "data" => [
+                "fecha" => "2022-07-13",
+                "cliente_id" => $credito->creditable->cliente_id,
+                "moneda" => "USD",
+                "detalles" => [
+                    [
+                        "id" => $pagables[0]->id,
+                        "type" => Cuota::class,
+                        "importe" => "100"
+                    ],
+                    [
+                        "id" => $pagables[1]->id,
+                        "type" => Cuota::class,
+                        "importe" => "160"
+                    ]
+                ],
+                "medios_pago" => [
+                    [
+                        "forma_pago" => 2,
+                        "importe" => "260"
+                    ]
+                ]
+            ],
+            "expectations" => [
+                "pagables" => [
+                    [
+                        "saldo" => "584.6500",
+                        "total_pagos" => "100.0000",
+                        "total_multas" => "0.6000"
+                    ],
+                    [
+                        "saldo" => "524.2100",
+                        "total_pagos" => "160.0000",
+                        "total_multas" => "0.1600"
+                    ]
+                ],
+                "cuenta" => []
+            ],
+        ];
+    },
+    function(){
+        $credito = buildCredito2();
+        $pagables = [$credito->cuotas[1], $credito->cuotas[3]];
+        $pagables[0]->update([
+            "saldo" => "584.65",
+            "total_pagos" => "100.00",
+        ]);
+        $pagables[0]->pagos()->create([
+            "fecha" => "2022-07-13",
+            "moneda" => "USD",
+            "importe" => "100.00"
+        ]);
+        $pagables[1]->update([
+            "saldo" => "524.21",
+            "total_pagos" => "160.00",
+        ]);
+        $pagables[1]->pagos()->create([
+            "fecha" => "2022-07-13",
+            "moneda" => "USD",
+            "importe" => "160.00"
+        ]);
+        return [
+            "pagables" => $pagables,
+            "data" => [
+                "fecha" => "2022-08-22",
+                "cliente_id" => $credito->creditable->cliente_id,
+                "moneda" => "USD",
+                "detalles" => [
+                    [
+                        "id" => $pagables[0]->id,
+                        "type" => Cuota::class,
+                        "importe" => "590.01"
+                    ],
+                    [
+                        "id" => $pagables[1]->id,
+                        "type" => Cuota::class,
+                        "importe" => "520.48"
+                    ]
+                ],
+                "medios_pago" => [
+                    [
+                        "forma_pago" => 2,
+                        "importe" => "1110.5"
+                    ]
+                ]
+            ],
+            "expectations" => [
+                "pagables" => [
+                    [
+                        "saldo" => "0.1500",
+                        "total_pagos" => "690.0100",
+                        "total_multas" => "6.1100"
+                    ],
+                    [
+                        "saldo" => "5.9800",
+                        "total_pagos" => "680.4800",
+                        "total_multas" => "2.4100"
+                    ]
+                ],
+                "cuenta" => [
+                    "balance" => "0.0100"
+                ]
+            ],
+        ];
+    },
+    function(){
+        $credito = buildCredito2();
+        Account::create([
+            "moneda" => "USD",
+            "balance" => "0.01",
+            "cliente_id" => $credito->creditable->cliente_id
+        ]);
+        $pagables = [$credito->cuotas[1], $credito->cuotas[3]];
+        $pagables[0]->update([
+            "saldo" => "0.15",
+            "total_pagos" => "690.01",
+        ]);
+        $pagables[0]->pagos()->createMany([[
+            "fecha" => "2022-07-13",
+            "moneda" => "USD",
+            "importe" => "100.00"
+        ], [
+            "fecha" => "2022-08-22",
+            "moneda" => "USD",
+            "importe" => "590.01"
+        ]]);
+        $pagables[1]->update([
+            "saldo" => "5.98",
+            "total_pagos" => "680.48",
+        ]);
+        $pagables[1]->pagos()->createMany([[
+            "fecha" => "2022-07-13",
+            "moneda" => "USD",
+            "importe" => "160.00"
+        ], [
+            "fecha" => "2022-08-22",
+            "moneda" => "USD",
+            "importe" => "520.48"
+        ]]);
+        return [
+            "pagables" => $pagables,
+            "data" => [
+                "fecha" => "2022-08-22",
+                "cliente_id" => $credito->creditable->cliente_id,
+                "moneda" => "USD",
+                "detalles" => [
+                    [
+                        "id" => $pagables[0]->id,
+                        "type" => Cuota::class,
+                        "importe" => "0.15"
+                    ],
+                    [
+                        "id" => $pagables[1]->id,
+                        "type" => Cuota::class,
+                        "importe" => "6.00"
+                    ]
+                ],
+                "medios_pago" => [
+                    [
+                        "forma_pago" => 2,
+                        "importe" => "7"
+                    ]
+                ]
+            ],
+            "expectations" => [
+                "pagables" => [
+                    [
+                        "saldo" => "0.0000",
+                        "total_pagos" => "690.1600",
+                        "total_multas" => "6.1100"
+                    ],
+                    [
+                        "saldo" => "0.0000",
+                        "total_pagos" => "686.4800",
+                        "total_multas" => "2.4300"
+                    ]
+                ],
+                "cuenta" => [
+                    "balance" => "0.8600"
+                ]
+            ],
+        ];
+    }
+
+
+    // function(){
+    //     $credito = buildCredito2();
+    //     return [
+    //         "requests" => [
+    //             [
+    //                 "cuota" => $credito->cuotas[1],
+    //                 "data" => [
+    //                         "fecha" => "2022-07-13",
+    //                         "importe" => "100",
+    //                 ],
+    //                 "expectations" => [
+    //                     "saldo" => "584.6500",
+    //                     "total_pagos" => "100.0000",
+    //                     "total_multas" => "0.6000"
+    //                 ],
+    //             ],
+    //             [
+    //                 "cuota" => $credito->cuotas[3],
+    //                 "data" => [
+    //                         "fecha" => "2022-07-13",
+    //                         "importe" => "160",
+    //                 ],
+    //                 "expectations" => [
+    //                     "saldo" => "524.2100",
+    //                     "total_pagos" => "160.0000",
+    //                     "total_multas" => "0.1600"
+    //                 ],                    
+    //             ],
+    //             [
+    //                 "cuota" => $credito->cuotas[1],
+    //                 "data" => [
+    //                         "fecha" => "2022-08-22",
+    //                         "importe" => "590.01",
+    //                 ],
+    //                 "expectations" => [
+    //                     "saldo" => "0.1500",
+    //                     "total_pagos" => "690.0100",
+    //                     "total_multas" => "6.1100"
+    //                 ],                    
+    //             ],
+    //             [
+    //                 "cuota" => $credito->cuotas[3],
+    //                 "data" => [
+    //                         "fecha" => "2022-08-22",
+    //                         "importe" => "520.48",
+    //                 ],
+    //                 "expectations" => [
+    //                     "saldo" => "5.9800",
+    //                     "total_pagos" => "680.4800",
+    //                     "total_multas" => "2.4100"
+    //                 ],                    
+    //             ],
+    //             [
+    //                 "cuota" => $credito->cuotas[1],
+    //                 "data" => [
+    //                         "fecha" => "2022-08-22",
+    //                         "importe" => "0.15",
+    //                 ],
+    //                 "expectations" => [
+    //                     "saldo" => "0.0000",
+    //                     "total_pagos" => "690.1600",
+    //                     "total_multas" => "6.1100"
+    //                 ],                    
+    //             ],
+    //             [
+    //                 "cuota" => $credito->cuotas[3],
+    //                 "data" => [
+    //                         "fecha" => "2022-08-22",
+    //                         "importe" => "6",
+    //                 ],
+    //                 "expectations" => [
+    //                     "saldo" => "0.0000",
+    //                     "total_pagos" => "686.4800",
+    //                     "total_multas" => "2.4300"
+    //                 ],                    
+    //             ]
+    //         ]
+    //     ];
+    // }
+]);
 
 
 // test('La fecha no puede estar en el futuro', function(){

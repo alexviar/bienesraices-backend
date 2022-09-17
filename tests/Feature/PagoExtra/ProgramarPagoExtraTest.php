@@ -148,14 +148,14 @@ it('copia las referencias del credito anterior', function(){
         "fecha" => "2022-02-28",
         "moneda" => "USD",
         "importe" => "500",
-    ]))->for($credito, "transactable")->create();
+    ]))->for($credito, "pagable")->create();
 
     $transaccionPagoCuota1 = DetalleTransaccion::factory()
     ->for(Transaccion::factory([
         "fecha" => "2022-03-05",
         "moneda" => "USD",
         "importe" => "100"
-    ]))->for($credito->cuotas[0], "transactable")->create();
+    ]))->for($credito->cuotas[0], "pagable")->create();
     $credito->cuotas[0]->pagos()->create([
         "fecha" => "2022-03-05",
         "moneda" => "USD",
@@ -168,12 +168,12 @@ it('copia las referencias del credito anterior', function(){
 
     $response = makeRequest($credito, $body);
     $nuevoCredito = Credito::find($response->json("id"));
-    $this->assertTrue($transaccionCuotaInicial->is(DetalleTransaccion::whereMorphedTo("transactable", $nuevoCredito)->first()), "No se copió la referencia al pago de la cuota inicial.");
-    $this->assertTrue($transaccionPagoCuota1->is(DetalleTransaccion::whereMorphedTo("transactable", $nuevoCredito->cuotas[0])->first()), "No se copió la referencia al pago de la primer cuota.");
+    $this->assertTrue($transaccionCuotaInicial->is(DetalleTransaccion::whereMorphedTo("pagable", $nuevoCredito)->first()), "No se copió la referencia al pago de la cuota inicial.");
+    $this->assertTrue($transaccionPagoCuota1->is(DetalleTransaccion::whereMorphedTo("pagable", $nuevoCredito->cuotas[0])->first()), "No se copió la referencia al pago de la primer cuota.");
     
     expect($nuevoCredito->cuotas->count())->toBe($credito->cuotas->count());
     expect($nuevoCredito->cuotas->pluck("id"))->not->toMatchArray($credito->cuotas->pluck("id"));
-    expect($nuevoCredito->cuotas->pluck("transactable_id"))->toMatchArray($credito->cuotas->pluck("transactable_id"));
+    expect($nuevoCredito->cuotas->pluck("pagable_id"))->toMatchArray($credito->cuotas->pluck("pagable_id"));
     // expect($nuevoCredito->cuotas[0]->pagos[0]->getAttributes())->toMatchArray([
     //     "fecha" => "2022-03-05",
     //     "moneda" => "USD",

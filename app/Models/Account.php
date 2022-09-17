@@ -21,10 +21,10 @@ class Account extends Model
 
     
     function getBalanceAttribute($value){
-        return new Money($value, $this->currency);
+        return new Money($value, $this->moneda);
     }
 
     function currency(){
-        return $this->belongsTo(Currency::class, "moneda");
+        return $this->belongsTo(Currency::class, "moneda", "code");
     }
 }

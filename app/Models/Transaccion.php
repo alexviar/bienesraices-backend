@@ -18,12 +18,7 @@ class Transaccion extends Model
         "fecha",
         "moneda",
         "importe",
-        "ajuste_redondeo",
-        "metodo_pago",
-        "observaciones",
-        "accountable_id",
-        "accountable_type",
-        "accountable_name",
+        "cliente_id",
         "user_id"
     ];
 
@@ -32,7 +27,7 @@ class Transaccion extends Model
     ];
 
     function getImporteAttribute($value){
-        return new Money($value, $this->currency);
+        return new Money($value??"0", $this->currency);
     }
 
     #region Relationships
@@ -43,6 +38,12 @@ class Transaccion extends Model
         return $this->hasMany(DetalleTransaccion::class);
     }
 
+    /**
+     * @return HasMany
+     */
+    function detallesPago(){
+        return $this->hasMany(DetallePago::class);
+    }
     /**
      * @return BelongsTo
      */

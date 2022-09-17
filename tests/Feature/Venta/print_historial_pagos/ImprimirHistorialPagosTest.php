@@ -73,7 +73,7 @@ it("Genera un reporte del historial de pagos", function(){
     $detailModel->referencia = "Cuota inicial de la venta N.º 1";
     $detailModel->moneda = "USD";
     $detailModel->importe = "500";
-    $detailModel->transactable()->associate($credito);
+    $detailModel->pagable()->associate($credito);
     $transaccion->detalles()->save($detailModel);
 
     $transaccion = Transaccion::factory([
@@ -85,7 +85,7 @@ it("Genera un reporte del historial de pagos", function(){
     $detailModel->referencia = "Pago de la cuota 1 del crédito 1";
     $detailModel->moneda = "USD";
     $detailModel->importe = "70";
-    $detailModel->transactable()->associate($cuota1->pagos()->create([
+    $detailModel->pagable()->associate($cuota1->pagos()->create([
         "fecha" => "2022/08/24",
         "importe" => "70",
         "moneda" => "USD"
@@ -101,7 +101,7 @@ it("Genera un reporte del historial de pagos", function(){
     $detailModel->referencia = "Pago de la cuota 1 del crédito 1";
     $detailModel->moneda = "USD";
     $detailModel->importe = "8.95";
-    $detailModel->transactable()->associate($cuota1->pagos()->create([
+    $detailModel->pagable()->associate($cuota1->pagos()->create([
         "fecha" => "2022/09/30",
         "importe" => "8.95",
         "moneda" => "USD"
@@ -111,7 +111,7 @@ it("Genera un reporte del historial de pagos", function(){
     $detailModel->referencia = "Pago de la cuota 2 del crédito 1";
     $detailModel->moneda = "USD";
     $detailModel->importe = "78.93";
-    $detailModel->transactable()->associate($cuota2->pagos()->create([
+    $detailModel->pagable()->associate($cuota2->pagos()->create([
         "fecha" => "2022/09/30",
         "importe" => "78.93",
         "moneda" => "USD"
