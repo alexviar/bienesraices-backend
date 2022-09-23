@@ -24,8 +24,8 @@ class CreditoController extends Controller
     }
 
     function findCredito($id){
-        // $venta = Venta::with("credito")->find($id);
-        $credito = Credito::with(["cuotas", "pagosExtras"])->find($id);
+        // $credito = Credito::with(["cuotas", "pagosExtras"])->find($id);
+        $credito = Credito::with(["cuotas", "pagosExtras"])->where("codigo", $id)->where("estado", 1)->first();
 
         if(!$credito){
             throw new ModelNotFoundException("El credito no existe");

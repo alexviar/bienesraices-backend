@@ -6,6 +6,7 @@ use App\Models\Credito;
 use App\Models\Cuota;
 use App\Models\DetalleTransaccion;
 use App\Models\Reserva;
+use App\Models\ValueObjects\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 
@@ -23,16 +24,18 @@ class HistorialPagos {
         $query = DetalleTransaccion::query();
         $reserva = $venta->reserva;
         if($reserva) {
-            $query->whereMorphedTo("transactable", $reserva);
+            $query->whereMorphedTo("pagable", $reserva);
         }
-        $query->orWhereMorphedTo("transactable", $credito);
-        $query->orWhereMorphedTo("transactable", $credito->cuotas->pluck("pagos")->flatten());
+        $query->orWhereMorphedTo("pagable", $venta);
+        $query->orWhereMorphedTo("pagable", $credito->cuotas);
 
         $pagos = $query->get();
         
         $zero = new \App\Models\ValueObjects\Money("0", $venta->currency);
         $totalPagos = $pagos->reduce(function($carry, $pago){
-            return $carry->add($pago->importe->exchangeTo($carry->currency, ["exchangeMode"=>"buy"]));
+            return $carry->add($pago->importe->exchangeTo($carry->currency, [
+                "exchangeMode" => Money::BUY
+            ]));
         }, $zero)->round(2);
         
         $saldoMora = $zero;

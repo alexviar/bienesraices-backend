@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CreditoController;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -20,13 +21,15 @@ Route::get('/migrate', function(){
   Artisan::call("migrate");
 });
 
-Route::get('/seed', function(){
-  Artisan::call("migrate:fresh");
-  Artisan::call("db:seed InitialLoadSeeder");
-});
+// Route::get('/seed', function(){
+//   Artisan::call("migrate:fresh");
+//   Artisan::call("db:seed InitialLoadSeeder");
+// });
 
 Route::post('/login', [AuthController::class, 'login'])->name("login");
 Route::post('/logout', [AuthController::class, 'logout']);
+
+Route::middleware("auth:sanctum")->get("/comprobantes/{comprobante}", [CajaController::class, "comprobante"])->name("comprobantes");
 
 Route::controller(CreditoController::class)->group(function(){
   Route::middleware("auth:sanctum")->get('/creditos/{id}/historial_pagos', "print_historial_pagos")->name("creditos.historial_pagos");

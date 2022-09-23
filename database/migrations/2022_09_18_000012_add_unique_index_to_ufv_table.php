@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateTalonariosTable extends Migration
+class AddUniqueIndexToUfvTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,11 +13,8 @@ class CreateTalonariosTable extends Migration
      */
     public function up()
     {
-        Schema::create('talonarios', function (Blueprint $table) {
-            $table->id();
-            $table->string('tipo');
-            $table->string('siguiente');
-            $table->timestamps();
+        Schema::table('ufv', function (Blueprint $table) {
+            $table->unique("fecha");
         });
     }
 
@@ -28,6 +25,8 @@ class CreateTalonariosTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('talonarios');
+        Schema::table('ufv', function (Blueprint $table) {
+            $table->dropUnique(["fecha"]);
+        });
     }
 }

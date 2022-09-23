@@ -103,7 +103,7 @@ it('obtiene los pagables', function ($dataset) {
             ],
             "expectations" => [
                 [
-                    "id" => $credito->cuotas[0]->id,
+                    "id" => $credito->cuotas[0]->codigo,
                     "type" => Cuota::class,
                     "referencia" => $credito->cuotas[0]->getReferencia(),
                     "moneda" => $credito->getCurrency()->code,
@@ -135,7 +135,7 @@ it('obtiene los pagables', function ($dataset) {
             ],
             "expectations" => [
                 [
-                    "id" => $credito->cuotas[0]->id,
+                    "id" => $credito->cuotas[0]->codigo,
                     "type" => Cuota::class,
                     "referencia" => $credito->cuotas[0]->getReferencia(),
                     "moneda" => $credito->getCurrency()->code,
@@ -168,7 +168,7 @@ it('obtiene los pagables', function ($dataset) {
             ],
             "expectations" => [
                 [
-                    "id" => $credito->cuotas[0]->id,
+                    "id" => $credito->cuotas[0]->codigo,
                     "type" => Cuota::class,
                     "referencia" => $credito->cuotas[0]->getReferencia(),
                     "moneda" => $credito->getCurrency()->code,
@@ -178,7 +178,7 @@ it('obtiene los pagables', function ($dataset) {
                     "total" => "255.2800"
                 ],
                 [
-                    "id" => $credito->cuotas[1]->id,
+                    "id" => $credito->cuotas[1]->codigo,
                     "type" => Cuota::class,
                     "referencia" => $credito->cuotas[1]->getReferencia(),
                     "moneda" => $credito->getCurrency()->code,
@@ -222,7 +222,7 @@ it('obtiene los pagables', function ($dataset) {
             ],
             "expectations" => [
                 [
-                    "id" => $credito->cuotas[0]->id,
+                    "id" => $credito->cuotas[0]->codigo,
                     "type" => Cuota::class,
                     "referencia" => $credito->cuotas[0]->getReferencia(),
                     "moneda" => $credito->getCurrency()->code,
@@ -232,7 +232,7 @@ it('obtiene los pagables', function ($dataset) {
                     "total" => "155.6600"
                 ],
                 [
-                    "id" => $credito->cuotas[1]->id,
+                    "id" => $credito->cuotas[1]->codigo,
                     "type" => Cuota::class,
                     "referencia" => $credito->cuotas[1]->getReferencia(),
                     "moneda" => $credito->getCurrency()->code,
@@ -277,7 +277,7 @@ it('obtiene los pagables', function ($dataset) {
             ],
             "expectations" => [
                 [
-                    "id" => $credito->cuotas[0]->id,
+                    "id" => $credito->cuotas[0]->codigo,
                     "type" => Cuota::class,
                     "referencia" => $credito->cuotas[0]->getReferencia(),
                     "moneda" => $credito->getCurrency()->code,
@@ -287,7 +287,7 @@ it('obtiene los pagables', function ($dataset) {
                     "total" => "155.6600"
                 ],
                 [
-                    "id" => $credito->cuotas[1]->id,
+                    "id" => $credito->cuotas[1]->codigo,
                     "type" => Cuota::class,
                     "referencia" => $credito->cuotas[1]->getReferencia(),
                     "moneda" => $credito->getCurrency()->code,
@@ -361,7 +361,7 @@ it('obtiene los pagables', function ($dataset) {
                     "total" => "100.0000"
                 ],
                 [
-                    "id" => $credito->cuotas[0]->id,
+                    "id" => $credito->cuotas[0]->codigo,
                     "type" => Cuota::class,
                     "referencia" => $credito->cuotas[0]->getReferencia(),
                     "moneda" => $credito->getCurrency()->code,
@@ -371,7 +371,7 @@ it('obtiene los pagables', function ($dataset) {
                     "total" => "155.6600"
                 ],
                 [
-                    "id" => $credito->cuotas[1]->id,
+                    "id" => $credito->cuotas[1]->codigo,
                     "type" => Cuota::class,
                     "referencia" => $credito->cuotas[1]->getReferencia(),
                     "moneda" => $credito->getCurrency()->code,

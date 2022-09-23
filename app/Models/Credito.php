@@ -38,13 +38,13 @@ class Credito extends Model
 
     function getUrlPlanPagoAttribute(){
         return route("creditos.plan_pago", [
-            "id" => $this->id
+            "id" => $this->codigo
         ]);
     }
 
     function getUrlHistorialPagosAttribute(){
         return route("creditos.historial_pagos", [
-            "id" => $this->id
+            "id" => $this->codigo
         ]);
     }
 

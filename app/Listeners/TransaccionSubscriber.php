@@ -71,6 +71,8 @@ class TransaccionSubscriber {
     }
 
     function actualizarCuota(Cuota $pagable, $fecha, $importe){
+        $total = $pagable->total;
+        $saldo = $pagable->saldo;
         $pagable->pagos()->create([
             "fecha" => $fecha,
             "moneda" => $pagable->getCurrency()->code,
@@ -83,7 +85,7 @@ class TransaccionSubscriber {
                 throw new Exception("No se pueden pagar cuotas antes del plazo");
             }
             if($pagable->total->amount->isNegative()){
-                throw new Exception("El pago excede el importe a pagar");
+                throw new Exception("El pago excede el importe a pagar ($pagable->id, {$pagable->credito->id}, $pagable->numero, $saldo, $total, $importe)");
             }
             
             $pagable->recalcularSaldo();
@@ -97,7 +99,6 @@ class TransaccionSubscriber {
     }
 
     function actualizarPagable(DetalleTransaccion $detalleTransacccion){
-        dd($detalleTransacccion->getAttributes());
         $pagable = $detalleTransacccion->pagable;
         $importe = $detalleTransacccion->getAttributes()["importe"];
         do{
@@ -118,7 +119,9 @@ class TransaccionSubscriber {
     public function handleTransaccionRegistrada(TransaccionRegistrada $event){
         foreach($event->transaccion->detalles as $detalle){
             if($detalle->pagable_type == Cuota::class){
-                $this->actualizarCuota($detalle->pagable, $event->transaccion->fecha, $detalle->getAttributes()["importe"]);
+                $this->actualizarCuota($detalle->pagable()->whereHas("credito", function($query){
+                    $query->where("estado", 1);
+                })->first(), $event->transaccion->fecha, $detalle->getAttributes()["importe"]);
             }
             else{
                 $this->actualizarPagable($detalle);

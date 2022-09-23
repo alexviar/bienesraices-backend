@@ -70,15 +70,16 @@ it('registra pagos', function ($dataset) {
             "data" => [
                 "fecha" => "2022-07-13",
                 "cliente_id" => $credito->creditable->cliente_id,
+                "registrar_excedentes" => 1,
                 "moneda" => "USD",
                 "detalles" => [
                     [
-                        "id" => $pagables[0]->id,
+                        "id" => $pagables[0]->codigo,
                         "type" => Cuota::class,
                         "importe" => "100"
                     ],
                     [
-                        "id" => $pagables[1]->id,
+                        "id" => $pagables[1]->codigo,
                         "type" => Cuota::class,
                         "importe" => "160"
                     ]
@@ -133,15 +134,16 @@ it('registra pagos', function ($dataset) {
             "data" => [
                 "fecha" => "2022-08-22",
                 "cliente_id" => $credito->creditable->cliente_id,
+                "registrar_excedentes" => 1,
                 "moneda" => "USD",
                 "detalles" => [
                     [
-                        "id" => $pagables[0]->id,
+                        "id" => $pagables[0]->codigo,
                         "type" => Cuota::class,
                         "importe" => "590.01"
                     ],
                     [
-                        "id" => $pagables[1]->id,
+                        "id" => $pagables[1]->codigo,
                         "type" => Cuota::class,
                         "importe" => "520.48"
                     ]
@@ -211,15 +213,16 @@ it('registra pagos', function ($dataset) {
             "data" => [
                 "fecha" => "2022-08-22",
                 "cliente_id" => $credito->creditable->cliente_id,
+                "registrar_excedentes" => 1,
                 "moneda" => "USD",
                 "detalles" => [
                     [
-                        "id" => $pagables[0]->id,
+                        "id" => $pagables[0]->codigo,
                         "type" => Cuota::class,
                         "importe" => "0.15"
                     ],
                     [
-                        "id" => $pagables[1]->id,
+                        "id" => $pagables[1]->codigo,
                         "type" => Cuota::class,
                         "importe" => "6.00"
                     ]

@@ -26,7 +26,7 @@ class PagableController extends Controller
 
         //Reservas
         $reservas = Reserva::whereBelongsTo($cliente)
-        ->where("estado", 1)
+        ->where("estado", "<>", 2)
         ->where("saldo", ">", "0")
         ->oldest("id")
         ->get();
@@ -37,17 +37,11 @@ class PagableController extends Controller
         ->where("saldo", ">", "0")
         ->oldest("id")
         ->get();
-        
-        // //Creditos
-        // $creditos = Credito::whereHasMorph("creditable", function($query) use($cliente){
-        //     $query->whereBelongsTo($cliente);
-        // })->where("estado", 1)
-        // ->where("saldo", ">", "0")
-        // ->get();
 
         //Cuotas
-        $cuotas = Cuota::leftJoin("cuotas as anterior", function($join){
-            $join->where("anterior.numero", DB::raw("cuotas.numero - 1"));
+        $cuotas = Cuota::leftJoin("cuotas as anterior", function($join){            
+            $join->on("cuotas.credito_id", "anterior.credito_id") //Pertenecen al mismo credito
+                ->where("anterior.numero", DB::raw("cuotas.numero - 1"));
         })
         ->select("cuotas.*")
         ->where("cuotas.saldo", ">", "0")
@@ -90,7 +84,7 @@ class PagableController extends Controller
             ];
         }))->concat($cuotas->map(function($cuota) use($fecha){
             return [
-                "id" => $cuota->id,
+                "id" => $cuota->codigo,
                 "type" => $cuota->getMorphClass(),
                 "referencia" => $cuota->getReferencia(),
                 "moneda" => $cuota->getCurrency()->code,

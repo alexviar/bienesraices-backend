@@ -41,7 +41,7 @@ function makeRequest(?Credito &$credito, ?array &$body = [])
         "tipo_ajuste" => 1 //Prorrateo
     ];
 
-    $response = test()->actingAs(User::find(1))->postJson("/api/creditos/$credito->id/pagos-extras", $body);
+    $response = test()->actingAs(User::find(1))->postJson("/api/creditos/$credito->codigo/pagos-extras", $body);
     
     return $response;
 }

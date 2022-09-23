@@ -18,10 +18,19 @@ class DetalleTransaccion extends Model
         "pagable_type"
     ];
 
+    protected $appends = [
+        "importe_moneda_transaccion"
+    ];
+
     protected $table = "detalles_transaccion";
 
     function getImporteAttribute($value){
         return new Money($value, Currency::find($this->moneda));
+    }
+
+    function getImporteMonedaTransaccionAttribute()
+    {
+        return $this->importe->round(2)->exchangeTo($this->transaccion->moneda);
     }
 
     function transaccion(){

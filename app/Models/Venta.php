@@ -124,7 +124,7 @@ class Venta extends Model
     }
 
     function getReferencia(){
-        return "Venta N.º {$this->id}";
+        return $this->tipo == 1 ? "Venta N.º {$this->id}" : "Cuota inicial del crédito {$this->credito->codigo}";
     }
 
     function getCurrency(){

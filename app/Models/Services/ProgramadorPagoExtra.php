@@ -11,11 +11,14 @@ use Illuminate\Support\Facades\Log;
 
 abstract class ProgramadorPagoExtra {
 
-    // private $next;
+    /** @var ProgramadorPagoExtra|null $next */
+    private $next;
 
     function __construct(
-        private ?ProgramadorPagoExtra $next=null
-    ){ }
+        $next=null
+    ){
+        $this->next = $next;
+    }
 
     function cloneCuota(Cuota $cuota){
         $clone = $cuota->replicate();

@@ -175,7 +175,8 @@ class Cuota extends Model
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     function pagos(){
-        return $this->hasMany(PagoCuota::class, "codigo_cuota", "codigo");
+        // return $this->hasMany(PagoCuota::class, "codigo_cuota", "codigo");
+        return $this->hasMany(PagoCuota::class);
     }
 
     function credito(){
@@ -221,7 +222,7 @@ class Cuota extends Model
         $ufvVencimiento = $ufvRepository->findByDate($this->vencimiento);
         if(!$ufvVencimiento) throw new Exception("No se encontro el valor de la UFV en la fecha ".$this->vencimiento->format("Y-m-d"));
         $ufvPago = $ufvRepository->findByDate($this->projectionDate);
-        if(!$ufvVencimiento) throw new Exception("No se encontro el valor de la UFV en la fecha ".$this->projectionDate->format("Y-m-d"));
+        if(!$ufvPago) throw new Exception("No se encontro el valor de la UFV en la fecha ".$this->projectionDate->format("Y-m-d"));
         //Factor de mantenimiento de valor
         $fmv = $ufvPago->isLessThan($ufvVencimiento) ? BigRational::one() : BigRational::of($ufvPago)->dividedBy($ufvVencimiento);
         $fas = BigRational::of($this->credito->tasa_mora)
@@ -238,7 +239,13 @@ class Cuota extends Model
     }
 
     function getSaldoRationalAttribute(){
-        if(!isset($this->_saldo)){
+        //Recalcular cada vez que se llama en caso de que los pagos hayan sido actualizados
+        // if(!isset($this->_saldo)){
+            if($this->saldo->amount->isEqualTo("0")){
+                // $this->_saldo = BigRational::zero();
+                // return $this->_saldo;
+                return BigRational::zero();
+            }
             $saldo = BigRational::of($this->importe->plus($this->pago_extra)->amount);
             $projectionDate = $this->projectionDate;
             foreach($this->pagos as $pago){
@@ -250,8 +257,12 @@ class Cuota extends Model
                 $saldo = $saldo->minus($pagoProyectado);
             }
             $this->projectTo($projectionDate);
-            $this->_saldo = $saldo;
-        }
-        return $this->_saldo;
+            return $saldo;
+            // if($saldo->isLessThan("0.01")){
+            //     $saldo = BigRational::zero();
+            // }
+            // $this->_saldo = $saldo;
+        // }
+        // return $this->_saldo;
     }
 }

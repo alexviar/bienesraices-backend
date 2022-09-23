@@ -26,28 +26,41 @@ class Transaccion extends Model
         "fecha" => "date:Y-m-d"
     ];
 
-    function getImporteAttribute($value){
-        return new Money($value??"0", $this->currency);
+    function getImporteAttribute($value)
+    {
+        return new Money($value ?? "0", $this->currency);
     }
 
     #region Relationships
     /**
+     * 
+     * @return BelongsTo
+     */
+    function cliente()
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+
+    /**
      * @return HasMany
      */
-    function detalles(){
+    function detalles()
+    {
         return $this->hasMany(DetalleTransaccion::class);
     }
 
     /**
      * @return HasMany
      */
-    function detallesPago(){
+    function detallesPago()
+    {
         return $this->hasMany(DetallePago::class);
     }
     /**
      * @return BelongsTo
      */
-    function currency(){
+    function currency()
+    {
         return $this->belongsTo(Currency::class, "moneda");
     }
     #endregion
