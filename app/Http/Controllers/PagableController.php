@@ -58,13 +58,14 @@ class PagableController extends Controller
         ->oldest("id")
         ->get();
 
-        $cuotas->each->projectTo($fecha);
+        // $cuotas->each->projectTo($fecha);
 
         $pagables = $reservas->map(function($reserva){
             return [
                 "id" => $reserva->id,
                 "type" => $reserva->getMorphClass(),
                 "referencia" => $reserva->getReferencia(),
+                "vencimiento" => $reserva->fecha->format("Y-m-d"),
                 "moneda" => $reserva->getCurrency()->code,
                 "importe" => (string) $reserva->importe->amount,
                 "saldo" => (string) $reserva->saldo->amount,
@@ -76,6 +77,7 @@ class PagableController extends Controller
                 "id" => $venta->id,
                 "type" => $venta->getMorphClass(),
                 "referencia" => $venta->getReferencia(),
+                "vencimiento" => $venta->fecha->format("Y-m-d"),
                 "moneda" => $venta->getCurrency()->code,
                 "importe" => (string) $venta->importe->amount,
                 "saldo" => (string) $venta->saldo->amount,
@@ -83,17 +85,19 @@ class PagableController extends Controller
                 "total" => (string) $venta->saldo->amount
             ];
         }))->concat($cuotas->map(function($cuota) use($fecha){
+            $cuota->projectTo($fecha);
             return [
                 "id" => $cuota->codigo,
                 "type" => $cuota->getMorphClass(),
                 "referencia" => $cuota->getReferencia(),
+                "vencimiento" => $cuota->vencimiento->format("Y-m-d"),
                 "moneda" => $cuota->getCurrency()->code,
                 "importe" => (string) $cuota->importe->amount,
                 "saldo" => (string) $cuota->saldo->amount,
                 "multa" => (string) $cuota->multa->amount,
                 "total" => (string) $cuota->total->amount
             ];
-        }))->toArray();
+        }))->sortBy("vencimiento")->values()->all();
 
         return [
             "fecha" => $fecha->format("Y-m-d"),

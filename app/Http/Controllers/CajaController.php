@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -76,10 +77,6 @@ class CajaController extends Controller
         ]);
 
         $transaccion = DB::transaction(function() use($payload, $request){
-            if($comprobante = Arr::get($payload, "comprobante")){
-                $path = $comprobante->store("comprobantes");
-                $payload["comprobante"] = $path;
-            }
             $transaccion = Transaccion::create(Arr::except($payload, ["medios_pago", "detalles"]) + [
                 "user_id" => $request->user()->id,
             ]);
@@ -110,13 +107,17 @@ class CajaController extends Controller
             $pagoTotal = BigDecimal::zero();
             foreach($payload["medios_pago"] as $key => $pago){
                 $pagoTotal = $pagoTotal->plus($pago["importe"])->toScale(2, RoundingMode::HALF_UP);
-                $transaccion->detallesPago()->create(Arr::only($pago, ["forma_pago", "importe"])+[
+                if($comprobante = Arr::get($pago, "comprobante")){
+                    $path = $comprobante->store("comprobantes");
+                    $pago["comprobante"] = $path;
+                }
+                $transaccion->detallesPago()->create(Arr::only($pago, ["forma_pago", "importe", "numero_comprobante", "comprobante"])+[
                     "moneda" => $transaccion->moneda
                 ]);
             }
 
             $saldo = $pagoTotal->minus($transaccion->importe->amount);
-            // dd((string)$pagoTotal, (string)$transaccion->importe, (string)$saldo);
+            Log::debug(json_encode([(string)$pagoTotal, (string)$transaccion->importe, (string)$saldo]));
             if($saldo->isGreaterThan("0") && $payload["registrar_excedentes"]){
                 // 
                 $account = Account::where("cliente_id", $payload["cliente_id"])
