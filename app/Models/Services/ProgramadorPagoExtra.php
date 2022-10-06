@@ -24,9 +24,9 @@ abstract class ProgramadorPagoExtra {
         $clone = $cuota->replicate();
         $clone->save();
         $clone->unsetRelation("pagos");
-        $clone->pagos()->saveMany($cuota->pagos->map(function($pago){
-            return $pago->replicate();
-        }));
+        // $clone->pagos()->saveMany($cuota->pagos->map(function($pago){
+        //     return $pago->replicate();
+        // }));
         return $clone;
     }
 

@@ -19,8 +19,6 @@ use Illuminate\Support\Facades\Storage;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
-require(__DIR__."/assertTransaccion.php");
-
 function read_csv($filename){
     $file = fopen($filename, "r");
 

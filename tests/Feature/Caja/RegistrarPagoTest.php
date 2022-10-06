@@ -28,6 +28,97 @@ function buildCredito2(){
     return $credito;
 }
 
+test("Campos requeridos", function($dataset){
+    /** @var TestCase $this */
+    $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', $dataset["data"]);
+    $response->assertJsonValidationErrors($dataset["errors"]);
+    $response->assertJsonMissingValidationErrors($dataset["missings"]);
+})->with([
+    fn () => [
+        "data" => [],
+        "errors" => [
+            "cliente_id" => "El campo 'cliente' es requerido",
+            "moneda" => "El campo 'moneda de pago' es requerido",
+            "detalles" => "El campo 'detalles' es requerido",
+            "medios_pago" => "El campo 'medios de pago' es requerido",
+        ],
+        "missings" => []
+    ],
+    fn () => [
+        "data" => [
+            "detalles"=>[],
+            "medios_pago" =>[]
+        ],
+        "errors" => [
+            "detalles" => "El campo 'detalles' es requerido",
+            "medios_pago" => "El campo 'medios de pago' es requerido",
+        ],
+        "missings" => []
+    ],
+    fn()=>[
+        "data" => [
+            "detalles"=>[
+                [
+
+                ]
+            ],
+            "medios_pago"=>[
+                [
+
+                ]
+            ],
+            "missings" => []
+        ],
+        "errors" => [
+            "detalles.0.id" => "El campo 'id' es requerido",
+            "detalles.0.type" => "El campo 'tipo' es requerido",
+            "detalles.0.importe" => "El campo 'importe' es requerido",
+
+            "medios_pago.0.forma_pago" => "El campo 'forma de pago' es requerido",
+            "medios_pago.0.importe" => "El campo 'importe' es requerido"
+        ],
+        "missings" => [
+            "medios_pago.0.numero_comprobante",
+            "medios_pago.0.comprobante"
+        ]
+    ],
+    fn () => [
+        "data" => [
+            "detalles"=>[
+                [
+
+                ]
+            ],
+            "medios_pago"=>[
+                [
+                    "forma_pago" => 2,
+                ],
+                [
+                    "forma_pago" => 1,
+                ],
+                [
+                    "forma_pago" => 1,
+                ],
+                [
+                    "forma_pago" => 2,
+                ]
+            ]
+        ],
+        "errors" => [
+            "medios_pago.0.numero_comprobante" => "El campo 'n.º de comprobante' es requerido cuando el campo 'forma de pago' es 2",
+            "medios_pago.0.comprobante" => "El campo 'comprobante' es requerido cuando el campo 'forma de pago' es 2",
+            "medios_pago.3.numero_comprobante" => "El campo 'n.º de comprobante' es requerido cuando el campo 'forma de pago' es 2",
+            "medios_pago.3.comprobante" => "El campo 'comprobante' es requerido cuando el campo 'forma de pago' es 2"
+        ],
+        "missings" => [
+            "medios_pago.1.numero_comprobante",
+            "medios_pago.1.comprobante",
+            "medios_pago.2.numero_comprobante",
+            "medios_pago.2.comprobante",
+        ]
+    ]
+]);
+
 it('registra pagos', function ($dataset) {
     /** @var TestCase $this  */
     $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
@@ -86,7 +177,7 @@ it('registra pagos', function ($dataset) {
                 ],
                 "medios_pago" => [
                     [
-                        "forma_pago" => 2,
+                        "forma_pago" => 1,
                         "importe" => "260"
                     ]
                 ]
@@ -151,7 +242,9 @@ it('registra pagos', function ($dataset) {
                 "medios_pago" => [
                     [
                         "forma_pago" => 2,
-                        "importe" => "1110.5"
+                        "importe" => "1110.5",
+                        "numero_comprobante" => 13243254365,
+                        "comprobante" => UploadedFile::fake()->image("comprobante.jpg")
                     ]
                 ]
             ],
@@ -229,7 +322,7 @@ it('registra pagos', function ($dataset) {
                 ],
                 "medios_pago" => [
                     [
-                        "forma_pago" => 2,
+                        "forma_pago" => 1,
                         "importe" => "7"
                     ]
                 ]
@@ -337,305 +430,165 @@ it('registra pagos', function ($dataset) {
 ]);
 
 
-// test('La fecha no puede estar en el futuro', function(){
-//     /** @var TestCase $this */
+test('La fecha no puede estar en el futuro', function(){
+    /** @var TestCase $this */
 
-//     $today = Carbon::today();
-//     $response = $this->actingAs(User::find(1))->postJson("/api/transacciones", [
-//         "fecha" => $today->clone()->addDay()->format("Y-m-d")
-//     ]);
-//     $response->assertJsonValidationErrors([
-//         "fecha" => "El campo 'fecha' no puede ser posterior a la fecha actual."
-//     ]);
+    $today = Carbon::today();
+    $response = $this->actingAs(User::find(1))->postJson("/api/transacciones", [
+        "fecha" => $today->clone()->addDay()->format("Y-m-d")
+    ]);
+    $response->assertJsonValidationErrors([
+        "fecha" => "El campo 'fecha' debe ser anterior o igual a la fecha actual."
+    ]);
 
-//     $response = $this->actingAs(User::find(1))->postJson("/api/transacciones", [
-//         "fecha" => $today->format("Y-m-d")
-//     ]);
-//     $response->assertJsonMissingValidationErrors([
-//         "fecha" => "El campo 'fecha' no puede ser posterior a la fecha actual."
-//     ]);
-// });
+    $response = $this->actingAs(User::find(1))->postJson("/api/transacciones", [
+        "fecha" => $today->format("Y-m-d")
+    ]);
+    $response->assertJsonMissingValidationErrors([
+        "fecha"
+    ]);
+});
 
-// it('No permite pagos que excedan el monto del depósito', function () {
-//     /** @var TestCase $this */
+it('No permite pagos que excedan el monto del depósito', function () {
+    /** @var TestCase $this */
+ 
+    $credito = buildCredito2();
+    $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [
+        "moneda" => "USD",
+        "cliente_id" => $credito->creditable->cliente_id,
+        "detalles" => [
+            [
+                "id" => $credito->cuotas[0]->getMorphKey(),
+                "type" => $credito->cuotas[0]->getMorphClass(),
+                "importe" => "50"
+            ],
+            [
+                "id" => $credito->cuotas[1]->getMorphKey(),
+                "type" => $credito->cuotas[1]->getMorphClass(),
+                "importe" => "50.01"
+            ]
+        ],
+        "medios_pago" => [
+            [
+                "forma_pago" => 1,
+                "importe" => "100"
+            ]
+        ]
+    ]);
+    $response->assertStatus(500);
+    $response->assertJson([
+        "message" => "La suma de los pagos es inferior al importe a pagar."
+    ]);
+});
 
-//     $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [
-//         "importe" => "100",
-//         "detalles" => [
-//             [ "importe" => "50" ],
-//             [ "importe" => "50.01" ]
-//         ],
-//     ]);
+test('El pago excede el saldo de la cuota', function() {
+    /** @var TestCase $this */
 
-//     $response->assertJsonValidationErrors([
-//         "detalles" => "Los pagos exceden el monto depositado (Pagos: 100.01, Deposito: 100.00)"
-//     ]);
-// });
+    $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-02-28"));
 
-// it('Registra un deposito', function() {
-//     /** @var TestCase $this */
+    $venta = Venta::factory([
+        "fecha" => now(),
+        "importe" => "10530.96"
+    ])->credito("10030.96")->create();
+    // $venta->crearPlanPago();
+    $credito = Credito::factory([
+        "dia_pago" => 31,
+        "plazo" => 48,
+        "periodo_pago" => 1
+    ])->for($venta, "creditable")->create();
+    $credito->build();
 
-//     $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-02-28"));
+    $this->travelTo($credito->cuotas[0]->vencimiento);
 
-//     $venta = Venta::factory([
-//         "fecha" => now(),
-//         "importe" => "10530.96"
-//     ])->credito()->create();
-//     // $venta->crearPlanPago();
-//     $credito = Credito::factory([
-//         "dia_pago" => 31,
-//         "plazo" => 48,
-//         "periodo_pago" => 1
-//     ])->for($venta, "creditable")->create();
-//     $credito->build();
+    $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [
+        "cliente_id" => $venta->cliente_id,
+        "moneda" => $venta->moneda,
+        "detalles" => [
+            [
+                "importe" => "255.20",
+                "id" => $credito->cuotas[0]->getMorphKey(),
+                "type" => $credito->cuotas[0]->getMorphClass()
+            ]
+        ],
+        "medios_pago" => [
+            [
+                "forma_pago" => 2,
+                "importe" => "256",
+                "numero_comprobante" => 123124354236,
+                "comprobante" => UploadedFile::fake()->image("comprobante.png")
+            ]
+        ]
+    ]);
+    $response->assertStatus(500);
+    $response->assertJson([
+        "message" => "El pago excede el importe a pagar."
+    ]);
 
+    $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [
+        "cliente_id" => $venta->cliente_id,
+        "moneda" => $venta->moneda,
+        "detalles" => [
+            [
+                "importe" => "255.19",
+                "id" => $credito->cuotas[0]->getMorphKey(),
+                "type" => $credito->cuotas[0]->getMorphClass()
+            ]
+        ],
+        "medios_pago" => [
+            [
+                "forma_pago" => 2,
+                "importe" => "256",
+                "numero_comprobante" => 123124354236,
+                "comprobante" => UploadedFile::fake()->image("comprobante.png")
+            ]
+        ]
+    ]);
+    $response->assertCreated();
+});
 
-//     $this->travelTo($credito->cuotas[1]->vencimiento);
+test('Solo puede pagar cuotas en curso o vencidas', function() {
+    /** @var TestCase $this */
 
-//     $data = Transaccion::factory()->raw([
-//         "fecha" => "2022-03-30",
-//         "importe" => "256",
-//     ]);
+    $venta = Venta::factory([
+        "fecha" => now(),
+        "importe" => "10530.96"
+    ])->credito("10030.96")->create();
+    // $venta->crearPlanPago();
+    $credito = Credito::factory([
+        "dia_pago" => 31,
+        "plazo" => 48,
+        "periodo_pago" => 1
+    ])->for($venta, "creditable")->create();
+    $credito->build();
 
-//     $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [
-//         "detalles" => [
-//             [
-//                 "importe" => "255.19",
-//                 "cuota_id" => $credito->cuotas[0]->id,
-//             ]
-//         ],
-//         "comprobante" => UploadedFile::fake()->image("comprobante.png")
-//     ]+$data);
+    $this->travelTo($credito->cuotas[0]->vencimiento);
 
-//     $response->assertCreated();
-
-//     $id = $response->json("id");
-
-//     $transaccion = Transaccion::with("detalles")->find($id);
-//     $credito->cuotas[0]->refresh();
-
-//     $this->assertSame("2022-03-30", $transaccion->getAttributes()["fecha"]);
-//     $this->assertSame("256.00", $transaccion->getAttributes()["importe"]);
-//     $this->assertSame(1, $transaccion->detalles->count());
-//     $this->assertSame("255.19", $transaccion->detalles[0]->getAttributes()["importe"]);
-//     $this->assertSame(1, $transaccion->detalles[0]->cuotas->count());
-//     $this->assertTrue($credito->cuotas[0]->is($transaccion->detalles[0]->cuotas[0]));
-//     $this->assertSame("0.00", $credito->cuotas[0]->getAttributes()["saldo"]);
-//     $this->assertSame("0.00", $credito->cuotas[0]->getAttributes()["total_multas"]);
-//     $this->assertSame("255.19", $credito->cuotas[0]->getAttributes()["total_pagos"]);
-// });
-
-// it('Registra un deposito con fecha implicita', function() {
-//     /** @var TestCase $this */
-
-//     $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-02-28"));
-
-//     $venta = Venta::factory([
-//         "fecha" => now(),
-//         "importe" => "10530.96"
-//     ])->credito()->create();
-//     // $venta->crearPlanPago();
-//     $credito = Credito::factory([
-//         "dia_pago" => 31,
-//         "plazo" => 48,
-//         "periodo_pago" => 1
-//     ])->for($venta, "creditable")->create();
-//     $credito->build();
-
-//     $this->travelTo($credito->cuotas[0]->vencimiento);
-
-//     $data = Transaccion::factory()->raw([
-//         "importe" => "256",
-//     ]);
-//     unset($data["fecha"]);
-
-//     $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [
-//         "detalles" => [
-//             [
-//                 "importe" => "255.19",
-//                 "cuota_id" => $credito->cuotas[0]->id,
-//             ]
-//         ],
-//         "comprobante" => UploadedFile::fake()->image("comprobante.png")
-//     ]+$data);
-
-//     $response->assertCreated();
-
-//     $this->assertDatabaseHas("transacciones", [
-//         "fecha" => "2022-03-31"
-//     ]);
-// });
-
-
-// test('Registra las multas', function() {
-//     /** @var TestCase $this */
-
-//     $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-02-28"));
-
-//     $venta = Venta::factory([
-//         "fecha" => now(),
-//         "importe" => "10530.96"
-//     ])->credito()->create();
-//     // $venta->crearPlanPago();
-//     $credito = Credito::factory([
-//         "dia_pago" => 31,
-//         "plazo" => 48,
-//         "periodo_pago" => 1
-//     ])->for($venta, "creditable")->create();
-//     $credito->build();
-
-//     $this->travelTo($credito->cuotas[0]->vencimiento);
-
-//     $data = Transaccion::factory()->raw([
-//         "importe" => "50",
-//     ]);
-//     unset($data["fecha"]);
-
-//     $this->actingAs(User::find(1))->postJson('/api/transacciones', [
-//         "detalles" => [
-//             [
-//                 "importe" => "50",
-//                 "cuota_id" => $credito->cuotas[0]->id,
-//             ]
-//         ],
-//         "comprobante" => UploadedFile::fake()->image("comprobante.png")
-//     ]+$data);
-//     $credito->cuotas[0]->refresh();
-//     $this->assertSame("205.19", $credito->cuotas[0]->getAttributes()["saldo"]);
-//     $this->assertSame("0.00", $credito->cuotas[0]->getAttributes()["total_multas"]);
-//     $this->assertSame("50.00", $credito->cuotas[0]->getAttributes()["total_pagos"]);
-
-//     $this->travel(1)->day();
-
-//     $data = Transaccion::factory()->raw([
-//         "importe" => "100",
-//     ]);
-//     unset($data["fecha"]);
-
-//     $this->actingAs(User::find(1))->postJson('/api/transacciones', [
-//         "detalles" => [
-//             [
-//                 "importe" => "100",
-//                 "cuota_id" => $credito->cuotas[0]->id,
-//             ]
-//         ],
-//         "comprobante" => UploadedFile::fake()->image("comprobante.png")
-//     ]+$data);
-//     $credito->cuotas[0]->refresh();
-//     $this->assertSame("105.20", $credito->cuotas[0]->getAttributes()["saldo"]);
-//     $this->assertSame("0.01", $credito->cuotas[0]->getAttributes()["total_multas"]);
-//     $this->assertSame("150.00", $credito->cuotas[0]->getAttributes()["total_pagos"]);
-
-//     $this->travel(29)->days();
-
-//     $data = Transaccion::factory()->raw([
-//         "importe" => "106",
-//     ]);
-//     unset($data["fecha"]);
-
-//     $this->actingAs(User::find(1))->postJson('/api/transacciones', [
-//         "detalles" => [
-//             [
-//                 "importe" => "105.46",
-//                 "cuota_id" => $credito->cuotas[0]->id,
-//             ]
-//         ],
-//         "comprobante" => UploadedFile::fake()->image("comprobante.png")
-//     ]+$data);
-//     $credito->cuotas[0]->refresh();
-//     $this->assertSame("0.00", $credito->cuotas[0]->getAttributes()["saldo"]);
-//     $this->assertSame("0.27", $credito->cuotas[0]->getAttributes()["total_multas"]);
-//     $this->assertSame("255.46", $credito->cuotas[0]->getAttributes()["total_pagos"]);
-// });
-
-// test('El pago excede el saldo de la cuota', function() {
-//     /** @var TestCase $this */
-
-//     $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-02-28"));
-
-//     $venta = Venta::factory([
-//         "fecha" => now(),
-//         "importe" => "10530.96"
-//     ])->credito()->create();
-//     // $venta->crearPlanPago();
-//     $credito = Credito::factory([
-//         "dia_pago" => 31,
-//         "plazo" => 48,
-//         "periodo_pago" => 1
-//     ])->for($venta, "creditable")->create();
-//     $credito->build();
-
-//     $this->travelTo($credito->cuotas[0]->vencimiento);
-
-//     $data = Transaccion::factory()->raw([
-//         "importe" => "256",
-//     ]);
-//     unset($data["fecha"]);
-
-//     $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [
-//         "detalles" => [
-//             [
-//                 "importe" => "255.20",
-//                 "cuota_id" => $credito->cuotas[0]->id,
-//             ]
-//         ],
-//         "comprobante" => UploadedFile::fake()->image("comprobante.png")
-//     ]+$data);
-
-//     $response->assertJsonValidationErrors([
-//         "detalles.0.importe" => "El pago excede el saldo de la cuota."
-//     ]);
-
-//     $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [
-//         "detalles" => [
-//             [
-//                 "importe" => "255.19",
-//                 "cuota_id" => $credito->cuotas[0]->id,
-//             ]
-//         ],
-//         "comprobante" => UploadedFile::fake()->image("comprobante.png")
-//     ]+$data);
-//     $response->assertCreated();
-// });
-
-
-// test('Solo puede pagar cuotas en curso o vencidas', function() {
-//     /** @var TestCase $this */
-
-//     $venta = Venta::factory([
-//         "fecha" => now(),
-//         "importe" => "10530.96"
-//     ])->credito()->create();
-//     // $venta->crearPlanPago();
-//     $credito = Credito::factory([
-//         "dia_pago" => 31,
-//         "plazo" => 48,
-//         "periodo_pago" => 1
-//     ])->for($venta, "creditable")->create();
-//     $credito->build();
-
-//     $data = Transaccion::factory()->raw([
-//         "importe" => "511",
-//     ]);
-//     unset($data["fecha"]);
-
-//     $this->travelTo($credito->cuotas[0]->vencimiento);
-
-//     $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [
-//         "detalles" => [
-//             [
-//                 "importe" => "255.19",
-//                 "cuota_id" => $credito->cuotas[0]->id,
-//             ],
-//             [
-//                 "importe" => "255.19",
-//                 "cuota_id" => $credito->cuotas[1]->id,
-//             ]
-//         ],
-//         "comprobante" => UploadedFile::fake()->image("comprobante.png")
-//     ]+$data);
-
-//     $response->assertJsonValidationErrors([
-//         "detalles.1.cuota_id" => "Solo puede pagar cuotas en curso o vencidas"
-//     ]);
-// });
+    $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [
+        "cliente_id" => $venta->cliente_id,
+        "moneda" => $venta->moneda,
+        "detalles" => [
+            [
+                "importe" => "255.19",
+                "id" => $credito->cuotas[0]->getMorphKey(),
+                "type" => $credito->cuotas[0]->getMorphClass(),
+            ],
+            [
+                "importe" => "255.19",
+                "id" => $credito->cuotas[1]->getMorphKey(),
+                "type" => $credito->cuotas[0]->getMorphClass(),
+            ]
+        ],
+        "medios_pago" => [
+            [
+                "forma_pago" => 2,
+                "importe" => "511",
+                "numero_comprobante" => 12215243653654,
+                "comprobante" => UploadedFile::fake()->image("comprobante.png")
+            ]
+        ]
+    ]);
+    $response->assertStatus(500);
+    $response->assertJson([
+        "message" => "Solo puede pagar cuotas vencidas o en curso."
+    ]);
+});

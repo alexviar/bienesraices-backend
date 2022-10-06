@@ -20,8 +20,8 @@ class CreatePagoCuotasTable extends Migration
             $table->date("fecha");
             $table->char("moneda", 3);
             $table->decimal("importe", 19, 4);
-            // $table->unsignedBigInteger("codigo_cuota");
-            $table->foreignIdFor(Cuota::class)->constrained();
+            $table->unsignedBigInteger("codigo_cuota");
+            // $table->foreignIdFor(Cuota::class)->constrained();
             $table->foreign("moneda")->on("currencies")->references("code");
             $table->timestamps();
         });
@@ -30,20 +30,23 @@ class CreatePagoCuotasTable extends Migration
             "fecha",
             "moneda",
             "importe",
-            "cuota_id",
+            "codigo_cuota",
+            // "cuota_id",
         ], DB::table("transacciones")
             ->join("detalles_transaccion", "transacciones.id", "detalles_transaccion.transaccion_id")
             ->join("transactables", "detalles_transaccion.id", "transactables.detalle_transaccion_id")
-            // ->join("cuotas", "transactables.transactable_id", "cuotas.id")
+            ->join("cuotas", "transactables.transactable_id", "cuotas.id")
             ->where("transactables.transactable_type", Cuota::class)
             ->select([
                 "transacciones.fecha",
                 "detalles_transaccion.moneda",
                 "detalles_transaccion.importe",
-                // "cuotas.codigo" 
-                "transactables.transactable_id"
+                "cuotas.codigo" 
+                // "transactables.transactable_id"
             ])->distinct("detalles_transaccion.id")
         );
+        
+        Schema::drop("transactables");
     }
 
     /**

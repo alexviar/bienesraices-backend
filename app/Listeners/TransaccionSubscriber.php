@@ -82,10 +82,10 @@ class TransaccionSubscriber {
             $pagable->refresh();
             $pagable->projectTo($fecha);
             if(!$pagable->pendiente){
-                throw new Exception("No se pueden pagar cuotas antes del plazo");
+                throw new Exception("Solo puede pagar cuotas vencidas o en curso.");
             }
             if($pagable->total->amount->isNegative()){
-                throw new Exception("El pago excede el importe a pagar ($pagable->id, {$pagable->credito->id}, $pagable->numero, $saldo, $total, $importe)");
+                throw new Exception("El pago excede el importe a pagar.");
             }
             
             $pagable->recalcularSaldo();

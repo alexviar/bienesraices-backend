@@ -73,7 +73,7 @@ it("Genera un reporte del historial de pagos", function(){
     $detailModel->referencia = "Cuota inicial de la venta N.º 1";
     $detailModel->moneda = "USD";
     $detailModel->importe = "500";
-    $detailModel->pagable()->associate($credito);
+    $detailModel->pagable()->associate($venta);
     $transaccion->detalles()->save($detailModel);
 
     $transaccion = Transaccion::factory([
@@ -85,12 +85,13 @@ it("Genera un reporte del historial de pagos", function(){
     $detailModel->referencia = "Pago de la cuota 1 del crédito 1";
     $detailModel->moneda = "USD";
     $detailModel->importe = "70";
-    $detailModel->pagable()->associate($cuota1->pagos()->create([
+    $detailModel->pagable()->associate($cuota1);
+    $transaccion->detalles()->save($detailModel);
+    $cuota1->pagos()->create([
         "fecha" => "2022/08/24",
         "importe" => "70",
         "moneda" => "USD"
-    ]));
-    $transaccion->detalles()->save($detailModel);
+    ]);
 
     $transaccion = Transaccion::factory([
         "fecha" => "2022/09/30",
@@ -101,27 +102,29 @@ it("Genera un reporte del historial de pagos", function(){
     $detailModel->referencia = "Pago de la cuota 1 del crédito 1";
     $detailModel->moneda = "USD";
     $detailModel->importe = "8.95";
-    $detailModel->pagable()->associate($cuota1->pagos()->create([
+    $detailModel->pagable()->associate($cuota1);
+    $transaccion->detalles()->save($detailModel);
+    $cuota1->pagos()->create([
         "fecha" => "2022/09/30",
         "importe" => "8.95",
         "moneda" => "USD"
-    ]));
-    $transaccion->detalles()->save($detailModel);
+    ]);
     $detailModel = new DetalleTransaccion();
     $detailModel->referencia = "Pago de la cuota 2 del crédito 1";
     $detailModel->moneda = "USD";
     $detailModel->importe = "78.93";
-    $detailModel->pagable()->associate($cuota2->pagos()->create([
+    $detailModel->pagable()->associate($cuota2);
+    $transaccion->detalles()->save($detailModel);
+    $cuota2->pagos()->create([
         "fecha" => "2022/09/30",
         "importe" => "78.93",
         "moneda" => "USD"
-    ]));
-    $transaccion->detalles()->save($detailModel);
+    ]);
 
     $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-09-30"));    
     $credito->cuotas->each->refresh();
     $pdf = $report->generate($credito->refresh());
-    $pdf->save(__DIR__."/historial_pagos_sample_10.pdf");
+    // $pdf->save(__DIR__."/historial_pagos_sample_10.pdf");
 
     $generatedContent = $pdf->output();
     $sampleContent = file_get_contents(__DIR__."/historial_pagos_sample_1.pdf");
@@ -173,7 +176,7 @@ it("imprime el historial de pagos en pantalla", function(){
     // $mock = \Mockery::mock(new HistorialPagos);
     // $this->instance(HistorialPagos::class, $mock)->shouldReceive("generate")->once();
 
-    $response = $this->actingAs($user)->get("/creditos/$id/historial_pagos");
+    $response = $this->actingAs($user)->get("/creditos/{$credito->codigo}/historial_pagos");
 
     $response->assertOk();
     $response->assertSeeText("MOCKED_CONTENT");

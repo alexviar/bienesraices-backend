@@ -175,8 +175,8 @@ class Cuota extends Model
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     function pagos(){
-        // return $this->hasMany(PagoCuota::class, "codigo_cuota", "codigo");
-        return $this->hasMany(PagoCuota::class);
+        return $this->hasMany(PagoCuota::class, "codigo_cuota", "codigo");
+        // return $this->hasMany(PagoCuota::class);
     }
 
     function credito(){

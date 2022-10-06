@@ -34,15 +34,15 @@ class CajaController extends Controller
     {
         $transaccion = $this->findTransaccion($id);
         $this->authorize("view", [$transaccion]);
-        return $transaccion->loadMissing(["detalles", "detallesPago","cliente"]);
+        return $transaccion->loadMissing(["detalles", "detallesPago", "cliente"]);
     }
 
     function comprobante(Request $request, $comprobante)
     {
-        if(Storage::exists("comprobantes/$comprobante")){
+        if (Storage::exists("comprobantes/$comprobante")) {
             return Storage::download("comprobantes/$comprobante", null, [
                 'Content-Type' => Storage::mimeType("comprobantes/$comprobante"),
-                'Content-Disposition' => 'inline; filename="'.$comprobante.'"'
+                'Content-Disposition' => 'inline; filename="' . $comprobante . '"'
             ]);
         }
         abort(404);
@@ -59,33 +59,48 @@ class CajaController extends Controller
         //Mejor no usar la validacion exists para disminuir el numero de llamadas a la BD
         //¿Que tan conveniente es dejar que la solicitud falle?
         $payload = $request->validate([
-            "fecha" => "date|before_or_equal:".$today->format("Y-m-d"),
+            "fecha" => "date|before_or_equal:" . $today->format("Y-m-d"),
             "cliente_id" => "required",
-            "moneda" => "required",
-            "registrar_excedentes" => "required:boolean",
+            "moneda" => "required|exists:currencies,code",
+            "registrar_excedentes" => "nullable|boolean",
 
             "detalles" => "required|array",
-            "detalles.*.id" => "required_with:detalles",
-            "detalles.*.type" => "required_with:detalles|in:".Reserva::class.",".Venta::class.",".Cuota::class,
-            "detalles.*.importe" => "required_with:detalles|numeric",
+            "detalles.*.id" => "required",
+            "detalles.*.type" => "required|in:" . Reserva::class . "," . Venta::class . "," . Cuota::class,
+            "detalles.*.importe" => "required|numeric",
 
             "medios_pago" => "required|array",
-            "medios_pago.*.forma_pago" => "required_with:medios_pago|in:1,2",
-            "medios_pago.*.importe" => "required_with:medios_pago|numeric",
-            "medios_pago.*.comprobante" => "nullable|image",
-            "medios_pago.*.numero_comprobante" => "nullable|numeric"
+            "medios_pago.*.forma_pago" => "required|in:1,2",
+            "medios_pago.*.importe" => "required|numeric",
+            "medios_pago.*.comprobante" => "required_if:medios_pago.*.forma_pago,2|image",
+            "medios_pago.*.numero_comprobante" => "required_if:medios_pago.*.forma_pago,2|numeric"
+        ], [
+            "fecha.before_or_equal" => "El campo 'fecha' debe ser anterior o igual a la fecha actual."
+        ], [
+            "detalles.*.type" => "tipo",
+            "moneda" => "moneda de pago",
+            "medios_pago" => "medios de pago",
+
+            "detalles.*.id" => "id",
+            "detalles.*.type" => "tipo",
+            "detalles.*.importe" => "importe",
+
+            "medios_pago.*.forma_pago" => "forma de pago",
+            "medios_pago.*.importe" => "importe",
+            "medios_pago.*.comprobante" => "comprobante",
+            "medios_pago.*.numero_comprobante" => "n.º de comprobante"
         ]);
 
-        $transaccion = DB::transaction(function() use($payload, $request){
+        $transaccion = DB::transaction(function () use ($payload, $request) {
             $transaccion = Transaccion::create(Arr::except($payload, ["medios_pago", "detalles"]) + [
                 "user_id" => $request->user()->id,
             ]);
 
             // $importeTotal = new Money("0", $payload["moneda"]);
             $detalles = collect($payload["detalles"])->sortBy(["id", "type"]);
-            foreach($detalles as $key => $detalle) {
+            foreach ($detalles as $key => $detalle) {
                 $pagable = $this->findPagable($detalle["type"], $detalle["id"]);
-                
+
                 $importe = new Money($detalle["importe"], $pagable->getCurrency()->code);
                 $importe->round(2);
                 $transaccion->importe = $transaccion->importe->plus($importe->exchangeTo($transaccion->moneda))->amount;
@@ -99,46 +114,44 @@ class CajaController extends Controller
                     "pagable_id" => $pagable->getMorphKey(),
                     "pagable_type" => $pagable->getMorphClass()
                 ]);
-
             }
             $transaccion->importe = $transaccion->importe->round(2)->amount;
             $transaccion->update();
-    
+
             $pagoTotal = BigDecimal::zero();
-            foreach($payload["medios_pago"] as $key => $pago){
+            foreach ($payload["medios_pago"] as $key => $pago) {
                 $pagoTotal = $pagoTotal->plus($pago["importe"])->toScale(2, RoundingMode::HALF_UP);
-                if($comprobante = Arr::get($pago, "comprobante")){
+                if ($comprobante = Arr::get($pago, "comprobante")) {
                     $path = $comprobante->store("comprobantes");
                     $pago["comprobante"] = $path;
                 }
-                $transaccion->detallesPago()->create(Arr::only($pago, ["forma_pago", "importe", "numero_comprobante", "comprobante"])+[
+                $transaccion->detallesPago()->create(Arr::only($pago, ["forma_pago", "importe", "numero_comprobante", "comprobante"]) + [
                     "moneda" => $transaccion->moneda
                 ]);
             }
 
             $saldo = $pagoTotal->minus($transaccion->importe->amount);
             Log::debug(json_encode([(string)$pagoTotal, (string)$transaccion->importe, (string)$saldo]));
-            if($saldo->isGreaterThan("0") && $payload["registrar_excedentes"]){
+            if ($saldo->isGreaterThan("0") && Arr::get($payload, "registrar_excedentes")) {
                 // 
                 $account = Account::where("cliente_id", $payload["cliente_id"])
                     ->where("moneda", $payload["moneda"])
                     ->first();
-                if(!$account){
+                if (!$account) {
                     $account = Account::create(Arr::only($payload, ["cliente_id", "moneda"]) + [
                         "balance" => "0"
                     ]);
                 }
-                do{
+                do {
                     $account->refresh();
                     $updated = Account::where("id", $account->id)
                         ->where("updated_at", $account->updated_at)
                         ->update([
                             "balance" => (string) $account->balance->amount->plus($saldo)
                         ]);
-                }while(!$updated);
-            }
-            else if($saldo->isLessThan("0")){
-                throw new Exception("La suma de los pagos es inferior al importe a pagar");
+                } while (!$updated);
+            } else if ($saldo->isLessThan("0")) {
+                throw new Exception("La suma de los pagos es inferior al importe a pagar.");
             }
             TransaccionRegistrada::dispatch($transaccion);
             return $transaccion;
@@ -147,13 +160,12 @@ class CajaController extends Controller
         return $transaccion;
     }
 
-    function findPagable($type, $id){
-        if($type == Reserva::class || $type == Venta::class)
-        {
+    function findPagable($type, $id)
+    {
+        if ($type == Reserva::class || $type == Venta::class) {
             return $type::find($id);
-        }
-        else if($type == Cuota::class) {
-            return $type::where("codigo", $id)->whereHas("credito", function($query) {
+        } else if ($type == Cuota::class) {
+            return $type::where("codigo", $id)->whereHas("credito", function ($query) {
                 $query->where("estado", 1);
             })->first();
         }

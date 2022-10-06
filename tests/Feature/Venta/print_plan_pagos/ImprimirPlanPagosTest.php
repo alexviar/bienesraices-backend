@@ -81,7 +81,7 @@ it("imprime el plan de pagos en pantalla", function(){
             });
     });
 
-    $response = $this->actingAs($user)->get("/creditos/$id/plan_pagos");
+    $response = $this->actingAs($user)->get("/creditos/$credito->codigo/plan_pagos");
 
     $response->assertOk();
     $response->assertSeeText("MOCKED_CONTENT");

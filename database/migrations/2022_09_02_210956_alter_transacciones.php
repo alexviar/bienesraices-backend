@@ -157,8 +157,6 @@ class AlterTransacciones extends Migration
         ->join("ventas", "creditos.creditable_id", "ventas.id")->update([
             "transacciones.cliente_id" => DB::raw("ventas.cliente_id")
         ]);
-
-        Schema::drop("transactables");
     }
 
     /**
