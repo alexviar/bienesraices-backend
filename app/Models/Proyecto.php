@@ -77,6 +77,10 @@ class Proyecto extends Model
             $query->whereRaw("(`estado` & 1) = 1");
         });
     }
+    
+    public function categorias(){
+        return $this->hasMany(CategoriaLote::class);
+    }
 
     public function lotes(){
         return $this->hasManyThrough(Lote::class, Manzana::class);
