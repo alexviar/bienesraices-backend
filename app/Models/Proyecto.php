@@ -64,6 +64,10 @@ class Proyecto extends Model
         })->count();
     }
 
+    public function categorias(){
+        return $this->hasMany(CategoriaLote::class);
+    }
+
     public function lotes(){
         return $this->hasManyThrough(Lote::class, Manzana::class);
     }
