@@ -13,7 +13,7 @@ class ClienteFactory extends Factory
      */
     public function definition($attributes)
     {
-        $tipo = $this->faker->randomElement([1,2]);
+        $tipo = $attributes["tipo"] ?? $this->faker->randomElement([1,2]);
         if($tipo === 1) {
             $tipo_documento = $attributes["tipo_documento"] ?? $this->faker->randomElement([1,2]);
             return [

@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\CategoriaLote;
 use App\Models\Lote;
 use App\Models\Manzana;
 use App\Models\Proyecto;
@@ -12,7 +13,6 @@ class LoteTest extends TestCase
     public function test_precio_sugerido()
     {
         $proyecto = Proyecto::factory([
-            "precio_mt2" => "1.91",
             "redondeo" => "100",
             "moneda" => "BOB"
         ])->create();
@@ -20,12 +20,13 @@ class LoteTest extends TestCase
         /** @var Lote $lote */
         $lote = Lote::factory([
             "superficie" => "1000.00"
-        ])->for($manzana)->create();
+        ])->for($manzana)->for(CategoriaLote::factory([
+            "precio_m2" => "1.91"
+        ])->for($proyecto), "categoria")->create();
 
         $precioSugerido = $lote->precio_sugerido;
 
-        $this->assertTrue($precioSugerido->amount->isEqualTo("2000.00"));
-        $this->assertTrue($precioSugerido->currency->code === "BOB");
+        expect((string) $precioSugerido->amount)->toBe("2000.00");
     }
 
     

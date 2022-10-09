@@ -17,7 +17,6 @@ class Manzana extends Model
         "proyecto_id"
     ];
 
-    // protected $append = ["total_lotes"];
     protected $hidden = ["proyecto"];
 
     function proyecto(){

@@ -37,7 +37,7 @@ class CreateCategoriaLotesTable extends Migration
 
         DB::statement("SET FOREIGN_KEY_CHECKS = 0");
         Schema::table('lotes', function (Blueprint $table) {
-            $table->foreignIdFor(CategoriaLote::class, "categoria_id")->constrained();
+            $table->foreignIdFor(CategoriaLote::class, "categoria_id")->constrained("categoria_lotes");
         });
 
         DB::table('lotes')->join("manzanas", "lotes.manzana_id", "manzanas.id")

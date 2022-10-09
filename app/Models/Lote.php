@@ -47,11 +47,11 @@ class Lote extends Model
     ];
 
     function getPrecioAttribute($value){
-        return $value ? new Money($value, $this->manzana->proyecto->currency) : null;
+        return $value ? new Money($value, $this->proyecto->currency) : null;
     }
 
     function getPrecioSugeridoAttribute(){
-        $precioSugerido = $this->manzana->proyecto->precio_mt2->multipliedBy($this->superficie);
+        $precioSugerido = $this->categoria->precio_m2->multipliedBy($this->superficie);
         if($this->proyecto->redondeo){
             $precioSugerido = $precioSugerido->mround($this->proyecto->redondeo, RoundingMode::UP);
         }
@@ -91,6 +91,7 @@ class Lote extends Model
         ];
     }
 
+    #region Relationships
     function reserva(){
         // return $this->hasOne(Reserva::class)->where("estado", 1)->where("vencimiento", ">=", DB::raw("NOW()"))->orderBy("id");
         //Refactor para propositos de testing (travelTo)
@@ -108,6 +109,11 @@ class Lote extends Model
     function getProyectoAttribute(){
         return $this->manzana->proyecto;
     }
+
+    function categoria(){
+        return $this->belongsTo(CategoriaLote::class, "categoria_id");
+    }
+    #endregion
 
     function toArray()
     {
