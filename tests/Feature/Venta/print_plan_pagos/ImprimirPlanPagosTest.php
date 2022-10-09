@@ -32,6 +32,7 @@ it("Genera un reporte del plan de pagos", function(){
         "importe" => "3600",
         "moneda" => "USD",
     ])->for($proyecto)->for(Cliente::factory([
+        "tipo" => 1,
         "nombre" => "JOAQUIN",
         "apellido_paterno" => "CHUMACERO",
         "apellido_materno" => "YUPANQUI",

@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CategoriaLote;
 use App\Models\Lote;
 use App\Models\Manzana;
 use App\Models\Proyecto;
-use Exception;
 use Grimzy\LaravelMysqlSpatial\Types\Polygon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -59,7 +59,9 @@ class LoteController extends Controller
         //     abort(403, "Las ediciones estan bloqueadas en el plano actual.");
         // }
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        return $this->buildResponse($proyecto->plano->lotes()->latest(), $queryArgs);
+        return $this->buildResponse($proyecto->plano->lotes()
+        ->orderBy('manzanas.numero')
+        ->orderBy('lotes.numero'), $queryArgs);
     }
 
     function store(Request $request, $proyectoId)
@@ -96,7 +98,10 @@ class LoteController extends Controller
             }],
             "manzana_id" => ["required", Rule::exists(Manzana::class, "id")->where(function ($query) use($proyectoId) {
                 return $query->where('proyecto_id', $proyectoId);
-            })]
+            })],
+            "categoria_id" => ["required", Rule::exists(CategoriaLote::class, "id")->where(function ($query) use($proyectoId) {
+                return $query->where('proyecto_id', $proyectoId);
+            })],
         ], [
             "numero.unique" => "La manzana indicada tiene un lote con el mismo número."
         ]);
