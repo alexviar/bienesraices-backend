@@ -8,6 +8,7 @@ use App\Http\Controllers\ListaMoraController;
 use App\Http\Controllers\LoteController;
 use App\Http\Controllers\ManzanaController;
 use App\Http\Controllers\CreditoController;
+use App\Http\Controllers\PlanoController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\UFVController;
@@ -72,4 +73,6 @@ Route::controller(UFVController::class)->group(function(){
     Route::middleware('auth:sanctum')->post('/ufvs', 'store');
 });
 
-
+Route::controller(PlanoController::class)->prefix('/proyectos/{proyectoId}')->group(function(){
+    Route::middleware('auth:sanctum')->post('/planos', 'store');
+});

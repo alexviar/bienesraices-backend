@@ -8,6 +8,7 @@ use Grimzy\LaravelMysqlSpatial\Eloquent\SpatialTrait;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * 
@@ -64,6 +65,19 @@ class Proyecto extends Model
         })->count();
     }
 
+    #region Relationships
+    /**
+     * @return HasOne
+     */
+    public function plano()
+    {
+        return $this->hasOne(Plano::class)->ofMany([
+            "id" => "MAX"
+        ], function($query){
+            $query->whereRaw("(`estado` & 1) = 1");
+        });
+    }
+
     public function lotes(){
         return $this->hasManyThrough(Lote::class, Manzana::class);
     }
@@ -85,6 +99,8 @@ class Proyecto extends Model
     {
         return $this->hasMany(Manzana::class);
     }
+    #endregion
+
 
     // public function getUbicacionAttribute($ubicacion){
     //     $byteOrder = $ubicacion[0];
