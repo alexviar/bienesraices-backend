@@ -39,7 +39,14 @@ class Lote extends Model
         "geocerca"
     ];
 
-    protected $hidden = ["reserva","venta"];
+    protected $hidden = [
+        "categoria",
+        "manzana",
+        "plano",
+        "proyecto",
+        "reserva",
+        "venta"
+    ];
     
     protected $appends = [
         // "precio",
@@ -47,11 +54,11 @@ class Lote extends Model
     ];
 
     function getPrecioAttribute($value){
-        return $value ? new Money($value, $this->manzana->proyecto->currency) : null;
+        return $value ? new Money($value, $this->proyecto->currency) : null;
     }
 
     function getPrecioSugeridoAttribute(){
-        $precioSugerido = $this->manzana->proyecto->precio_mt2->multipliedBy($this->superficie);
+        $precioSugerido = $this->categoria->precio_m2->multipliedBy($this->superficie);
         if($this->proyecto->redondeo){
             $precioSugerido = $precioSugerido->mround($this->proyecto->redondeo, RoundingMode::UP);
         }
@@ -91,6 +98,7 @@ class Lote extends Model
         ];
     }
 
+    #region Relationships
     function reserva(){
         // return $this->hasOne(Reserva::class)->where("estado", 1)->where("vencimiento", ">=", DB::raw("NOW()"))->orderBy("id");
         //Refactor para propositos de testing (travelTo)
@@ -105,19 +113,28 @@ class Lote extends Model
         return $this->belongsTo(Manzana::class);
     }
 
-    function getProyectoAttribute(){
-        return $this->manzana->proyecto;
+    function getPlanoAttribute(){
+        return $this->manzana->plano;
     }
+
+    function getProyectoAttribute(){
+        return $this->plano->proyecto;
+    }
+
+    function categoria(){
+        return $this->belongsTo(CategoriaLote::class, "categoria_id");
+    }
+    #endregion
 
     function toArray()
     {
         $array = parent::toArray();
-        $array["geocerca"] = $this->geocerca ? array_map(function(Point $point) {
-            return [
-                "latitud" => $point->getLat(),
-                "longitud" => $point->getLng(),
-            ];
-        }, $this->geocerca->getLineStrings()[0]->getPoints()) : [];
+        // $array["geocerca"] = $this->geocerca ? array_map(function(Point $point) {
+        //     return [
+        //         "latitud" => $point->getLat(),
+        //         "longitud" => $point->getLng(),
+        //     ];
+        // }, $this->geocerca->getLineStrings()[0]->getPoints()) : [];
 
         return $array;
     }

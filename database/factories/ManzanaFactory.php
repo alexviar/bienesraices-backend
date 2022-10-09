@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Plano;
 use App\Models\Proyecto;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,11 +16,11 @@ class ManzanaFactory extends Factory
      */
     public function definition($attributes)
     {
-        $proyecto = $this->resolveAttribute($attributes["proyecto_id"] ?? Proyecto::factory(), []);
-        $proyectoId = $proyecto instanceof Model ? $proyecto->id : $proyecto;
+        $plano = $this->resolveAttribute($attributes["plano_id"] ?? Plano::factory(), []);
+        $planoId = $plano instanceof Model ? $plano->id : $plano;
         return [
-            "numero" => $attributes["numero"] ?? explode("-", $this->faker->unique()->numerify("P{$proyectoId}-##"))[1],
-            "proyecto_id" => $proyectoId
+            "numero" => $attributes["numero"] ?? explode("-", $this->faker->unique()->numerify("P{$plano}-##"))[1],
+            "plano_id" => $planoId
         ];
     }
 }

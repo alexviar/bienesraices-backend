@@ -52,10 +52,15 @@ class Proyecto extends Model
 
     protected $appends = ["lotes_summary", "clientes_en_mora"];
 
+    public function getPrecioMt2Attribute($value)
+    {
+        return new Money($value, $this->currency);
+    }
+
     public function getLotesSummaryAttribute() {
         return [
-            "total" => $this->lotes->count(),
-            "disponibles" => $this->lotes->where("estado.code", 1)->count()
+            "total" => $this->plano ? $this->plano->lotes->count() : 0,
+            "disponibles" => $this->plano ? $this->plano->lotes->where("estado.code", 1)->count() : 0
         ];
     }
 
@@ -82,26 +87,9 @@ class Proyecto extends Model
         return $this->hasMany(CategoriaLote::class);
     }
 
-    public function lotes(){
-        return $this->hasManyThrough(Lote::class, Manzana::class);
-    }
-
-    public function getPrecioMt2Attribute($value)
-    {
-        return new Money($value, $this->currency);
-    }
-
     public function currency()
     {
         return $this->belongsTo(Currency::class, "moneda");
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function manzanas()
-    {
-        return $this->hasMany(Manzana::class);
     }
     #endregion
 

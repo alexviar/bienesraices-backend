@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\CategoriaLote;
+use App\Models\Lote;
 use App\Models\Plano;
 use App\Models\Proyecto;
 use App\Models\User;
@@ -38,6 +40,11 @@ it('registra un plano vacio', function(){
 
 it('importa las manzanas y lotes desde un csv', function(){
     $proyecto = Proyecto::factory()->create();
+    CategoriaLote::factory(3)->sequence(
+        ["codigo" => 'A'],
+        ["codigo" => 'B'],
+        ["codigo" => 'C'],
+    )->create();
     $proyectoId = $proyecto->id;
 
     //Aqui por ejemplo no era necesario vincular los datos al proyecto pues no es usado en el body de la solicitud
@@ -63,6 +70,8 @@ it('importa las manzanas y lotes desde un csv', function(){
     $response->assertCreated();
     $plano = $proyecto->plano;
 
+    expect($plano->import_warnings)->toBeEmpty();
+
     expect($plano->manzanas->map(function($manzana){
         return implode(",",[
             $manzana->numero,
@@ -78,7 +87,7 @@ it('importa las manzanas y lotes desde un csv', function(){
         return implode(",",[
             $lote->manzana->numero,
             $lote->numero,
-            $lote->getAttributes("superficie"),
+            $lote->getAttributes()["superficie"],
             $lote->categoria->codigo
         ]);
     })->toArray())->toBe([

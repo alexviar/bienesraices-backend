@@ -6,6 +6,8 @@ use App\Models\Plano;
 use App\Models\Proyecto;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class PlanoController extends Controller
@@ -17,9 +19,7 @@ class PlanoController extends Controller
         $payload = $request->validate([
             "titulo" => "required|string|max:100",
             "descripcion" => "nullable|string|max:255",
-            "manzanas" => "nullable|file|mimes:csv",
             "lotes" => "nullable|file|mimes:csv",
-            "coordenadas" => "nullable|file|mimes:csv",
         ]);
 
         return DB::transaction(function () use ($payload, $proyecto) {
@@ -27,7 +27,15 @@ class PlanoController extends Controller
                 $plano->is_vigente = false;
                 $plano->update();
             }
-            return $proyecto->plano()->create($payload);
+            $plano = $proyecto->plano()->create($payload);
+
+            //Despachar un job?
+            /** @var UploadedFile $csv */
+            if($csv = Arr::get($payload, "lotes")){
+                $plano->importManzanasYLotesFromCsv($csv->path());
+            }
+
+            return $plano;
         });
     }
 

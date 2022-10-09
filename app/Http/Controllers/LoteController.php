@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Lote;
 use App\Models\Manzana;
 use App\Models\Proyecto;
+use Exception;
 use Grimzy\LaravelMysqlSpatial\Types\Polygon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -48,8 +49,17 @@ class LoteController extends Controller
     function index(Request $request, $proyectoId)
     {
         $proyecto = $this->findProyecto($proyectoId);
+        if(!($plano = $proyecto->plano)){
+            // abort(404, "No hay un plano vigente.");
+            return $this->buildPaginatedResponseData([
+                "total_records" => 0
+            ], []);
+        }
+        // else if(!$plano->is_locked){
+        //     abort(403, "Las ediciones estan bloqueadas en el plano actual.");
+        // }
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        return $this->buildResponse($proyecto->lotes()->latest(), $queryArgs);
+        return $this->buildResponse($proyecto->plano->lotes()->latest(), $queryArgs);
     }
 
     function store(Request $request, $proyectoId)
