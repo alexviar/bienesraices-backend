@@ -105,6 +105,6 @@ it('devuelve solo los lotes que pertenecen al proyecto', function () {
         "meta" => [
             "total_records" => 5,
         ],
-        "records" => $lotes->sortBy(["created_at", "numero"])->toArray()
+        "records" => $lotes->sortBy(["manzana.numero", "numero"])->toArray()
     ]);
 });

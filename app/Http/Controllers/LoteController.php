@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CategoriaLote;
 use App\Models\Lote;
 use App\Models\Manzana;
 use App\Models\Proyecto;
@@ -49,7 +50,9 @@ class LoteController extends Controller
     {
         $proyecto = $this->findProyecto($proyectoId);
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        return $this->buildResponse($proyecto->lotes()->latest(), $queryArgs);
+        return $this->buildResponse($proyecto->lotes()
+        ->orderBy('manzanas.numero')
+        ->orderBy('lotes.numero'), $queryArgs);
     }
 
     function store(Request $request, $proyectoId)
@@ -86,7 +89,10 @@ class LoteController extends Controller
             }],
             "manzana_id" => ["required", Rule::exists(Manzana::class, "id")->where(function ($query) use($proyectoId) {
                 return $query->where('proyecto_id', $proyectoId);
-            })]
+            })],
+            "categoria_id" => ["required", Rule::exists(CategoriaLote::class, "id")->where(function ($query) use($proyectoId) {
+                return $query->where('proyecto_id', $proyectoId);
+            })],
         ], [
             "numero.unique" => "La manzana indicada tiene un lote con el mismo número."
         ]);

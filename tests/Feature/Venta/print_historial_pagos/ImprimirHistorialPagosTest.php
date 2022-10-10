@@ -44,6 +44,7 @@ it("Genera un reporte del historial de pagos", function(){
         "importe" => "500",
         "moneda" => "USD",
     ])->for(Cliente::factory([
+        "tipo" => 1,
         "nombre" => "JOAQUIN",
         "apellido_paterno" => "CHUMACERO",
         "apellido_materno" => "YUPANQUI",

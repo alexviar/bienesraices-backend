@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CajaController;
+use App\Http\Controllers\CategoriaLoteController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\CuotaController;
 use App\Http\Controllers\CurrencyController;
@@ -51,9 +52,17 @@ Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/ventas', [Venta
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/reservas', [ReservaController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/reservas', [ReservaController::class, "store"]);
 
-Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}', [ProyectoController::class, "show"]);
-Route::middleware('auth:sanctum')->get('/proyectos', [ProyectoController::class, "index"]);
-Route::middleware('auth:sanctum')->post('/proyectos', [ProyectoController::class, "store"]);
+Route::controller(ProyectoController::class)->prefix('/proyectos')->group(function() {
+    Route::prefix('/{proyectoId}')->group(function(){
+        Route::middleware('auth:sanctum')->get('/', "show");
+        
+        Route::controller(CategoriaLoteController::class)->prefix('/categorias')->group(function(){
+            Route::middleware('auth:sanctum')->post('/', 'store');
+        });
+    });
+    Route::middleware('auth:sanctum')->get('/', "index");
+    Route::middleware('auth:sanctum')->post('/', "store");
+});
 
 Route::middleware('auth:sanctum')->get('/transacciones', [CajaController::class, "index"]);
 Route::middleware('auth:sanctum')->get('/transacciones/{id}', [CajaController::class, "show"]);
@@ -74,5 +83,4 @@ Route::controller(UFVController::class)->group(function(){
     Route::middleware('auth:sanctum')->get('/ufvs', 'index');
     Route::middleware('auth:sanctum')->post('/ufvs', 'store');
 });
-
 
