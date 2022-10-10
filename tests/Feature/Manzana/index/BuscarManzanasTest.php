@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Manzana;
+use App\Models\Plano;
 use App\Models\Proyecto;
 use App\Models\User;
 use Tests\TestCase;
@@ -10,9 +11,7 @@ test('Paginación', function () {
 
     $user = User::find(1);
     $proyecto = Proyecto::factory()->create();
-    Manzana::factory(11, [
-        "proyecto_id" => $proyecto->id
-    ])->create();
+    Manzana::factory(11)->for(Plano::factory()->for($proyecto))->create();
     $response = $this->actingAs($user)->getJson("/api/proyectos/{$proyecto->id}/manzanas?".http_build_query([
         "page" => [ "current" => 1, "size" => 10],
     ]));
@@ -40,9 +39,7 @@ test('Busqueda', function () {
     $this->faker->seed(2022);
     $user = User::find(1);
     $proyecto = Proyecto::factory()->create();
-    $manzanas = Manzana::factory(11, [
-        "proyecto_id" => $proyecto->id
-    ])->create();
+    $manzanas = Manzana::factory(11)->for(Plano::factory()->for($proyecto))->create();
     $response = $this->actingAs($user)->getJson("/api/proyectos/{$proyecto->id}/manzanas?".http_build_query([
         "search" => $manzanas[3]->numero,
     ]));

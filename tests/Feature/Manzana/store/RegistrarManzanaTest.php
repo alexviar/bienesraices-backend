@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Manzana;
+use App\Models\Plano;
 use App\Models\Proyecto;
 use App\Models\User;
 use Tests\TestCase;
@@ -9,25 +10,25 @@ it("registra una manzana", function(){
     /** @var TestCase $this */
 
     $user = User::find(1);
-    $data = Manzana::factory()->raw();
-    $proyecto_id = $data["proyecto_id"];
-    unset($data["proyecto_id"]);
+    $plano = Plano::factory()->create();
+    $data = Manzana::factory()->for($plano)->raw();
+    $proyecto_id = $plano->proyecto_id;
 
     $response = $this->actingAs($user)->postJson("/api/proyectos/$proyecto_id/manzanas", $data);
     $response->assertCreated();
 
-    $this->assertDatabaseHas("manzanas", [
-        "proyecto_id" => $proyecto_id
-    ] + $data);
+    $this->assertDatabaseHas("manzanas", $data);
 });
 
 test("Campos requeridos", function(){
     /** @var TestCase $this */
 
     $user = User::find(1);
-    $proyecto = Proyecto::factory()->create();
+    $plano = Plano::factory()->create();
+    $data = Manzana::factory()->for($plano)->raw();
+    $proyecto_id = $plano->proyecto_id;
 
-    $response = $this->actingAs($user)->postJson("/api/proyectos/{$proyecto->id}/manzanas", []);
+    $response = $this->actingAs($user)->postJson("/api/proyectos/{$proyecto_id}/manzanas", []);
     $response->assertJsonValidationErrors([
         "numero" => "El campo 'número' es requerido."
     ]);
@@ -48,7 +49,7 @@ test("Numero repetido", function(){
     $user = User::find(1);
     $manzana = Manzana::factory()->create();
 
-    $response = $this->actingAs($user)->postJson("/api/proyectos/{$manzana->proyecto_id}/manzanas", [
+    $response = $this->actingAs($user)->postJson("/api/proyectos/{$manzana->proyecto->id}/manzanas", [
         "numero" => $manzana->numero
     ]);
     $response->assertJsonValidationErrors([

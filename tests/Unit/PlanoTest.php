@@ -11,7 +11,7 @@ test('change estado via accessors', function () {
     expect($plano->estado)->toBe(0xFF);
 
     $plano->is_locked = false;
-    expect($plano->estado)->toBe(0xFD);
+    expect($plano->estado)->toBe(0xF);
     $plano->is_locked = true;
     expect($plano->estado)->toBe(0xFF);
 
