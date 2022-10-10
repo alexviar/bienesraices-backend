@@ -8,6 +8,7 @@ use App\Models\Credito;
 use App\Models\DetalleTransaccion;
 use App\Models\Lote;
 use App\Models\Manzana;
+use App\Models\Plano;
 use App\Models\Proyecto;
 use App\Models\Transaccion;
 use App\Models\User;
@@ -37,7 +38,7 @@ it("Genera un reporte del plan de pagos", function(){
         "apellido_paterno" => "CHUMACERO",
         "apellido_materno" => "YUPANQUI",
 
-    ]))->for(Lote::factory(["numero" => 2])->for(Manzana::factory(["numero"=>"100"])->for($proyecto)))
+    ]))->for(Lote::factory(["numero" => 2])->for(Manzana::factory(["numero"=>"100"])->for(Plano::factory()->for($proyecto))))
     ->credito("3100")
     ->create();
     $credito = Credito::factory([

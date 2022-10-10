@@ -8,6 +8,7 @@ use App\Models\DetalleTransaccion;
 use App\Models\Interfaces\UfvRepositoryInterface;
 use App\Models\Lote;
 use App\Models\Manzana;
+use App\Models\Plano;
 use App\Models\Proyecto;
 use App\Models\Transaccion;
 use App\Models\User;
@@ -49,9 +50,9 @@ it("Genera un reporte del historial de pagos", function(){
         "apellido_paterno" => "CHUMACERO",
         "apellido_materno" => "YUPANQUI",
 
-    ]))->for(Lote::factory(["numero" => 2])->for(Manzana::factory(["numero"=>"100"])->for(Proyecto::factory([
+    ]))->for(Lote::factory(["numero" => 2])->for(Manzana::factory(["numero"=>"100"])->for(Plano::factory()->for(Proyecto::factory([
         "nombre" => "OPORTUNIDAD IV"
-    ]))))->credito("3100")->create();
+    ])))))->credito("3100")->create();
     $credito = Credito::factory([
         "plazo" => "48",
         "dia_pago" => 1,

@@ -17,10 +17,14 @@ class Manzana extends Model
         "proyecto_id"
     ];
 
-    protected $hidden = ["proyecto"];
+    protected $hidden = ["proyecto", "plano"];
 
-    function proyecto(){
-        return $this->belongsTo(Proyecto::class);
+    function plano(){
+        return $this->belongsTo(Plano::class);
+    }
+
+    function getProyectoAttribute(){
+        return $this->plano->proyecto;
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Models\Lote;
 use App\Models\Manzana;
 use App\Models\Proyecto;
 use Grimzy\LaravelMysqlSpatial\Types\Polygon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -36,7 +37,7 @@ class LoteController extends Controller
         }
     }
 
-    function findProyecto($proyectoId)
+    private function findProyecto($proyectoId)
     {
         $proyecto = Proyecto::find($proyectoId);
         if(!$proyecto)
@@ -49,8 +50,17 @@ class LoteController extends Controller
     function index(Request $request, $proyectoId)
     {
         $proyecto = $this->findProyecto($proyectoId);
+        if(!($plano = $proyecto->plano)){
+            // abort(404, "No hay un plano vigente.");
+            return $this->buildPaginatedResponseData([
+                "total_records" => 0
+            ], []);
+        }
+        // else if(!$plano->is_locked){
+        //     abort(403, "Las ediciones estan bloqueadas en el plano actual.");
+        // }
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        return $this->buildResponse($proyecto->lotes()
+        return $this->buildResponse($proyecto->plano->lotes()
         ->orderBy('manzanas.numero')
         ->orderBy('lotes.numero'), $queryArgs);
     }
@@ -87,8 +97,8 @@ class LoteController extends Controller
                     $fail("La $attribute se sobrepone con otros lotes.");
                 }
             }],
-            "manzana_id" => ["required", Rule::exists(Manzana::class, "id")->where(function ($query) use($proyectoId) {
-                return $query->where('proyecto_id', $proyectoId);
+            "manzana_id" => ["required", Rule::exists(Manzana::class, "id")->where(function ($query) use($proyecto) {
+                return $query->where("plano_id", $proyecto->plano->id);
             })],
             "categoria_id" => ["required", Rule::exists(CategoriaLote::class, "id")->where(function ($query) use($proyectoId) {
                 return $query->where('proyecto_id', $proyectoId);

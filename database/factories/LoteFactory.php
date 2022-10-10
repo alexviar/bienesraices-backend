@@ -23,18 +23,10 @@ class LoteFactory extends Factory
             "numero" => $attributes["numero"] ?? explode("-", $this->faker->unique()->numerify("Mz{$manzanaId}-##"))[1],
             "superficie" => $attributes["superficie"] ?? ($this->faker->randomElement(["", "1"]).$this->faker->numerify("###.##")),
             "precio" => isset($attributes["precio"]) ? $attributes["precio"] : $this->faker->numerify("#####.##"),
-            "geocerca" => $attributes["geocerca"] ?? new Polygon([
-                new LineString([
-                    new Point(1, -1),
-                    new Point(1, 1),
-                    new Point(-1, 1),
-                    new Point(-1, -1),
-                    new Point(1, -1)
-                ])
-            ]),
+            "geocerca" => $attributes["geocerca"] ?? null,
             "manzana_id" => $manzanaId,
             "categoria_id" => $attributes["categoria_id"] ?? CategoriaLote::factory([
-                "proyecto_id" => Manzana::find($manzanaId)->proyecto_id
+                "proyecto_id" => Manzana::find($manzanaId)->plano->proyecto_id
             ])
         ];
     }

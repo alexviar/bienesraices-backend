@@ -8,6 +8,7 @@ use Grimzy\LaravelMysqlSpatial\Eloquent\SpatialTrait;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * 
@@ -51,27 +52,6 @@ class Proyecto extends Model
 
     protected $appends = ["lotes_summary", "clientes_en_mora"];
 
-    public function getLotesSummaryAttribute() {
-        return [
-            "total" => $this->lotes->count(),
-            "disponibles" => $this->lotes->where("estado.code", 1)->count()
-        ];
-    }
-
-    public function getClientesEnMoraAttribute() {
-        return Cliente::whereHas("creditosEnMora", function($query){
-            $query->where("proyecto_id", $this->id);
-        })->count();
-    }
-
-    public function categorias(){
-        return $this->hasMany(CategoriaLote::class);
-    }
-
-    public function lotes(){
-        return $this->hasManyThrough(Lote::class, Manzana::class);
-    }
-
     public function getPrecioMt2Attribute($value)
     {
         return new Money($value, $this->currency);
@@ -87,18 +67,42 @@ class Proyecto extends Model
         return new Money($value, $this->currency);
     }
 
+    public function getLotesSummaryAttribute() {
+        return [
+            "total" => $this->plano ? $this->plano->lotes->count() : 0,
+            "disponibles" => $this->plano ? $this->plano->lotes->where("estado.code", 1)->count() : 0
+        ];
+    }
+
+    public function getClientesEnMoraAttribute() {
+        return Cliente::whereHas("creditosEnMora", function($query){
+            $query->where("proyecto_id", $this->id);
+        })->count();
+    }
+
+    #region Relationships
+    /**
+     * @return HasOne
+     */
+    public function plano()
+    {
+        return $this->hasOne(Plano::class)->ofMany([
+            "id" => "MAX"
+        ], function($query){
+            $query->whereRaw("(`estado` & 1) = 1");
+        });
+    }
+    
+    public function categorias(){
+        return $this->hasMany(CategoriaLote::class);
+    }
+
     public function currency()
     {
         return $this->belongsTo(Currency::class, "moneda");
     }
+    #endregion
 
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function manzanas()
-    {
-        return $this->hasMany(Manzana::class);
-    }
 
     // public function getUbicacionAttribute($ubicacion){
     //     $byteOrder = $ubicacion[0];

@@ -39,7 +39,14 @@ class Lote extends Model
         "geocerca"
     ];
 
-    protected $hidden = ["reserva","venta"];
+    protected $hidden = [
+        "categoria",
+        "manzana",
+        "plano",
+        "proyecto",
+        "reserva",
+        "venta"
+    ];
     
     protected $appends = [
         // "precio",
@@ -106,8 +113,12 @@ class Lote extends Model
         return $this->belongsTo(Manzana::class);
     }
 
+    function getPlanoAttribute(){
+        return $this->manzana->plano;
+    }
+
     function getProyectoAttribute(){
-        return $this->manzana->proyecto;
+        return $this->plano->proyecto;
     }
 
     function categoria(){
@@ -118,12 +129,12 @@ class Lote extends Model
     function toArray()
     {
         $array = parent::toArray();
-        $array["geocerca"] = $this->geocerca ? array_map(function(Point $point) {
-            return [
-                "latitud" => $point->getLat(),
-                "longitud" => $point->getLng(),
-            ];
-        }, $this->geocerca->getLineStrings()[0]->getPoints()) : [];
+        // $array["geocerca"] = $this->geocerca ? array_map(function(Point $point) {
+        //     return [
+        //         "latitud" => $point->getLat(),
+        //         "longitud" => $point->getLng(),
+        //     ];
+        // }, $this->geocerca->getLineStrings()[0]->getPoints()) : [];
 
         return $array;
     }
