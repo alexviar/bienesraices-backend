@@ -9,6 +9,13 @@ use Illuminate\Http\Request;
 
 class CategoriaLoteController extends Controller
 {
+    function index(Request $request, $proyectoId)
+    {
+        $this->authorize("viewAll", [CategoriaLote::class, $request->all()]);
+        $proyecto = $this->findProyecto($proyectoId);
+        return $this->buildResponse($proyecto->categorias(), []);
+    }
+
     function store(Request $request, $proyectoId)
     {
         $this->authorize("create", [CategoriaLote::class, $request->all()]);
