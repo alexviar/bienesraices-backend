@@ -58,6 +58,7 @@ Route::controller(ProyectoController::class)->prefix('/proyectos')->group(functi
         Route::middleware('auth:sanctum')->get('/', "show");
         
         Route::controller(CategoriaLoteController::class)->prefix('/categorias')->group(function(){
+            Route::middleware('auth:sanctum')->put('/{categoriaId}', 'update');
             Route::middleware('auth:sanctum')->get('/', 'index');
             Route::middleware('auth:sanctum')->post('/', 'store');
         });
