@@ -15,7 +15,6 @@ it('registra un lotes', function () {
     $user = User::find(1);
     $manzana = Manzana::factory()->create();
     $data = Lote::factory([
-        "manzana_id" => $manzana->id,
         "geocerca" => new Polygon([
             new LineString([
                 new Point(40.74894149554006, -73.98615270853043),
@@ -25,8 +24,8 @@ it('registra un lotes', function () {
                 new Point(40.74894149554006, -73.98615270853043)
             ])
         ])
-    ])->raw();
-    $proyecto_id = $manzana->proyecto_id;
+    ])->for($manzana)->raw();
+    $proyecto_id = $manzana->proyecto->id;
     $data["geocerca"] = $data["geocerca"]->toWKT();
 
     $response = $this->actingAs($user)->postJson("/api/proyectos/$proyecto_id/lotes", $data);
@@ -42,7 +41,7 @@ it('valida los campos requeridos', function () {
 
     $user = User::find(1);
     $manzana = Manzana::factory()->create();
-    $proyecto_id = $manzana->proyecto_id;
+    $proyecto_id = $manzana->proyecto->id;
 
     $response = $this->actingAs($user)->postJson("/api/proyectos/$proyecto_id/lotes", []);
     $response->assertJsonValidationErrors([
@@ -80,7 +79,7 @@ test("Número repetido", function(){
         ])
     ])->create();
 
-    $response = $this->actingAs($user)->postJson("/api/proyectos/{$manzana->proyecto_id}/lotes", [
+    $response = $this->actingAs($user)->postJson("/api/proyectos/{$manzana->proyecto->id}/lotes", [
         "numero" => $loteExistente->numero,
         "manzana_id" => $loteExistente->manzana_id
     ]);
@@ -122,7 +121,7 @@ test("Lotes que se sobreponen", function(){
     ])->raw();
     $data["geocerca"] = $data["geocerca"]->toWKT();
 
-    $response = $this->actingAs($user)->postJson("/api/proyectos/{$manzana->proyecto_id}/lotes", $data);
+    $response = $this->actingAs($user)->postJson("/api/proyectos/{$manzana->proyecto->id}/lotes", $data);
     $response->assertJsonValidationErrors([
         "geocerca" => "La geocerca se sobrepone con otros lotes."
     ]);

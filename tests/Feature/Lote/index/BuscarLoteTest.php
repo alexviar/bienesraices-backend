@@ -2,6 +2,7 @@
 
 use App\Models\Lote;
 use App\Models\Manzana;
+use App\Models\Plano;
 use App\Models\Proyecto;
 use App\Models\User;
 use Tests\TestCase;
@@ -12,9 +13,7 @@ test('Paginación', function () {
 
     $user = User::find(1);
     $proyecto = Proyecto::factory()->create();
-    $manzanas = Manzana::factory(3, [
-        "proyecto_id" => $proyecto->id
-    ])->create();
+    $manzanas = Manzana::factory(3)->for(Plano::factory()->for($proyecto))->create();
     $manzana_ids = $this->faker->randomElements($manzanas->pluck("id")->map(function($id){
         return ["manzana_id" => $id];
     }), 5, true);
@@ -35,9 +34,7 @@ test('Paginación', function () {
                 "precio",
                 "precio_sugerido",
                 "estado",
-                "geocerca" => [
-                    "*" => [ "latitud", "longitud" ]
-                ],
+                "geocerca",
             ]
         ]
     ]);
@@ -52,9 +49,7 @@ test('Busqueda', function () {
     $this->faker->seed(2022);
     $user = User::find(1);
     $proyecto = Proyecto::factory()->create();
-    $manzanas = Manzana::factory(2, [
-        "proyecto_id" => $proyecto->id
-    ])->create();
+    $manzanas = Manzana::factory(2)->for(Plano::factory()->for($proyecto))->create();
     $manzana_ids = $this->faker->randomElements($manzanas->pluck("id")->map(function($id){
         return ["manzana_id" => $id];
     }), 5, true);
@@ -84,17 +79,13 @@ it('devuelve solo los lotes que pertenecen al proyecto', function () {
 
     $user = User::find(1);
     $proyecto1 = Proyecto::factory()->create();
-    Manzana::factory(2, [
-        "proyecto_id" => $proyecto1->id
-    ])->create()->each(function($manzana){
+    Manzana::factory(2)->for(Plano::factory()->for($proyecto1))->create()->each(function($manzana){
         Lote::factory(5, [
             "manzana_id" => $manzana,
         ])->create();
     });
     $proyecto2 = Proyecto::factory()->create();
-    $manzanas = Manzana::factory(2, [
-        "proyecto_id" => $proyecto2->id
-    ])->create();
+    $manzanas = Manzana::factory(2)->for(Plano::factory()->for($proyecto2))->create();
     $manzana_ids = $this->faker->randomElements($manzanas->pluck("id")->map(function($id){
         return ["manzana_id" => $id];
     }), 5, true);
