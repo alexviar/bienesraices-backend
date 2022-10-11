@@ -48,7 +48,7 @@ class Proyecto extends Model
         'ubicacion'
     ];
 
-    protected $hidden = ["currency", "lotes"];
+    protected $hidden = ["currency", "plano"];
 
     protected $appends = ["lotes_summary", "clientes_en_mora"];
 
@@ -91,6 +91,14 @@ class Proyecto extends Model
         ], function($query){
             $query->whereRaw("(`estado` & 1) = 1");
         });
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function planos()
+    {
+        return $this->hasMany(Plano::class);
     }
     
     public function categorias(){

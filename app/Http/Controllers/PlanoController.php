@@ -12,6 +12,12 @@ use Illuminate\Support\Facades\DB;
 
 class PlanoController extends Controller
 {
+    function index(Request $request, $proyectoId){
+        $proyecto = $this->findProyecto($proyectoId);
+        $queryArgs =  $request->only(["search", "filter", "page"]);
+        return $this->buildResponse($proyecto->planos(), $queryArgs);
+    }
+
     function store(Request $request, $proyectoId)
     {
         $this->authorize("create", [Plano::class, $request->all()]);

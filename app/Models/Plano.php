@@ -27,6 +27,12 @@ class Plano extends Model
         "import_warnings"
     ];
 
+    protected $appends = [
+        "is_vigente",
+        "is_locked",
+        "has_errors",
+    ];
+
     #region Accessors
 
     public function getIsVigenteAttribute()
@@ -48,6 +54,11 @@ class Plano extends Model
     // {
     //     return ($this->estado&2) == 1;
     // }
+
+    public function getHasErrorsAttribute()
+    {
+        return $this->import_warnings !== null;
+    }
     #endregion
 
     #region Mutators
