@@ -27,6 +27,12 @@ class Plano extends Model
         "import_warnings"
     ];
 
+    protected $appends = [
+        "is_vigente",
+        "is_locked",
+        "has_errors",
+    ];
+
     #region Accessors
 
     public function getIsVigenteAttribute()
@@ -48,6 +54,11 @@ class Plano extends Model
     // {
     //     return ($this->estado&2) == 1;
     // }
+
+    public function getHasErrorsAttribute()
+    {
+        return $this->import_warnings !== null;
+    }
     #endregion
 
     #region Mutators
@@ -95,10 +106,11 @@ class Plano extends Model
     #endregion
 
     public function importManzanasYLotesFromCsv($filename){
-        // $fileContent = file_get_contents($filename);
-        // $fileContent = str_replace("\r", "", $fileContent);
-        // file_put_contents($filename, $fileContent);
-        $eol = substr(json_encode(detectEol($filename, "\n")), 1, -1);
+        $fileContent = file_get_contents($filename);
+        $fileContent = str_replace("\r", "", $fileContent);
+        file_put_contents($filename, $fileContent);
+        $eol = "\n";
+        // $eol = substr(json_encode(detectEol($filename, "\n")), 1, -1);
 
         $filename = str_replace("\\", "\\\\", $filename);
         $planoId = $this->id;
@@ -134,9 +146,9 @@ class Plano extends Model
             IGNORE 1 LINES
             (@manzana, `numero`, `superficie`, @categoria)
             SET `manzana_id` = (SELECT `id` FROM `manzanas` WHERE `plano_id` = ? AND `numero` = @manzana),
-                `categoria_id` = (SELECT `id` FROM `categoria_lotes` WHERE `codigo` = @categoria),
+                `categoria_id` = (SELECT `id` FROM `categoria_lotes` WHERE `codigo` = @categoria AND `proyecto_id` = ?),
                 `estado` = 1
-        SQL, [$planoId]);
+        SQL, [$planoId, $this->proyecto_id]);
         $warning_messages = DB::select('SHOW WARNINGS');
         $this->import_warnings = empty($warning_messages) ? null : json_encode($warning_messages);
         $this->update();
