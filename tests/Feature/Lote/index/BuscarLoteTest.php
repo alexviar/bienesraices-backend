@@ -22,6 +22,7 @@ test('Paginación', function () {
         "page" => [ "current" => 1, "size" => 10],
     ]));
     $response->assertOk();
+    $response->assertJsonCount(10, "records");
     $response->assertJsonStructure([
         "meta" => [
             "total_records"
@@ -45,8 +46,6 @@ test('Paginación', function () {
 
 test('Busqueda', function () {
     /** @var TestCase $this */
-
-    $this->faker->seed(2022);
     $user = User::find(1);
     $proyecto = Proyecto::factory()->create();
     $manzanas = Manzana::factory(2)->for(Plano::factory()->for($proyecto))->create();
@@ -58,11 +57,11 @@ test('Busqueda', function () {
         "search" => $lotes[3]->numero,
     ]));
     $response->assertOk();
+    $response->assertJsonCount($lotes->where("numero", $lotes[3]->numero)->count(), "records");
     $response->assertJson([
-        "meta" => [ "total_records" => 1 ],
-        "records" => [ $lotes[3]->toArray() ]
+        "meta" => [ "total_records" => $lotes->where("numero", $lotes[3]->numero)->count() ],
+        "records" => $lotes->where("numero", $lotes[3]->numero)->values()->toArray()
     ]);
-    $this->assertTrue(count($response->json("records")) == 1);
 });
 
 it('verifica que el proyecto exista', function () {

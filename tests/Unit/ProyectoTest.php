@@ -21,8 +21,6 @@ class ProyectoTest extends TestCase
 
         $this->assertArrayHasKey("moneda", $array);
         $this->assertArrayHasKey("redondeo", $array);
-        $this->assertArrayHasKey("precio_mt2.amount", $array);
-        $this->assertArrayHasKey("precio_mt2.currency", $array);
         $this->assertArrayHasKey("precio_reservas.amount", $array);
         $this->assertArrayHasKey("precio_reservas.currency", $array);
         $this->assertArrayHasKey("duracion_reservas", $array);

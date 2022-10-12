@@ -40,7 +40,6 @@ class ProyectoController extends Controller
             "ubicacion.latitud" => "required|numeric|min:-90|max:90",
             "ubicacion.longitud" => "required|numeric|min:-180|max:180",
             "moneda" => "required|exists:currencies,code",
-            "precio_mt2" => "required|numeric",
             "redondeo" => "nullable|numeric",
             "precio_reservas" => "required|numeric",
             "duracion_reservas" => "required|integer",

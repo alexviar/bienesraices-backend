@@ -35,6 +35,10 @@ class CreateCategoriaLotesTable extends Migration
             ->addSelect(["precio_mt2", "id"])
         );
 
+        Schema::table("proyectos", function(Blueprint $table) {
+            $table->dropColumn("precio_mt2");
+        });
+
         DB::statement("SET FOREIGN_KEY_CHECKS = 0");
         Schema::table('lotes', function (Blueprint $table) {
             $table->foreignIdFor(CategoriaLote::class, "categoria_id")->constrained("categoria_lotes");
