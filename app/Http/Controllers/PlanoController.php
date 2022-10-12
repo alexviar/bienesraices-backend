@@ -25,7 +25,7 @@ class PlanoController extends Controller
         $payload = $request->validate([
             "titulo" => "required|string|max:100",
             "descripcion" => "nullable|string|max:255",
-            "lotes" => "nullable|file|mimes:csv",
+            "lotes" => "nullable|file|mimes:csv,txt",
         ]);
 
         return DB::transaction(function () use ($payload, $proyecto) {
