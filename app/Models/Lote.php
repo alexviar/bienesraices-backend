@@ -40,8 +40,6 @@ class Lote extends Model
     ];
 
     protected $hidden = [
-        "categoria",
-        "manzana",
         "plano",
         "proyecto",
         "reserva",
