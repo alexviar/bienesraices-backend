@@ -22,7 +22,7 @@ class ProyectoFactory extends Factory
             "moneda" => $attributes["moneda"] ?? "USD",
             "redondeo" => 100,
             // "regateo" => 500,
-            "precio_mt2" => $attributes["precio_mt2"] ?? $this->faker->numerify("#.##"),
+            // "precio_mt2" => $attributes["precio_mt2"] ?? $this->faker->numerify("#.##"),
             "precio_reservas" => $attributes["precio_reserva"] ?? $this->faker->numerify("###.##"),
             "duracion_reservas" => $attributes["precio_reserva"] ?? $this->faker->numberBetween(7, 30),
             "cuota_inicial" => $attributes["cuota_inicial"] ?? $this->faker->numerify("###.##"),
