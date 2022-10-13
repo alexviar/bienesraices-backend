@@ -64,6 +64,8 @@ Route::controller(ProyectoController::class)->prefix('/proyectos')->group(functi
         });
 
         Route::controller(PlanoController::class)->prefix('/planos')->group(function(){
+            Route::middleware('auth:sanctum')->get('/{planoId}', 'show');
+            Route::middleware('auth:sanctum')->put('/{planoId}', 'update');
             Route::middleware('auth:sanctum')->get('/', 'index');
             Route::middleware('auth:sanctum')->post('/', 'store');
         });

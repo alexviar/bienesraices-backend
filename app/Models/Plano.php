@@ -20,7 +20,8 @@ class Plano extends Model
     protected $fillable = [
         "titulo",
         "descripcion",
-        "estado"
+        "estado",
+        "import_warnings"
     ];
 
     protected $hidden = [
@@ -126,7 +127,7 @@ class Plano extends Model
             FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
             LINES TERMINATED BY '$eol'
             IGNORE 1 LINES
-            (`numero`)
+            (`numero`, @c1, @c2, @c3)
             SET `plano_id` = ?
         SQL, [$planoId]);
 
@@ -149,8 +150,10 @@ class Plano extends Model
                 `categoria_id` = (SELECT `id` FROM `categoria_lotes` WHERE `codigo` = @categoria AND `proyecto_id` = ?),
                 `estado` = 1
         SQL, [$planoId, $this->proyecto_id]);
-        $warning_messages = DB::select('SHOW WARNINGS');
-        $this->import_warnings = empty($warning_messages) ? null : json_encode($warning_messages);
+        $warning_messages = collect(DB::select('SHOW WARNINGS'))->filter(function($warning){
+            return $warning->Code !== 1062;
+        });
+        $this->import_warnings = !$warning_messages->count() ? null : $warning_messages->toJson();
         $this->update();
     }
 }

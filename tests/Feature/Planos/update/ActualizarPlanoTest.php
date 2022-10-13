@@ -9,34 +9,21 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 
 test('campos requeridos', function () {
-    $proyecto = Proyecto::factory()->create();
-    $proyectoId = $proyecto->id;
-    $response = $this->actingAs(User::find(1))->postJson("api/proyectos/$proyectoId/planos", []);
+    $plano = Plano::factory()->for(Proyecto::factory())->create();
+    $response = $this->actingAs(User::find(1))->putJson("api/proyectos/$plano->proyecto_id/planos/$plano->id", []);
     $response->assertJsonValidationErrors([
         "titulo" => "El campo 'titulo' es requerido."
     ]);
 });
 
-test('solo puede haber un plano vigente', function () {
+it('actualiza un plano', function(){
     $proyecto = Proyecto::factory()->create();
     $plano = Plano::factory()->for($proyecto)->create();
-    $proyectoId = $proyecto->id;
-    $response = $this->actingAs(User::find(1))->postJson("api/proyectos/$proyectoId/planos", [
-        "titulo" => "Actualización 2"
-    ]);
-    $response->assertCreated();
-    expect($plano->fresh()->is_vigente)->toBeFalse();
-    expect($plano->fresh()->is_locked)->toBeTrue();
-});
-
-it('registra un plano vacio', function(){
-    $proyecto = Proyecto::factory()->create();
-    $proyectoId = $proyecto->id;
     //Aqui por ejemplo no era necesario vincular los datos al proyecto pues no es usado en el body de la solicitud
     $data = Plano::factory()->for($proyecto)->raw();
-    $response = $this->actingAs(User::find(1))->postJson("api/proyectos/$proyectoId/planos", $data);
-    $response->assertCreated();
-    expect($proyecto->plano->getAttributes())->toMatchArray($data);
+    $response = $this->actingAs(User::find(1))->putJson("api/proyectos/$proyecto->id/planos/$plano->id", $data);
+    $response->assertOk();
+    expect($plano->fresh()->getAttributes())->toMatchArray($data);
 });
 
 it('importa las manzanas y lotes desde un csv', function(){
@@ -46,9 +33,28 @@ it('importa las manzanas y lotes desde un csv', function(){
         ["codigo" => 'B'],
         ["codigo" => 'C'],
     )->create();
-    $proyectoId = $proyecto->id;
+    $plano = Plano::factory()->for($proyecto)->create();
+    $tmpfname = tempnam(sys_get_temp_dir(), 'lotes.csv');
+    file_put_contents($tmpfname, implode("\n", [
+        "manzana,numero,superficie,categoria",
+        "10,1,18984.22,B",
+        "10,2,19009.33,B",
+        "10,3,19014.46,B",
+        "11,1,18286.89,B",
+        "11,2,18100.74,C",
+        "11,3,18100.74,C",
+        "13,1,19920.98,B",
+        "13,2,113376.86,A",
+        "14,1,118566.09,A",
+        "14,2,117661.62,AF",
+    ]));
+    $plano->importManzanasYLotesFromCsv($tmpfname);
+    $plano->refresh();
 
-    //Aqui por ejemplo no era necesario vincular los datos al proyecto pues no es usado en el body de la solicitud
+    expect($plano->manzanas)->toHaveCount(4);
+    expect($plano->lotes)->toHaveCount(9);
+    expect($plano->hasErrors)->toBeTrue();
+
     $data = Plano::factory()->for($proyecto)->raw() + [
         "lotes" => UploadedFile::fake()->createWithContent(
             'lotes_test.csv',
@@ -67,9 +73,9 @@ it('importa las manzanas y lotes desde un csv', function(){
             ])
         )
     ];
-    $response = $this->actingAs(User::find(1))->postJson("api/proyectos/$proyectoId/planos", $data);
-    $response->assertCreated();
-    $plano = $proyecto->plano;
+    $response = $this->actingAs(User::find(1))->putJson("api/proyectos/$proyecto->id/planos/$plano->id", $data);
+    $response->assertOk();
+    $plano = $plano->fresh();
 
     expect($plano->import_warnings)->toBeEmpty();
 
@@ -92,15 +98,15 @@ it('importa las manzanas y lotes desde un csv', function(){
             $lote->categoria->codigo
         ]);
     })->toArray())->toBe([
-        "10,1,8984.22,B",
-        "10,2,9009.33,B",
-        "10,3,9014.46,B",
-        "11,1,8286.89,B",
-        "11,2,8100.74,C",
-        "11,3,8100.74,C",
-        "13,1,9920.98,B",
-        "13,2,13376.86,A",
-        "14,1,18566.09,A",
+        "10,1,18984.22,B",
+        "10,2,19009.33,B",
+        "10,3,19014.46,B",
+        "11,1,18286.89,B",
+        "11,2,18100.74,C",
+        "11,3,18100.74,C",
+        "13,1,19920.98,B",
+        "13,2,113376.86,A",
+        "14,1,118566.09,A",
         "14,2,17661.62,A",
     ]);
 });
