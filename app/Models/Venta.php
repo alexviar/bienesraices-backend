@@ -49,14 +49,15 @@ class Venta extends Model
     //     return static::create($attributes);
     // }
 
-    protected $hidden = [ "currency" ];
+    protected $hidden = [ "currency", "proyecto" ];
 
-    protected $appends = [ "formated_id", "manzana" ];
+    protected $appends = [ "formated_id", "observaciones" ];
 
     protected $casts = [
         "fecha" => "date:Y-m-d"
     ];
 
+    #region Accessors
     function getFormatedIdAttribute(){
         $tipo = $this->tipo == 1 ? "CON" : "CRE";
         $id = $this->id;
@@ -75,6 +76,12 @@ class Venta extends Model
     function getImportePendienteAttribute($value){
         return new Money($value, $this->moneda);
     }
+
+    function getObservacionesAttribute(){
+        // return $this->proyecto->plano->id !== $this->lote->plano->id ? "La venta hace referencia a un lote de un plano anterior." : "";
+        return !$this->lote->plano->is_vigente ? "La venta hace referencia a un lote de un plano que ya no esta vigente." : "";
+    }
+    #endregion
 
     // static function find($id){
     //     if(!is_numeric($id)){
