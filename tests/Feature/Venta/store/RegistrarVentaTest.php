@@ -141,7 +141,7 @@ it('Registra una venta', function ($dataset) {
                     "importe" => "500.0000",
                     "importe_pendiente" => "10030.9600"
                 ],
-                "credito" => Arr::except($dataCredito, ["cuota_inicial"])
+                "credito" => Arr::except($dataCredito, ["importe_cuotas"])
             ]
         ];
     },
@@ -268,7 +268,7 @@ it('Registra una venta', function ($dataset) {
                     "vendedor_id" => $reserva->vendedor_id,
                     "lote_id" => $reserva->lote_id
                 ],
-                "credito" => Arr::except($dataCredito, ["cuota_inicial"])
+                "credito" => Arr::except($dataCredito, ["importe_cuotas"])
             ]
         ];
     },
@@ -308,7 +308,7 @@ it('Registra una venta', function ($dataset) {
                     "vendedor_id" => $reserva->vendedor_id,
                     "lote_id" => $reserva->lote_id
                 ],
-                "credito" => Arr::except($dataCredito, ["cuota_inicial"])
+                "credito" => Arr::except($dataCredito, ["importe_cuotas"])
             ]
         ];
     },

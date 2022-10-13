@@ -40,7 +40,7 @@ it('registra un plano vacio', function(){
 
 it('importa las manzanas y lotes desde un csv', function(){
     $proyecto = Proyecto::factory()->create();
-    CategoriaLote::factory(3)->sequence(
+    CategoriaLote::factory(3)->for($proyecto)->sequence(
         ["codigo" => 'A'],
         ["codigo" => 'B'],
         ["codigo" => 'C'],
