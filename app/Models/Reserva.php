@@ -36,6 +36,15 @@ class Reserva extends Model
         "vencimiento" => "date:Y-m-d"
     ];
 
+    protected $hidden = [
+        "proyecto"
+    ];
+
+    protected $appends = [
+        "observaciones"
+    ];
+
+    #region Accessors
     function getImporteAttribute($value){
         return new Money($value, Currency::find($this->moneda));
     }
@@ -51,6 +60,11 @@ class Reserva extends Model
     function getSaldoContadoAttribute($value){
         return new Money($value, Currency::find($this->moneda));
     }
+
+    function getObservacionesAttribute(){
+        return !$this->lote->plano->is_vigente ? "La reserva hace referencia a un lote de un plano que ya no esta vigente." : "";
+    }
+    #endregion
 
     function getReferencia(){
         return "Reserva N.º {$this->id}";

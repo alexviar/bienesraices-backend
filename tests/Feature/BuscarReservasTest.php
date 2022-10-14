@@ -30,6 +30,7 @@ it('verifica la estructura de la respuesta', function () {
                 "lote_id",
                 "cliente_id",
                 "vendedor_id",
+                "observaciones",
                 "importe" => [
                     "amount",
                     "currency"

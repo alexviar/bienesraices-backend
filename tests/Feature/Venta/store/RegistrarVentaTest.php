@@ -146,6 +146,44 @@ it('Registra una venta', function ($dataset) {
         ];
     },
     function(){
+        //Venta al credito
+        Talonario::create([
+            "tipo" => Credito::class,
+            "siguiente" => 1
+        ]);
+        $data = Venta::factory([
+            "fecha" => "2022-02-28",
+            "moneda" => "USD",
+            "importe" => "500",
+        ])->credito("10030.96")->withoutReserva()->raw();
+        $dataCredito = Credito::factory([
+            "plazo" => 48,
+            "periodo_pago" => 1,
+            "dia_pago" => 1,
+            "tasa_interes" => "0.1500"
+        ])->raw();
+        $data["credito"] = $dataCredito;
+
+        return [
+            "data" => $data,
+            "expectations" => [
+                "venta" => Arr::only($data, [
+                    "fecha",
+                    "tipo",
+                    "moneda",
+                    "cliente_id",
+                    "vendedor_id",
+                    "proyecto_id",
+                    "lote_id"
+                ]) + [
+                    "importe" => "500.0000",
+                    "importe_pendiente" => "10030.9600"
+                ],
+                "credito" => Arr::except($dataCredito, ["importe_cuotas"])
+            ]
+        ];
+    },
+    function(){
         //Venta al contado
         $reserva = Reserva::factory([
             "moneda" => "USD",
@@ -166,7 +204,7 @@ it('Registra una venta', function ($dataset) {
                     "tipo",
                     "moneda"
                 ]) + [
-                    "importe" => "10430.9600",
+                    "importe" => "10530.9600",
                     "reserva_id" => $reserva->id,
                     "cliente_id" => $reserva->cliente_id,
                     "vendedor_id" => $reserva->vendedor_id,
@@ -184,6 +222,7 @@ it('Registra una venta', function ($dataset) {
             "saldo_credito" => "400",
         ])->create();
         $data = Venta::factory([
+            "importe" => "72600.0000",
             "moneda" => "BOB",
         ])->contado()->for($reserva)->raw();
         unset($data["importe_pendiente"]);
@@ -195,7 +234,7 @@ it('Registra una venta', function ($dataset) {
                     "tipo",
                     "moneda"
                 ]) + [
-                    "importe" => "72599.4800",
+                    "importe" => "72600.0000",
                     "reserva_id" => $reserva->id,
                     "cliente_id" => $reserva->cliente_id,
                     "vendedor_id" => $reserva->vendedor_id,
@@ -213,6 +252,7 @@ it('Registra una venta', function ($dataset) {
             "saldo_credito" => "400",
         ])->create();
         $data = Venta::factory([
+            "importe" => "1500.1234",
             "moneda" => "USD",
         ])->contado()->for($reserva)->raw();
         unset($data["importe_pendiente"]);
@@ -224,7 +264,7 @@ it('Registra una venta', function ($dataset) {
                     "tipo",
                     "moneda"
                 ]) + [
-                    "importe" => "1520.5500",
+                    "importe" => "1500.1200",
                     "reserva_id" => $reserva->id,
                     "cliente_id" => $reserva->cliente_id,
                     "vendedor_id" => $reserva->vendedor_id,
@@ -245,6 +285,7 @@ it('Registra una venta', function ($dataset) {
             "saldo_credito" => "400",
         ])->create();
         $data = Venta::factory([
+            "importe" => "3000",
             "moneda" => "BOB",
         ])->credito("100")->for($reserva)->raw();
         $dataCredito = Credito::factory([
@@ -261,8 +302,8 @@ it('Registra una venta', function ($dataset) {
                     "tipo",
                     "moneda"
                 ]) + [
-                    "importe_pendiente" => "69815.4800",
-                    "importe" => "2784.0000",
+                    "importe_pendiente" => "100.0000",
+                    "importe" => "3000.0000",
                     "reserva_id" => $reserva->id,
                     "cliente_id" => $reserva->cliente_id,
                     "vendedor_id" => $reserva->vendedor_id,
@@ -284,6 +325,7 @@ it('Registra una venta', function ($dataset) {
             "saldo_credito" => "400",
         ])->create();
         $data = Venta::factory([
+            "importe" => "1500",
             "moneda" => "USD",
         ])->credito("100")->for($reserva)->raw();
         $dataCredito = Credito::factory([
@@ -300,9 +342,8 @@ it('Registra una venta', function ($dataset) {
                     "tipo",
                     "moneda"
                 ]) + [
-                    // "importe" => "1520.5500",
-                    "importe_pendiente" => "1462.2400",
-                    "importe" => "58.3100",
+                    "importe" => "1500.0000",
+                    "importe_pendiente" => "100.0000",
                     "reserva_id" => $reserva->id,
                     "cliente_id" => $reserva->cliente_id,
                     "vendedor_id" => $reserva->vendedor_id,

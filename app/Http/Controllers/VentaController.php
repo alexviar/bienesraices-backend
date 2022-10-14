@@ -104,6 +104,9 @@ class VentaController extends Controller
             "fecha.before_or_equal" => "El campo ':attribute' no puede ser posterior a la fecha actual."
         ]);
 
+        $payload["importe"] = (string) BigDecimal::of($payload["importe"])->toScale(2, RoundingMode::HALF_UP);
+        if($pendiente = Arr::get($payload, "importe_pendiente")) $payload["importe_pendiente"] = (string) BigDecimal::of($pendiente)->toScale(2, RoundingMode::HALF_UP);
+
         return [$payload, $reserva];
     }
 
@@ -114,9 +117,9 @@ class VentaController extends Controller
         }    
         [$payload, $reserva] = $this->validateStoreRequest($request, $proyectoId);
         if($reserva){
-            $importe = $payload["tipo"] == 2 ? $reserva->saldo_credito : $reserva->saldo_contado;
-            $payload["importe"] = (string) $importe->exchangeTo($payload["moneda"])->round(2)->amount;
-            $payload["importe_pendiente"] = (string) $reserva->saldo_contado->minus($importe)->exchangeTo($payload["moneda"])->round(2)->amount;
+            // $importe = $payload["tipo"] == 2 ? $reserva->saldo_credito : $reserva->saldo_contado;
+            // $payload["importe"] = (string) $importe->exchangeTo($payload["moneda"])->round(2)->amount;
+            // $payload["importe_pendiente"] = (string) $reserva->saldo_contado->minus($importe)->exchangeTo($payload["moneda"])->round(2)->amount;
             $payload["lote_id"] = $reserva->lote->id;
             $payload["cliente_id"] = $reserva->cliente_id;
             $payload["vendedor_id"] = $reserva->vendedor_id;
@@ -146,7 +149,6 @@ class VentaController extends Controller
                     // "fecha" => $payload["fecha"],
                     "codigo" => $siguiente,
                     "tasa_mora" => $proyecto->tasa_mora,
-                    "tasa_interes" => $proyecto->tasa_interes,
                 ]);
                 $credito->build();
             }
