@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use NumberFormatter;
 use Throwable;
 
 class VentaController extends Controller
@@ -39,12 +40,61 @@ class VentaController extends Controller
         return $data;
     }
 
+    function print_nota_venta(Request $request, $proyectoId, $ventaId)
+    {
+        $venta = $this->findVenta($proyectoId, $ventaId);
+        $image = public_path("logo192.png");
+        $mime = getimagesize($image)["mime"];
+        $data = file_get_contents($image);
+        $dataUri = 'data:image/' . $mime . ';base64,' . base64_encode($data);
+        $importe = ($venta->tipo == 1 ? $venta->importe : $venta->credito->total_credito)->round(2, RoundingMode::HALF_UP);
+        $numberFormatter = new NumberFormatter("es", NumberFormatter::SPELLOUT);
+        $importeEntero = $importe->amount->toScale(0, RoundingMode::DOWN);
+        if($request->html){
+            return view("pdf.nota_venta", [
+                "logo" => $dataUri,
+                "fecha" => $venta->fecha->format("d/m/Y"),
+                "numero" => $venta->id,
+                "tipoVenta" => $venta->tipo == 1 ? "CONTADO" : "CRÉDITO",
+                "importeNumeral" => (string) $importe,
+                "importeTextual" => [
+                    "{$numberFormatter->format((string)$importeEntero)} {$venta->currency->name}",
+                    "{$numberFormatter->format((string)$importe->amount->minus($importeEntero)->multipliedBy("100"))}"
+                ],
+                "codigoLote" => "Mz {$venta->lote->manzana->numero}, Lt {$venta->lote->numero}",
+                "nombreProyecto" => $venta->proyecto->nombre,
+                "nombreCliente" => $venta->cliente->nombre_completo,
+                "tipoDocumento" => $venta->cliente->documento_identidad["tipo_text"],
+                "documento" => $venta->cliente->documento_identidad["numero"],
+            // ])->setPaper([0, 0, 72*8.5, 72*13])->stream();
+            ]);
+        }
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView("pdf.nota_venta", [
+            "logo" => $dataUri,
+            "fecha" => $venta->fecha->format("d/m/Y"),
+            "numero" => $venta->id,
+            "tipoVenta" => $venta->tipo == 1 ? "CONTADO" : "CRÉDITO",
+            "importeNumeral" => (string) $importe,
+            "importeTextual" => [
+                "{$numberFormatter->format((string)$importeEntero)} {$venta->currency->name}",
+                "{$numberFormatter->format((string)$importe->amount->minus($importeEntero)->multipliedBy("100"))}"
+            ],
+            "codigoLote" => "Mz {$venta->lote->manzana->numero}, Lt {$venta->lote->numero}",
+            "nombreProyecto" => $venta->proyecto->nombre,
+            "nombreCliente" => $venta->cliente->nombre_completo,
+            "tipoDocumento" => $venta->cliente->documento_identidad["tipo_text"],
+            "documento" => $venta->cliente->documento_identidad["numero"],
+        // ])->setPaper([0, 0, 72*8.5, 72*13])->stream();
+        ])->setPaper("A6", "landscape")->stream();
+    }
+
     /**
      * @return Venta
      */
     protected function findVenta($proyectoId, $ventaId){
-        $venta = Venta::where("proyecto_id", $proyectoId)->where("id", $ventaId)->first();
-        if(!$venta) throw new ModelNotFoundException();
+        // $venta = Venta::where("proyecto_id", $proyectoId)->where("id", $ventaId)->first();
+        $venta = Venta::find($ventaId);
+        if(!$venta || $venta->proyecto_id != $proyectoId) throw new ModelNotFoundException();
         return $venta;
     }
 

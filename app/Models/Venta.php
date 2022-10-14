@@ -51,7 +51,7 @@ class Venta extends Model
 
     protected $hidden = [ "currency", "proyecto" ];
 
-    protected $appends = [ "formated_id", "observaciones" ];
+    protected $appends = [ "formated_id", "observaciones", "url_nota_venta" ];
 
     protected $casts = [
         "fecha" => "date:Y-m-d"
@@ -80,6 +80,13 @@ class Venta extends Model
     function getObservacionesAttribute(){
         // return $this->proyecto->plano->id !== $this->lote->plano->id ? "La venta hace referencia a un lote de un plano anterior." : "";
         return !$this->lote->plano->is_vigente ? "La venta hace referencia a un lote de un plano que ya no esta vigente." : "";
+    }
+
+    function getUrlNotaVentaAttribute(){
+        return route("ventas.nota_venta", [
+            "proyectoId" => $this->proyecto_id,
+            "ventaId" => $this->id
+        ]);
     }
     #endregion
 

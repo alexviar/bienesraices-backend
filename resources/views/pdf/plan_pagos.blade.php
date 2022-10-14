@@ -86,7 +86,7 @@
 </head>
 <body>
 
-    <div class="title center bg-primary">PLAN DE PAGOS</div>
+    <div class="title center bg-primary">PLAN DE PAGOS DEL CRÉDITO N.º {{$credito->codigo}}</div>
     <br>
     <table style="width:100%">
         <tbody style="vertical-align:top">
@@ -130,10 +130,10 @@
                                                 <th scope="row" class="text-right"><b>Periodo de pago:</b></th>
                                                 <td class="text-left"> {{$credito->periodo_pago_text}}</td>
                                             </tr>
-                                            <tr>
+                                            <!-- <tr>
                                                 <th scope="row" class="text-right"><b>Tasa de interés anual:</b></th>
                                                 <td class="text-left"> {{\Brick\Math\BigDecimal::of("100")->multipliedBy($credito->tasa_interes)->toScale(2)}} %</td>
-                                            </tr>
+                                            </tr> -->
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Importe del terreno:</b></th>
                                                 <td class="text-left"> {{$credito->importe->plus($credito->cuota_inicial)->round()}}</td>
@@ -157,10 +157,10 @@
                                                 <th scope="row" class="text-right"><b>Nº de cuotas:</b></th>
                                                 <td class="text-left"> {{$credito->cuotas->count()}}</td>
                                             </tr>
-                                            <tr>
+                                            <!-- <tr>
                                                 <th scope="row" class="text-right"><b>Total intereses:</b></th>
                                                 <td class="text-left"> {{$credito->total_intereses->round()}}</td>
-                                            </tr>
+                                            </tr> -->
                                             <tr>
                                                 <th scope="row" class="text-right"><b>Total crédito:</b></th>
                                                 <td class="text-left"> {{$credito->total_credito->round()}}</td>
