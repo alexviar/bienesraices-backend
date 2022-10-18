@@ -58,4 +58,28 @@ class ProyectoController extends Controller
 
         return $proyecto;
     }
+
+    function update(Request $request, $proyectoId)
+    {
+        $proyecto = $this->findProyecto($request, $proyectoId);
+        $payload = $request->validate([
+            "nombre" => "sometimes|required|string",
+            "ubicacion" => "sometimes|array|required",
+            "ubicacion.latitud" => "required_with:ubicacion|numeric|min:-90|max:90",
+            "ubicacion.longitud" => "required_with:ubicacion|numeric|min:-180|max:180",
+            "moneda" => "sometimes|required|exists:currencies,code",
+            "redondeo" => "sometimes|nullable|numeric",
+            "precio_reservas" => "sometimes|required|numeric",
+            "duracion_reservas" => "sometimes|required|integer",
+            "cuota_inicial" => "sometimes|required|numeric",
+            "tasa_interes" => "sometimes|required|numeric|min:0.0001|max:0.9999",
+            "tasa_mora" => "sometimes|required|numeric|min:0.0001|max:0.9999",
+        ]);
+        if(Arr::has($payload, "ubicacion")){
+            $payload["ubicacion"] = new Point(Arr::get($payload, "ubicacion.latitud"), Arr::get($payload, "ubicacion.longitud"));
+        }
+        $proyecto->update($payload);
+        
+        return $proyecto;
+    }
 }

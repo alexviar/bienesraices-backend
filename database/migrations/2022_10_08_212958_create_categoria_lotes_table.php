@@ -36,6 +36,7 @@ class CreateCategoriaLotesTable extends Migration
         );
 
         Schema::table("proyectos", function(Blueprint $table) {
+            $table->decimal("redondeo", 19, 4)->change();
             $table->dropColumn("precio_mt2");
         });
 

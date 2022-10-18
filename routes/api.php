@@ -56,6 +56,7 @@ Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/reservas', [Res
 Route::controller(ProyectoController::class)->prefix('/proyectos')->group(function() {
     Route::prefix('/{proyectoId}')->group(function(){
         Route::middleware('auth:sanctum')->get('/', "show");
+        Route::middleware('auth:sanctum')->put('/', "update");
         
         Route::controller(CategoriaLoteController::class)->prefix('/categorias')->group(function(){
             Route::middleware('auth:sanctum')->put('/{categoriaId}', 'update');
