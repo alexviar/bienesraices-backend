@@ -11,7 +11,7 @@ class Cliente extends Model
 {
     use HasFactory, SaveToUpper;
 
-    protected $appends = [ "nombre_completo", "documento_identidad" ];
+    protected $appends = [ "nombre_completo", "documento_identidad", "codigo_pago" ];
     protected $hidden = [ "numero_documento", "tipo_documento" ];
 
     protected $fillable = [

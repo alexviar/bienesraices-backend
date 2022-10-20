@@ -27,8 +27,13 @@ Route::get('/migrate', function(){
 //   Artisan::call("db:seed InitialLoadSeeder");
 // });
 
-Route::post('/login', [AuthController::class, 'login'])->name("login");
-Route::post('/logout', [AuthController::class, 'logout']);
+Route::controller(AuthController::class)->group(function(){
+  Route::post('/login', 'login')->name("login");
+  Route::post('/logout', 'logout');
+  Route::middleware("auth:sanctum")->post('/change-password', 'change_password');
+  Route::middleware('guest')->post('/forgot-password', 'forgot_password');
+  Route::middleware('guest')->post('/reset-password', 'reset_password');
+});
 
 Route::middleware("auth:sanctum")->get("/comprobantes/{comprobante}", [CajaController::class, "comprobante"])->name("comprobantes");
 

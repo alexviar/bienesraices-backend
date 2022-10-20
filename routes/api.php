@@ -14,8 +14,10 @@ use App\Http\Controllers\PlanoController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\UFVController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\VentaController;
+use App\Models\Lote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -30,8 +32,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware('auth:sanctum')->prefix('/user')->group(function(){
+    Route::get('/', function (Request $request) {
+        return $request->user();
+    });
+});
+
+Route::controller(UserController::class)->prefix('/users')->group(function(){
+
 });
 
 Route::middleware('auth:sanctum')->get('/currencies', [CurrencyController::class, "index"]);
@@ -40,12 +48,6 @@ Route::middleware('auth:sanctum')->get('/clientes', [ClienteController::class, "
 Route::middleware('auth:sanctum')->post('/clientes', [ClienteController::class, "store"]);
 
 Route::middleware('auth:sanctum')->get('/vendedores', [VendedorController::class, "index"]);
-
-Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/manzanas', [ManzanaController::class, "index"]);
-Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/manzanas', [ManzanaController::class, "store"]);
-
-Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/lotes', [LoteController::class, "index"]);
-Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/lotes', [LoteController::class, "store"]);
 
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/ventas', [VentaController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/ventas', [VentaController::class, "store"]);
@@ -70,7 +72,18 @@ Route::controller(ProyectoController::class)->prefix('/proyectos')->group(functi
             Route::middleware('auth:sanctum')->get('/', 'index');
             Route::middleware('auth:sanctum')->post('/', 'store');
         });
+
+        Route::controller(ManzanaController::class)->prefix('/manzanas')->group(function(){
+            Route::middleware('auth:sanctum')->get('/', "index");
+            Route::middleware('auth:sanctum')->post('/', "store");
+        });
+
+        Route::controller(LoteController::class)->prefix('/lotes')->group(function(){
+            Route::middleware('auth:sanctum')->get('/', "index");
+            Route::middleware('auth:sanctum')->post('/', "store");
+        });
     });
+
     Route::middleware('auth:sanctum')->get('/', "index");
     Route::middleware('auth:sanctum')->post('/', "store");
 });

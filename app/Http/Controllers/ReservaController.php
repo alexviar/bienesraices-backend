@@ -23,7 +23,7 @@ class ReservaController extends Controller
     function index(Request $request, $proyectoId)
     {
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        return $this->buildResponse(Reserva::with(["cliente", "vendedor", "lote.manzana"])->where("proyecto_id", $proyectoId)->latest("updated_at"), $queryArgs);
+        return $this->buildResponse(Reserva::with(["cliente", "vendedor", "lote.manzana"])->where("proyecto_id", $proyectoId)->latest(), $queryArgs);
     }
 
     function store(Request $request, $proyectoId){

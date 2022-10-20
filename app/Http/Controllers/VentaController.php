@@ -36,7 +36,7 @@ class VentaController extends Controller
     function index(Request $request, $proyectoId)
     {
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        $data = $this->buildResponse(Venta::with(["cliente", "vendedor", "lote.manzana", "credito"])->where("proyecto_id", $proyectoId), $queryArgs);
+        $data = $this->buildResponse(Venta::with(["cliente", "vendedor", "lote.manzana", "credito"])->where("proyecto_id", $proyectoId)->latest(), $queryArgs);
         return $data;
     }
 
