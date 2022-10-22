@@ -15,13 +15,14 @@ class DatabaseSeeder extends Seeder
     {
         // \App\Models\User::factory(10)->create();
         $this->call([
-            ProyectoSeeder::class,
-            ManzanaSeeder::class,
-            LoteSeeder::class,
-            ClienteSeeder::class,
-            VendedorSeeder::class,
-            ReservaSeeder::class,
-            VentaSeeder::class,
+            // ProyectoSeeder::class,
+            // ManzanaSeeder::class,
+            // LoteSeeder::class,
+            // ClienteSeeder::class,
+            // VendedorSeeder::class,
+            // ReservaSeeder::class,
+            // VentaSeeder::class,
+            RolesAndPermissionsSeeder::class
         ]);
     }
 }

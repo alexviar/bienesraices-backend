@@ -396,4 +396,9 @@ it('obtiene los pagables', function ($dataset) {
             ]
         ];
     },
+    /**
+     * Una cuota atrasada (en mora), se realiza un pago casi total dejando solo el saldo total (saldo + multa)
+     * en un 1 ctv, pero el saldo adeudado en 0.00 UM. 0.01/0.005 = 2 => El factor de actualizacion 
+     * (1 + diasTranscurridos * interesAnual / 360) debe ser mayour a 2 (o un interes muy alto o muchos dias de mora)
+     */
 ]);

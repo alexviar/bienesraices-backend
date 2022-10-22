@@ -11,6 +11,8 @@
 |
 */
 
+use Database\Seeders\RolesAndPermissionsSeeder;
+use Illuminate\Support\Facades\Event;
 use PHPUnit\Framework\Assert;
 
 uses(Tests\TestCase::class)->in('Feature');
@@ -75,6 +77,8 @@ function something()
     // ..
 }
 
-uses()->beforeEach(function(){
+uses()
+->beforeEach(function(){
     $this->faker->seed(2022);  
+    $this->seed();
 })->in("Feature");

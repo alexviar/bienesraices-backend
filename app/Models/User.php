@@ -8,10 +8,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+
+    protected $guard_name = 'sanctum';
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +24,8 @@ class User extends Authenticatable
     protected $fillable = [
         'username',
         'password',
+        'email',
+        'email_verified_at',
     ];
 
     /**
@@ -37,7 +42,15 @@ class User extends Authenticatable
     }
 
     public function isSuperUser(){
-        // return $this->hasRole(1);
-        return true;
+        return $this->hasRole("Super usuarios");
     }
+
+    // public function checkPermissionTo($permission, $guardName = null): bool
+    // {
+    //     var_dump($permission);
+    //     $result = parent::checkPermissionTo($permission, $guardName);
+    //     while(!$result){
+    //         $permissions = $this->getAllPermissions();
+    //     }
+    // }
 }

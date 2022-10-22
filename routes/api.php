@@ -107,3 +107,7 @@ Route::controller(UFVController::class)->group(function(){
     Route::middleware('auth:sanctum')->get('/ufvs', 'index');
     Route::middleware('auth:sanctum')->post('/ufvs', 'store');
 });
+
+Route::controller(UserController::class)->prefix("/usuarios")->group(function(){
+    Route::middleware('auth:sanctum')->post('/', 'store');
+});

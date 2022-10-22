@@ -64,7 +64,7 @@ class Cuota extends Model
     protected $casts = [
         "vencimiento" => "date:Y-m-d"
     ];
-    
+
     /** @var Carbon $projectionDate */
     protected $projectionDate;
 
@@ -76,49 +76,59 @@ class Cuota extends Model
         parent::__construct($attributes);
         $this->projectionDate = Carbon::today();
     }
-    
+
     function getMorphKeyName()
     {
         return "codigo";
     }
 
-    function getVencidaAttribute(){
+    function getVencidaAttribute()
+    {
         return $this->vencimiento->isBefore($this->projectionDate);
     }
 
-    function getPendienteAttribute(){
+    function getPendienteAttribute()
+    {
         return !$this->anterior || $this->anterior->projectTo($this->projectionDate)->vencida;
     }
 
-    function getImporteAttribute($value){
+    function getImporteAttribute($value)
+    {
         return new Money($value, $this->getCurrency());
     }
 
-    function getPagoExtraAttribute($value){
+    function getPagoExtraAttribute($value)
+    {
         return new Money($value, $this->getCurrency());
     }
 
-    function getSaldoAttribute($value){
+    function getSaldoAttribute($value)
+    {
         return new Money($value, $this->getCurrency());
     }
 
-    function getTotalMultasAttribute(){
+    function getTotalMultasAttribute()
+    {
         return $this->total_pagos->minus($this->importe->plus($this->pago_extra)->minus($this->saldo));
     }
 
-    function getTotalPagosAttribute($value){
+    function getTotalPagosAttribute($value)
+    {
         return new Money($value, $this->getCurrency());
     }
 
-    function getDiasAttribute(){
+    function getDiasAttribute()
+    {
         return $this->vencimiento->diffInDays($this->anterior ? $this->anterior->vencimiento : $this->credito->fecha);
     }
 
-    function getInteresAttribute(){
+    function getInteresAttribute()
+    {
         return $this->importe->plus($this->pago_extra)->minus($this->amortizacion);
     }
 
-    function getAmortizacionAttribute(){
+    function getAmortizacionAttribute()
+    {
         $saldoAnterior = $this->anterior ?
             $this->anterior->saldo_capital :
             $this->credito->importe;
@@ -126,27 +136,32 @@ class Cuota extends Model
         return $amortizacion;
     }
 
-    function getMultaAttribute(){
+    function getMultaAttribute()
+    {
         return $this->total->minus($this->saldo);
     }
 
-    function getTotalAttribute(){
+    function getTotalAttribute()
+    {
         $total = $this->saldo_rational
             ->multipliedBy($this->getFactorActualizacion())
             ->toScale(2, RoundingMode::HALF_UP)->toScale(4);
         return new Money($total, $this->getCurrency());
     }
 
-    function getSaldoCapitalAttribute($value){
+    function getSaldoCapitalAttribute($value)
+    {
         return new Money($value, $this->getCurrency());
     }
 
-    function getFasAttribute(){
+    function getFasAttribute()
+    {
         return BigRational::of($this->credito->tasa_interes)->multipliedBy($this->dias)->dividedBy("360")->plus("1");
     }
 
-    function computeFrc(){
-        if($this->siguiente){
+    function computeFrc()
+    {
+        if ($this->siguiente) {
             $frc = $this->siguiente->computeFrc();
             return [
                 $frc[0]->multipliedBy($this->fas),
@@ -159,13 +174,15 @@ class Cuota extends Model
         ];
     }
 
-    function getFrcAttribute(){
+    function getFrcAttribute()
+    {
         [$numerador, $denominador] = $this->computeFrc();
         return $numerador->dividedBy($denominador);
     }
 
-    function getPagosExtrasAttribute(){
-        return $this->credito->pagosExtras->where("periodo", $this->numero)->sortBy(function($pe){
+    function getPagosExtrasAttribute()
+    {
+        return $this->credito->pagosExtras->where("periodo", $this->numero)->sortBy(function ($pe) {
             return $pe->id;
         });
     }
@@ -174,20 +191,23 @@ class Cuota extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    function pagos(){
+    function pagos()
+    {
         return $this->hasMany(PagoCuota::class, "codigo_cuota", "codigo");
         // return $this->hasMany(PagoCuota::class);
     }
 
-    function credito(){
+    function credito()
+    {
         return $this->belongsTo(Credito::class);
     }
     #endregion
-   
+
     /**
      * @param Carbon
      */
-    function projectTo(Carbon $fecha){
+    function projectTo(Carbon $fecha)
+    {
         $this->projectionDate = $fecha;
         return $this;
     }
@@ -195,34 +215,40 @@ class Cuota extends Model
     //     return $this->credito->cuotas->where("numero", $this->numero - 1)->first();
     // }    
 
-    function getAnteriorAttribute(){
+    function getAnteriorAttribute()
+    {
         return $this->credito->cuotas->where("numero", $this->numero - 1)->first();
-    }  
+    }
 
-    function getSiguienteAttribute(){
+    function getSiguienteAttribute()
+    {
         return $this->credito->cuotas->where("numero", $this->numero + 1)->first();
     }
 
-    function getCurrency(){
+    function getCurrency()
+    {
         return $this->credito->getCurrency();
     }
 
-    function getReferenciaAttribute(){
+    function getReferenciaAttribute()
+    {
         return $this->getReferencia();
     }
 
-    function getReferencia(){
+    function getReferencia()
+    {
         return "Pago de la cuota {$this->numero} del crédito {$this->credito->codigo}";
     }
 
-    function getFactorActualizacion(){
-        if(!$this->projectionDate->isAfter($this->vencimiento)) return BigRational::one();
+    function getFactorActualizacion()
+    {
+        if (!$this->projectionDate->isAfter($this->vencimiento)) return BigRational::one();
         /** @var UfvRepositoryInterface $ufvRepository */
         $ufvRepository = app()->make(UfvRepositoryInterface::class);
         $ufvVencimiento = $ufvRepository->findByDate($this->vencimiento);
-        if(!$ufvVencimiento) throw new Exception("No se encontro el valor de la UFV en la fecha ".$this->vencimiento->format("Y-m-d"));
+        if (!$ufvVencimiento) throw new Exception("No se encontro el valor de la UFV en la fecha " . $this->vencimiento->format("Y-m-d"));
         $ufvPago = $ufvRepository->findByDate($this->projectionDate);
-        if(!$ufvPago) throw new Exception("No se encontro el valor de la UFV en la fecha ".$this->projectionDate->format("Y-m-d"));
+        if (!$ufvPago) throw new Exception("No se encontro el valor de la UFV en la fecha " . $this->projectionDate->format("Y-m-d"));
         //Factor de mantenimiento de valor
         $fmv = $ufvPago->isLessThan($ufvVencimiento) ? BigRational::one() : BigRational::of($ufvPago)->dividedBy($ufvVencimiento);
         $fas = BigRational::of($this->credito->tasa_mora)
@@ -232,36 +258,40 @@ class Cuota extends Model
         return $fmv->multipliedBy($fas);
     }
 
-    function recalcularSaldo(){
-        $this->_saldo = null;
+    function recalcularSaldo()
+    {
+        // if ($this->total->amount->isLessThan("0.01")) {
+        //     $this->estado = 2;
+        // }
         $saldo = $this->saldo_rational;
         $this->saldo = $saldo->toScale(2, RoundingMode::HALF_UP)->toScale(4);
     }
 
-    function getSaldoRationalAttribute(){
+    function getSaldoRationalAttribute()
+    {
         //Recalcular cada vez que se llama en caso de que los pagos hayan sido actualizados
         // if(!isset($this->_saldo)){
-            // if($this->saldo->amount->isEqualTo("0")){
-            //     // $this->_saldo = BigRational::zero();
-            //     // return $this->_saldo;
-            //     return BigRational::zero();
-            // }
-            $saldo = BigRational::of($this->importe->plus($this->pago_extra)->amount);
-            $projectionDate = $this->projectionDate;
-            foreach($this->pagos as $pago){
-                $fechaPago = $pago->fecha;
-                $this->projectTo($fechaPago);
-    
-                $importePago = BigRational::of($pago->getAttributeFromArray("importe"));
-                $pagoProyectado = $importePago->dividedBy($this->getFactorActualizacion());
-                $saldo = $saldo->minus($pagoProyectado);
-            }
-            $this->projectTo($projectionDate);
-            return $saldo;
-            // if($saldo->isLessThan("0.01")){
-            //     $saldo = BigRational::zero();
-            // }
-            // $this->_saldo = $saldo;
+        // if($this->saldo->amount->isEqualTo("0")){
+        //     // $this->_saldo = BigRational::zero();
+        //     // return $this->_saldo;
+        //     return BigRational::zero();
+        // }
+        $saldo = BigRational::of($this->importe->plus($this->pago_extra)->amount);
+        $projectionDate = $this->projectionDate;
+        foreach ($this->pagos as $pago) {
+            $fechaPago = $pago->fecha;
+            $this->projectTo($fechaPago);
+
+            $importePago = BigRational::of($pago->getAttributeFromArray("importe"));
+            $pagoProyectado = $importePago->dividedBy($this->getFactorActualizacion());
+            $saldo = $saldo->minus($pagoProyectado);
+        }
+        $this->projectTo($projectionDate);
+        return $saldo;
+        // if($saldo->isLessThan("0.01")){
+        //     $saldo = BigRational::zero();
+        // }
+        // $this->_saldo = $saldo;
         // }
         // return $this->_saldo;
     }
