@@ -13,6 +13,9 @@ class ProyectoController extends Controller
 {
     function applyFilters($query, $queryArgs)
     {
+        if($search = Arr::get($queryArgs, "search")){
+            $query->where("nombre", "LIKE", "$search%");
+        }    
     }
 
     function index(Request $request)

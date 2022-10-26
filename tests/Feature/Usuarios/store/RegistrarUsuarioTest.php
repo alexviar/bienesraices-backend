@@ -1,8 +1,10 @@
 <?php
 
 use App\Models\Permission;
+use App\Models\Proyecto;
 use App\Models\Role;
 use App\Models\User;
+use App\Models\Vendedor;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -15,24 +17,25 @@ test('El usuario ha iniciado sesión', function () {
 });
 
 #region Pruebas de autorixación
-test('Usuarios sin verficar no tienen autorización', function () {
-    /** @var TestCase $this */
+// test('Usuarios sin verficar no tienen autorización', function () {
+//     /** @var TestCase $this */
 
-    /** @var User $login */
-    $login = User::factory([
-        "estado" => 1,
-        "email_verified_at" => null,
-    ])->create();
-    /** @var Role $rol */
-    $rol = Role::factory()->create();
-    $rol->givePermissionTo([
-        "Registrar usuarios"
-    ]);
-    $login->assignRole($rol);
+//     /** @var User $login */
+//     $login = User::factory([
+//         "estado" => 1,
+//         "email_verified_at" => null,
+//     ])->create();
+//     /** @var Role $rol */
+//     $rol = Role::factory()->create();
+//     $rol->givePermissionTo([
+//         "Registrar usuarios"
+//     ]);
+//     $login->assignRole($rol);
 
-    $response = $this->actingAs($login)->postJson("/api/usuarios", []);
-    $response->assertForbidden();
-});
+//     $response = $this->actingAs($login)->postJson("/api/usuarios", []);
+//     $response->assertForbidden();
+// });
+
 test('Usuarios bloqueados no tienen autorizacion', function () {
     /** @var TestCase $this */
 
@@ -61,6 +64,32 @@ test('Usuarios sin permisos no tienen autorizacion', function () {
 
     $response = $this->actingAs($login)->postJson("/api/usuarios", []);
     $response->assertForbidden();
+});
+
+test('Solo super usuarios pueden crear superusuarios', function () {
+    /** @var TestCase $this */
+
+    /** @var User $login */
+    $login = User::factory([
+        "estado" => 1
+    ])->create();
+    /** @var Role $rol */
+    $rol = Role::factory()->create();
+    $rol->givePermissionTo([
+        "Registrar usuarios"
+    ]);
+    $login->assignRole($rol);
+
+    $response = $this->actingAs($login)->postJson("/api/usuarios", [
+        "roles" => ["Super usuarios"]
+    ]);
+    $response->assertForbidden();
+
+    $login->assignRole("Super usuarios");
+    $response = $this->actingAs($login)->postJson("/api/usuarios", [
+        "roles" => ["Super usuarios"]
+    ]);
+    expect($response->getStatusCode())->not->toBe(403);
 });
 #endregion
 
@@ -195,6 +224,26 @@ test('Email invalido', function() {
     ]); 
 });
 
+test('Nombre de usuario invalido', function() {
+    /** @var TestCase $this */
+
+    /** @var User $login */
+    $login = User::factory()->create();
+    /** @var Role $rol */
+    $rol = Role::factory()->create();
+    $rol->givePermissionTo([
+        "Registrar usuarios"
+    ]);
+    $login->assignRole($rol);
+
+    $response = $this->actingAs($login)->postJson("/api/usuarios", [
+        "username" => "asdf@12!$"
+    ]);
+    $response->assertJsonValidationErrors([
+        "username" => 'El formato del nombre de usuario es inválido.'
+    ]);
+});
+
 test('El nombre de usuario debe ser unico', function(){
     /** @var TestCase $this */
 
@@ -254,15 +303,19 @@ it('registra un usuario', function(){
     ], [
         "name" => "Test role 2"
     ])->create();
+    $vendedorId = Vendedor::factory()->create()->id;
+    $proyectoIds = Proyecto::factory(3)->create()->pluck("id");
 
-    $this->mock(SendEmailVerificationNotification::class, function(\Mockery\MockInterface $mock){
-        $mock->shouldReceive("handle");
-    });
+    // $this->mock(SendEmailVerificationNotification::class, function(\Mockery\MockInterface $mock){
+    //     $mock->shouldReceive("handle");
+    // });
 
     $response = $this->actingAs($login)->postJson("/api/usuarios", [
         "username" => "megustanlasoreos",
         "email" => "fake@example.com",
         "password" => 'paS$w0rd',
+        "vendedor_id" => $vendedorId,
+        "proyecto_ids" => $proyectoIds,
         "roles" => [
             "Test role 1",
             "Test role 2",
@@ -278,6 +331,8 @@ it('registra un usuario', function(){
         "Test role 1",
         "Test role 2",
     ]))->toBeTrue();
+    expect($user->vendedor_id)->toBe($vendedorId);
+    expect($user->proyectos->pluck("id"))->toEqual($proyectoIds);
 });
 
 it('registra un usuario mediante diferentes formas de autorización', function($dataset) {

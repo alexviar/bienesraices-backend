@@ -23,7 +23,12 @@ class RolesAndPermissionsSeeder extends Seeder
             "name" => "Super usuarios",
             "guard_name" => "sanctum"
         ]);
-        User::find(1)->syncRoles([$superUsers]);
+        $admin = User::find(1);
+        $admin->syncRoles([$superUsers]);
+        $admin->update([
+            "email_verified_at" => now()
+        ]);
+        
 
         $tag = "Usuarios";
         $verUsuarios = Permission::firstOrCreate([
@@ -41,14 +46,9 @@ class RolesAndPermissionsSeeder extends Seeder
             "name" =>  "Editar usuarios",
             "guard_name" => "sanctum"
         ]);
-        $bloquearUsuarios = Permission::firstOrCreate([
+        $activarDesactivarUsuarios = Permission::firstOrCreate([
             "tag" => $tag,
-            "name" =>  "Bloquear usuarios",
-            "guard_name" => "sanctum"
-        ]);
-        $desbloquearUsuarios = Permission::firstOrCreate([
-            "tag" => $tag,
-            "name" =>  "Desbloquear usuarios",
+            "name" =>  "Activar/Desactivar usuarios",
             "guard_name" => "sanctum"
         ]);
 
@@ -95,12 +95,47 @@ class RolesAndPermissionsSeeder extends Seeder
             "name" =>  "Eliminar vendedores",
             "guard_name" => "sanctum"
         ]);
+        
+        $tag = "Proyectos";
+        $verProyectos = Permission::firstOrCreate([
+            "tag" => $tag,
+            "name" =>  "Ver proyectos",
+            "guard_name" => "sanctum"
+        ]);
+        $registrarProyectos = Permission::firstOrCreate([
+            "tag" => $tag,
+            "name" =>  "Registrar proyectos",
+            "guard_name" => "sanctum"
+        ]);
+        $editarProyectos = Permission::firstOrCreate([
+            "tag" => $tag,
+            "name" =>  "Editar proyectos",
+            "guard_name" => "sanctum"
+        ]);
+        $eliminarProyectos = Permission::firstOrCreate([
+            "tag" => $tag,
+            "name" =>  "Eliminar proyectos",
+            "guard_name" => "sanctum"
+        ]);
+        $archivarProyectos = Permission::firstOrCreate([
+            "tag" => $tag,
+            "name" => "Archivar proyectos",
+            "guard_name" => "sanctum"
+        ]);
+        $desarchivarProyectos = Permission::firstOrCreate([
+            "tag" => $tag,
+            "name" => "Desarchivar proyectos",
+            "guard_name" => "sanctum"
+        ]);
+
 
         $registrarUsuarios->syncPermissions([
-            $verVendedores
+            $verVendedores,
+            $verProyectos
         ]);
         $editarUsuarios->syncPermissions([
-            $verVendedores
+            $verVendedores,
+            $verProyectos
         ]);
     }
 }

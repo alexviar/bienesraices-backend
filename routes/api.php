@@ -13,6 +13,7 @@ use App\Http\Controllers\PagableController;
 use App\Http\Controllers\PlanoController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\ReservaController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UFVController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendedorController;
@@ -109,5 +110,11 @@ Route::controller(UFVController::class)->group(function(){
 });
 
 Route::controller(UserController::class)->prefix("/usuarios")->group(function(){
+    Route::middleware('auth:sanctum')->get('/', 'index');
     Route::middleware('auth:sanctum')->post('/', 'store');
+    Route::middleware('auth:sanctum')->put('/{userId}/{action}', 'changeStatus')->where("action", "^(activar|desactivar)$");
+});
+
+Route::controller(RoleController::class)->prefix("/roles")->group(function(){
+    Route::middleware('auth:sanctum')->get('/', 'index');
 });

@@ -4,6 +4,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\CreditoController;
 use App\Http\Controllers\VentaController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\File;
@@ -27,6 +29,12 @@ Route::get('/migrate', function(){
 //   Artisan::call("db:seed InitialLoadSeeder");
 // });
 
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+  $request->fulfill();
+
+  return response()->json();
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
 Route::controller(AuthController::class)->group(function(){
   Route::post('/login', 'login')->name("login");
   Route::post('/logout', 'logout');
@@ -46,6 +54,9 @@ Route::controller(VentaController::class)->group(function(){
   Route::middleware("auth:sanctum")->get('/proyectos/{proyectoId}/ventas/{ventaId}/nota-venta', "print_nota_venta")->name("ventas.nota_venta");
 });
 
-Route::fallback(function () {
+Route::fallback(function (Request $request) {
+  if ($request->expectsJson()) {
+      return abort(404);
+  }
   return File::get(public_path() . "/build/index.html");
 });

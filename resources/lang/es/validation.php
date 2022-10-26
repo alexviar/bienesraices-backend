@@ -14,6 +14,7 @@ return [
     'exists' => 'El :attribute seleccionado es inválido.',
     'email' => 'El :attribute es inválido.',
     'unique' => 'El :attribute ya está en uso.',
+    'regex' => 'El formato del :attribute es inválido.',
 
 
     'attributes' => [
