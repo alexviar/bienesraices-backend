@@ -5,8 +5,6 @@
         "pretest": "cls",
         "test": "php artisan test",
         "zip": "git archive -o backend.zip HEAD",
-        "pretest": "cls",
-        "test": "php artisan test",
         "dev": "npm run development",
         "development": "mix",
         "watch": "mix watch",
