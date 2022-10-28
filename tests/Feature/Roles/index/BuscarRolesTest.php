@@ -79,10 +79,8 @@ test('Paginación', function () {
         "records" => [
             "*" => [
                 "id",
-                "username",
-                "email",
-                "estado",
-                "estado_text"
+                "name",
+                "description",
             ]
         ]
     ]);

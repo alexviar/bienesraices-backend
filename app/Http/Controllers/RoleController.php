@@ -15,7 +15,8 @@ class RoleController extends Controller
     public function index(Request $request)
     {
         $this->authorize("viewAny", [Role::class, $request->all()]);
-        return $this->buildResponse(Role::query(), []);
+        $queryArgs = $request->only(["search", "filter", "page"]);
+        return $this->buildResponse(Role::query(), $queryArgs);
     }
 
     /**
