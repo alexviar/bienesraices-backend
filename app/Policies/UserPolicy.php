@@ -17,8 +17,8 @@ class UserPolicy
     public function create(User $login, $payload)
     {
         if($login->can("Registrar usuarios") && (
-            $login->isSuperUser()
-            || !collect(Arr::get($payload, "roles", []))->contains("Super usuarios")
+            // $login->isSuperUser() || 
+            !collect(Arr::get($payload, "roles", []))->contains("Super usuarios")
         )) return true;
     }
 

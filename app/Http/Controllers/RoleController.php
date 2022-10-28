@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Role;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class RoleController extends Controller
 {
@@ -20,16 +21,6 @@ class RoleController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -37,7 +28,20 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $this->authorize("create", [Role::class, $request->all()]);
+        $payload = $request->validate([
+            "name" => "required|string",
+            "description" => "nullable|string",
+            "permissions" => "required|array",
+            "permissions.*" => "exists:permissions,name"
+        ], [
+            "permissions.required" => "Debe asignar al menos un permiso."
+        ]);
+
+        /** @var Role $rol */
+        $rol = Role::create(Arr::except($payload, ["permissions"]));
+        $rol->givePermissionTo($payload["permissions"]);
+        return $rol;
     }
 
     /**

@@ -26,6 +26,10 @@ return [
         'cliente_id' => 'cliente',
         "numero_transaccion" => "n.º de transacción",
         "username" => "nombre de usuario",
-        "email" => "correo electrónico"
+        "email" => "correo electrónico",
+        "name" => "nombre",
+        "description" => "descripción",
+        "permissions" => "permisos",
+        "permissions.*" => "permiso"
     ],
 ];

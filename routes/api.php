@@ -117,4 +117,5 @@ Route::controller(UserController::class)->prefix("/usuarios")->group(function(){
 
 Route::controller(RoleController::class)->prefix("/roles")->group(function(){
     Route::middleware('auth:sanctum')->get('/', 'index');
+    Route::middleware('auth:sanctum')->post('/', 'store');
 });
