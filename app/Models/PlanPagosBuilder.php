@@ -54,9 +54,9 @@ class PlanPagosBuilder {
     $this->diaPago = $diaPago;
 
     $this->numeroCuotas = $this->plazo / $this->periodo;
-    $this->enero = Carbon::createFromDate($fecha->year, 1, $diaPago)->startOfDay();
     $start = $fecha->copy()->addDays(28);
     $this->offset = $start->month + ($start->day > $this->diaPago ? 0 : -1);
+    $this->enero = Carbon::createFromDate($start->year, 1, $diaPago)->startOfDay();
   }
 
   function build(){
