@@ -30,7 +30,7 @@ class RolePolicy
      */
     public function view(User $user, Role $role)
     {
-        //
+        if($user->can("Ver roles")) return true;
     }
 
     /**

@@ -46,6 +46,11 @@ class RolesAndPermissionsSeeder extends Seeder
             "name" =>  "Editar usuarios",
             "guard_name" => "sanctum"
         ]);
+        $eliminarUsuarios = Permission::firstOrCreate([
+            "tag" => $tag,
+            "name" =>  "Eliminar usuarios",
+            "guard_name" => "sanctum"
+        ]);
         $activarDesactivarUsuarios = Permission::firstOrCreate([
             "tag" => $tag,
             "name" =>  "Activar/Desactivar usuarios",
@@ -117,23 +122,20 @@ class RolesAndPermissionsSeeder extends Seeder
             "name" =>  "Eliminar proyectos",
             "guard_name" => "sanctum"
         ]);
-        $archivarProyectos = Permission::firstOrCreate([
+        $archivarDesarchivarProyectos = Permission::firstOrCreate([
             "tag" => $tag,
-            "name" => "Archivar proyectos",
-            "guard_name" => "sanctum"
-        ]);
-        $desarchivarProyectos = Permission::firstOrCreate([
-            "tag" => $tag,
-            "name" => "Desarchivar proyectos",
+            "name" => "Archivar/Desarchivar proyectos",
             "guard_name" => "sanctum"
         ]);
 
 
         $registrarUsuarios->syncPermissions([
+            $verRoles,
             $verVendedores,
             $verProyectos
         ]);
         $editarUsuarios->syncPermissions([
+            $verRoles,
             $verVendedores,
             $verProyectos
         ]);

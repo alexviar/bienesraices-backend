@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 
@@ -47,12 +48,14 @@ class RoleController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Role  $role
      * @return \Illuminate\Http\Response
      */
-    public function show(Role $role)
+    public function show(Request $request, $rolId)
     {
-        //
+        $rol = $this->findRol($rolId);
+        $this->authorize("view", [$rol]);
+        $rol->loadMissing("permissions");
+        return $rol;
     }
 
     /**
@@ -87,5 +90,13 @@ class RoleController extends Controller
     public function destroy(Role $role)
     {
         //
+    }
+
+    private function findRol($rolId){
+        $rol = Role::find($rolId);
+        if(!$rol){
+            throw new ModelNotFoundException("No eixste un rol con id '$rolId'.");
+        }
+        return $rol;
     }
 }
