@@ -50,7 +50,7 @@ class RoleController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function show(Request $request, $rolId)
+    public function show($rolId)
     {
         $rol = $this->findRol($rolId);
         $this->authorize("view", [$rol]);
@@ -76,9 +76,23 @@ class RoleController extends Controller
      * @param  \App\Models\Role  $role
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Role $role)
+    public function update(Request $request, $rolId)
     {
-        //
+        $rol = $this->findRol($rolId);
+        $this->authorize("update", [$rol]);
+        $payload = $request->validate([
+            "name" => "sometimes|required|string",
+            "description" => "sometimes|nullable|string",
+            "permissions" => "sometimes|required|array",
+            "permissions.*" => "sometimes|exists:permissions,name"
+        ], [
+            "permissions.required" => "Debe asignar al menos un permiso."
+        ]);
+        $rol->update($payload);
+        if ($permissions = Arr::get($payload, "permissions")) {
+            $rol->syncPermissions($permissions);
+        }
+        return $rol;
     }
 
     /**
@@ -92,9 +106,14 @@ class RoleController extends Controller
         //
     }
 
-    private function findRol($rolId){
+    /**
+     * 
+     * @return Role
+     */
+    private function findRol($rolId)
+    {
         $rol = Role::find($rolId);
-        if(!$rol){
+        if (!$rol) {
             throw new ModelNotFoundException("No eixste un rol con id '$rolId'.");
         }
         return $rol;

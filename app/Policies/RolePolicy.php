@@ -53,7 +53,7 @@ class RolePolicy
      */
     public function update(User $user, Role $role)
     {
-        //
+        if($user->can("Editar roles")) return true;
     }
 
     /**

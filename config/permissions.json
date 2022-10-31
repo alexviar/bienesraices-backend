@@ -1,0 +1,45 @@
+{
+  "groups": {
+    "Usuarios": [
+      "Ver usuarios",
+      "Registrar usuarios",
+      "Editar usuarios",
+      "Activar/Desactivar usuarios"
+    ],
+    "Roles": [
+      "Ver roles",
+      "Registrar roles",
+      "Editar roles",
+      "Eliminar roles"
+    ],
+    "Proyectos": [
+      "Ver proyectos",
+      "Registrar proyectos",
+      "Editar proyectos",
+      "Archivar/Desarchivar proyectos"
+    ],
+    "UFV": [],
+    "Clientes": [],
+    "Vendedores": [
+      "Ver vendedores"
+    ],
+    "Planos": [],
+    "Manzanas": [],
+    "Lotes": [],
+    "Reservas": [],
+    "Ventas": []
+  },
+
+  "includes": {
+    "Registrar usuarios": [
+      "Ver roles",
+      "Ver vendedores",
+      "Ver proyectos"
+    ],
+    "Editar usuarios": [
+      "Ver roles",
+      "Ver vendedores",
+      "Ver proyectos"
+    ]
+  }
+}
