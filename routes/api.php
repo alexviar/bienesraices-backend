@@ -113,6 +113,7 @@ Route::controller(UserController::class)->prefix("/usuarios")->group(function(){
     Route::middleware('auth:sanctum')->get('/', 'index');
     Route::middleware('auth:sanctum')->post('/', 'store');
     Route::middleware('auth:sanctum')->put('/{userId}/{action}', 'changeStatus')->where("action", "^(activar|desactivar)$");
+    Route::middleware('auth:sanctum')->put('/{userId}', 'update');
 });
 
 Route::controller(RoleController::class)->prefix("/roles")->group(function(){

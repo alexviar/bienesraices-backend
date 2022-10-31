@@ -22,6 +22,11 @@ class UserPolicy
         )) return true;
     }
 
+    public function update(User $login, User $user, $payload)
+    {
+        if($login->can("Editar usuarios")) return true;
+    }
+
     public function changeStatus(User $login, $user, $action){
         if($login->can("Activar/Desactivar usuarios")) return true;
     }
