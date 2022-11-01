@@ -25,6 +25,12 @@ class UserController extends Controller
         return $this->buildResponse(User::query()->latest(), $queryArgs);
     }
 
+    function show($userId){
+        $user = $this->findUser($userId);
+        $this->authorize("view", [$user]);
+        return $user->loadMissing(["vendedor","proyectos","roles"]);
+    }
+
     function store(Request $request)
     {
         $this->authorize("create", [User::class, $request->all()]);

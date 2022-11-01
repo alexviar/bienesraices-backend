@@ -110,6 +110,7 @@ Route::controller(UFVController::class)->group(function(){
 });
 
 Route::controller(UserController::class)->prefix("/usuarios")->group(function(){
+    Route::middleware('auth:sanctum')->get('/{userId}', 'show');
     Route::middleware('auth:sanctum')->get('/', 'index');
     Route::middleware('auth:sanctum')->post('/', 'store');
     Route::middleware('auth:sanctum')->put('/{userId}/{action}', 'changeStatus')->where("action", "^(activar|desactivar)$");

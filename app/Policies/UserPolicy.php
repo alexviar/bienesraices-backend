@@ -13,6 +13,10 @@ class UserPolicy
     public function viewAny(User $login, $queryArgs){
         if($login->can("Ver usuarios")) return true;
     }
+    
+    public function view(User $login, $user){
+        if($login->can("Ver usuarios")) return true;
+    }
 
     public function create(User $login, $payload)
     {
