@@ -131,7 +131,7 @@ class CajaController extends Controller
             }
 
             $saldo = $pagoTotal->minus($transaccion->importe->amount);
-            Log::debug(json_encode([(string)$pagoTotal, (string)$transaccion->importe, (string)$saldo]));
+            // Log::debug(json_encode([(string)$pagoTotal, (string)$transaccion->importe, (string)$saldo]));
             if ($saldo->isGreaterThan("0") && Arr::get($payload, "registrar_excedentes")) {
                 // 
                 $account = Account::where("cliente_id", $payload["cliente_id"])

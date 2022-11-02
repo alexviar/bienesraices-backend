@@ -18,7 +18,12 @@
       "Editar proyectos",
       "Archivar/Desarchivar proyectos"
     ],
-    "UFV": [],
+    "UFV": [
+      "Ver UFVs",
+      "Registrar UFVs",
+      "Editar UFVs",
+      "Eliminar UFVs"
+    ],
     "Clientes": [],
     "Vendedores": [
       "Ver vendedores"

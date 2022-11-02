@@ -18,7 +18,7 @@ class UFVPolicy
      */
     public function viewAny(User $user)
     {
-        //
+        if($user->can("Ver UFVs")) return true;
     }
 
     /**
@@ -41,7 +41,7 @@ class UFVPolicy
      */
     public function create(User $user)
     {
-        //
+        if($user->can("Registrar UFVs")) return true;
     }
 
     /**
