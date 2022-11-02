@@ -48,7 +48,10 @@ Route::middleware('auth:sanctum')->get('/currencies', [CurrencyController::class
 Route::middleware('auth:sanctum')->get('/clientes', [ClienteController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/clientes', [ClienteController::class, "store"]);
 
-Route::middleware('auth:sanctum')->get('/vendedores', [VendedorController::class, "index"]);
+Route::controller(VendedorController::class)->prefix("vendedores")->group(function(){
+    Route::middleware('auth:sanctum')->get('/', "index");
+    Route::middleware('auth:sanctum')->post('/', "store");
+});
 
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/ventas', [VentaController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/ventas', [VentaController::class, "store"]);

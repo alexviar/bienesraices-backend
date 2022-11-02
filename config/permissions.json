@@ -31,7 +31,10 @@
       "Eliminar clientes"
     ],
     "Vendedores": [
-      "Ver vendedores"
+      "Ver vendedores",
+      "Registrar vendedores",
+      "Editar vendedores",
+      "Eliminar vendedores"
     ],
     "Planos": [],
     "Manzanas": [],
