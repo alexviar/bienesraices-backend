@@ -24,7 +24,12 @@
       "Editar UFVs",
       "Eliminar UFVs"
     ],
-    "Clientes": [],
+    "Clientes": [
+      "Ver clientes",
+      "Registrar clientes",
+      "Editar clientes",
+      "Eliminar clientes"
+    ],
     "Vendedores": [
       "Ver vendedores"
     ],

@@ -22,11 +22,13 @@ class ClienteController extends Controller
 
     function index(Request $request)
     {
+        $this->authorize("viewAny", [Cliente::class, $request->all()]);
         $queryArgs =  $request->only(["search", "filter", "page"]);
         return $this->buildResponse(Cliente::query(), $queryArgs);
     }
 
     function store(Request $request){
+        $this->authorize("create", [Cliente::class, $request->all()]);
         $payload = $request->validate([
             "tipo" => "required|in:1,2",
             "tipo_documento" => ["required", "in:1,2", function($attribute, $value, $fail) use($request){

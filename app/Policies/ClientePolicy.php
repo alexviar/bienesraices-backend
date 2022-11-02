@@ -18,7 +18,7 @@ class ClientePolicy
      */
     public function viewAny(User $user)
     {
-        //
+        if($user->can("Ver clientes")) return true;
     }
 
     /**
@@ -41,7 +41,7 @@ class ClientePolicy
      */
     public function create(User $user)
     {
-        //
+        if($user->can("Registrar clientes")) return true;
     }
 
     /**
