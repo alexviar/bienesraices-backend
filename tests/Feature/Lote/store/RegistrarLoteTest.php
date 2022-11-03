@@ -2,12 +2,182 @@
 
 use App\Models\Lote;
 use App\Models\Manzana;
+use App\Models\Permission;
+use App\Models\Plano;
+use App\Models\Proyecto;
+use App\Models\Role;
 use App\Models\User;
 use Grimzy\LaravelMysqlSpatial\Types\LineString;
 use Grimzy\LaravelMysqlSpatial\Types\Point;
 use Grimzy\LaravelMysqlSpatial\Types\Polygon;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
+
+test('el usuario ha iniciado sesión', function () {
+    $response = $this->postJson("/api/proyectos/100/lotes");
+    $response->assertUnauthorized();
+});
+
+test('not found', function($dataset){
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $proyecto = $dataset["proyecto"];
+
+    $response = $this->actingAs($login)->postJson("/api/proyectos/$proyecto->id/lotes");
+    $response->assertNotFound();
+})->with([
+    "Proyecto inexistente" => function(){
+        $proyecto = new Proyecto();
+        $proyecto->id = 100;
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $login->assignRole("Super usuarios");
+        return [
+            "login" => $login,
+            "proyecto" => $proyecto
+        ];
+    },
+    "Plano obsoleto" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $login->assignRole("Super usuarios");
+        return [
+            "login" => $login,
+            "proyecto" => Plano::factory([
+                "estado" => 0 //Obsoleto y Editable
+            ])->create()->proyecto
+        ];
+    },
+]);
+
+#region Pruebas de autorización
+test('usuarios sin permiso no estan autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $proyecto = $dataset["proyecto"];
+
+    $response = $this->actingAs($login)->postJson("/api/proyectos/$proyecto->id/lotes");
+    $response->assertForbidden();
+})->with([
+    "Sin permiso" => function(){
+        $proyecto = Proyecto::factory()->create();
+        Plano::factory()->for($proyecto)->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $login->assignRole($rol);
+        return [
+            "login" => $login, 
+            "proyecto" => $proyecto
+        ];
+    },
+    "Plano vigente no editable" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar lotes");
+        $login->assignRole("Super usuarios");
+        return [
+            "login" => $login,
+            "proyecto" => Plano::factory([
+                "estado" => 3 //Vigente y No editable
+            ])->create()->proyecto
+        ];
+    },
+    "Proyecto no vinculado" => function(){
+        $proyecto = Proyecto::factory()->create();
+        Plano::factory()->for($proyecto)->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar lotes");
+        $login->assignRole($rol);
+        $login->proyectos()->attach(Proyecto::factory()->create());
+        return [
+            "login" => $login,
+            "proyecto" => $proyecto
+        ];
+    }
+]);
+
+test('usuarios autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $proyecto = $dataset["proyecto"];
+
+    $response = $this->actingAs($login)->postJson("/api/proyectos/$proyecto->id/planos");
+    expect($response->getStatusCode())->not->toBe(403);
+})->with([
+    "Acceso directo" => function(){
+        $proyecto = Proyecto::factory()->create();
+        Plano::factory()->for($proyecto)->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar planos");
+        $login->assignRole($rol);
+        return [
+            "login" => $login,
+            "proyecto" => $proyecto
+        ];
+    },
+    "Acceso indirecto" => function(){
+        $proyecto = Proyecto::factory()->create();
+        Plano::factory()->for($proyecto)->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $permission = Permission::factory()->create();
+        $permission->givePermissionTo("Registrar planos");
+        $rol->givePermissionTo($permission);
+        $login->assignRole($rol);
+        return [
+            "login" => $login,
+            "proyecto" => $proyecto
+        ];
+    },
+    "Proyecto vinculado" => function(){
+        $proyecto = Proyecto::factory()->create();
+        Plano::factory()->for($proyecto)->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar planos");
+        $login->assignRole($rol);
+        $login->proyectos()->attach($proyecto);
+        return [
+            "login" => $login,
+            "proyecto" => $proyecto
+        ];
+    }
+]);
+#endregion
 
 it('registra un lotes', function () {
     /** @var TestCase $this */
@@ -52,15 +222,6 @@ it('valida los campos requeridos', function () {
     ]);
 });
 
-test("Proyecto no existe", function(){
-    /** @var TestCase $this */
-
-    $user = User::find(1);
-
-    $response = $this->actingAs($user)->postJson("/api/proyectos/100/lotes", []);
-    $response->assertNotFound();
-});
-
 test("Número repetido", function(){
     /** @var TestCase $this */
 
@@ -87,8 +248,6 @@ test("Número repetido", function(){
         "numero" => "La manzana indicada tiene un lote con el mismo número."
     ]);
 });
-
-
 
 test("Lotes que se sobreponen", function(){
     /** @var TestCase $this */

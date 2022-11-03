@@ -50,7 +50,12 @@
       "Editar manzanas",
       "Eliminar manzanas"
     ],
-    "Lotes": [],
+    "Lotes": [
+      "Ver lotes",
+      "Registrar lotes",
+      "Editar lotes",
+      "Eliminar lotes"
+    ],
     "Reservas": [],
     "Ventas": []
   },
