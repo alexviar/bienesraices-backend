@@ -2,9 +2,12 @@
 
 namespace App\Policies;
 
+use App\Models\Proyecto;
+use App\Models\Reserva;
 use App\Models\User;
 use App\Models\Venta;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Support\Arr;
 
 class VentaPolicy
 {
@@ -16,9 +19,11 @@ class VentaPolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function viewAny(User $user)
+    public function viewAny(User $user, Proyecto $proyecto, $queryArgs)
     {
-        //
+        if($user->can("Ver ventas")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+        ) return true;
     }
 
     /**
@@ -39,9 +44,12 @@ class VentaPolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function create(User $user)
+    public function create(User $user, Proyecto $proyecto, $payload)
     {
-        //
+        if($user->can("Registrar ventas")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+            && (!$user->vendedor_id || Arr::get($payload, "vendedor_id") == $user->vendedor_id)
+        ) return true;
     }
 
     /**
@@ -90,5 +98,13 @@ class VentaPolicy
     public function forceDelete(User $user, Venta $venta)
     {
         //
+    }
+
+    public function printNotaVenta(User $user, Venta $venta)
+    {
+        if($user->can("Imprimir comprobantes de venta")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($venta->proyecto))
+            && (!$user->vendedor_id || $venta->vendedor_id == $user->vendedor_id)
+        ) return true;
     }
 }

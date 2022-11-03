@@ -65,21 +65,28 @@
     "Reservas": [
       "Ver reservas",
       "Registrar reservas",
-      "Anular reserva"
+      "Anular reservas",
+      "Imprimir comprobantes de reserva"
     ],
     "Ventas": [
       "Ver ventas",
       "Registrar ventas",
-      "Anular venta"
-    ],
-    "Créditos": [
-
+      "Anular ventas",
+      "Imprimir comprobantes de venta"
     ],
     "Caja": [
-
+      "Ver transacciones",
+      "Registrar transacciones",
+      "Anular transacciones"
+    ],
+    "Créditos": [
+      "Diferir creditos",
+      "Programar adelantos a capital",
+      "Imprimir plan de pagos",
+      "Imprimir historial de pagos"
     ],
     "Lista de mora": [
-
+      "Ver clientes en mora"
     ]
   },
 

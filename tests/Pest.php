@@ -72,9 +72,15 @@ expect()->extend('toMatchNestedArray', function ($array, $path="") {
 |
 */
 
-function something()
-{
-    // ..
+function read_csv($filename){
+    $file = fopen($filename, "r");
+
+    while (($data = fgetcsv($file, 0, "\t")) !== FALSE) {
+        yield $data;
+    }
+
+    fclose($file);
+
 }
 
 uses()
