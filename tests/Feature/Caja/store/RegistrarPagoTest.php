@@ -5,6 +5,8 @@ use App\Models\Cliente;
 use App\Models\Cuota;
 use App\Models\Credito;
 use App\Models\Interfaces\UfvRepositoryInterface;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\Transaccion;
 use App\Models\User;
 use App\Models\Venta;
@@ -27,6 +29,62 @@ function buildCredito2(){
     $credito->build();
     return $credito;
 }
+
+test('el usuario ha iniciado sesión', function () {
+    $response = $this->postJson('/api/transacciones');
+    $response->assertUnauthorized();
+});
+
+#region Pruebas de autorización
+test('usuarios sin permiso no estan autorizados', function () {
+    /** @var TestCase $this */
+    /** @var User $login */
+    $login = User::factory([
+        "estado" => 1
+    ])->create();
+    /** @var Role $rol */
+    $rol = Role::factory()->create();
+    $login->assignRole($rol);
+    $response = $this->actingAs($login)->postJson('/api/transacciones');
+    $response->assertForbidden();
+});
+
+test('usuarios autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $response = $this->actingAs($login)->postJson('/api/transacciones');
+    expect($response->getStatusCode())->not->toBe(403);
+})->with([
+    "Acceso directo" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar transacciones");
+        $login->assignRole($rol);
+        return [
+            "login" => $login
+        ];
+    },
+    "Acceso indirecto" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $permission = Permission::factory()->create();
+        $permission->givePermissionTo("Registrar transacciones");
+        $rol->givePermissionTo($permission);
+        $login->assignRole($rol);
+        return [
+            "login" => $login
+        ];
+    }
+]);
+#endregion
 
 test("Campos requeridos", function($dataset){
     /** @var TestCase $this */

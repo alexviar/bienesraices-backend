@@ -77,6 +77,7 @@
     "Caja": [
       "Ver transacciones",
       "Registrar transacciones",
+      "Imprimir recibos",
       "Anular transacciones"
     ],
     "Créditos": [
@@ -101,13 +102,56 @@
       "Ver vendedores",
       "Ver proyectos"
     ],
+    "Ver planos": [
+      "Ver proyectos"
+    ],
+    "Registrar planos": [
+      "Ver proyectos"
+    ],
+    "Editar planos": [
+      "Ver proyectos"
+    ],
+    "Ver manzanas": [
+      "Ver proyectos"
+    ],
+    "Registrar manzanas": [
+      "Ver proyectos"
+    ],
+    "Editar manzanas": [
+      "Ver proyectos"
+    ],
+    "Ver lotes": [
+      "Ver proyectos"
+    ],
     "Registrar lotes": [
+      "Ver proyectos",
       "Ver manzanas",
       "Ver categorías"
     ],
     "Editar lotes": [
+      "Ver proyectos",
       "Ver manzanas",
       "Ver categorías"
+    ],
+    "Ver reservas": [
+      "Ver proyectos"
+    ],
+    "Registrar reservas": [
+      "Ver proyectos",
+      "Ver manzanas",
+      "Ver lotes",
+      "Ver clientes",
+      "Ver vendedores"
+    ],
+    "Ver ventas": [
+      "Ver proyectos"
+    ],
+    "Registrar ventas": [
+      "Ver proyectos",
+      "Ver manzanas",
+      "Ver lotes",
+      "Ver clientes",
+      "Ver vendedores"
     ]
   }
 }

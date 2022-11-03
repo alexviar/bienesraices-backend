@@ -4,11 +4,69 @@ use App\Models\Cliente;
 use App\Models\Credito;
 use App\Models\Cuota;
 use App\Models\Interfaces\UfvRepositoryInterface;
+use App\Models\Permission;
 use App\Models\Reserva;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Venta;
 use Brick\Math\BigDecimal;
 use Mockery\MockInterface;
+
+test('el usuario ha iniciado sesión', function () {
+    $response = $this->getJson('/api/pagables');
+    $response->assertUnauthorized();
+});
+
+#region Pruebas de autorización
+test('usuarios sin permiso no estan autorizados', function () {
+    /** @var TestCase $this */
+    /** @var User $login */
+    $login = User::factory([
+        "estado" => 1
+    ])->create();
+    /** @var Role $rol */
+    $rol = Role::factory()->create();
+    $login->assignRole($rol);
+    $response = $this->actingAs($login)->getJson('/api/pagables');
+    $response->assertForbidden();
+});
+
+test('usuarios autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $response = $this->actingAs($login)->getJson('/api/pagables');
+    expect($response->getStatusCode())->not->toBe(403);
+})->with([
+    "Acceso directo" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar transacciones");
+        $login->assignRole($rol);
+        return [
+            "login" => $login
+        ];
+    },
+    "Acceso indirecto" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $permission = Permission::factory()->create();
+        $permission->givePermissionTo("Registrar transacciones");
+        $rol->givePermissionTo($permission);
+        $login->assignRole($rol);
+        return [
+            "login" => $login
+        ];
+    }
+]);
+#endregion
 
 it('Falla si no se proporciona un codigo de pago', function () {
     /** @var TestCase $this  */
