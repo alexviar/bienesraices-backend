@@ -34,21 +34,30 @@ class CreditoController extends Controller
     }
 
     function show(Request $request, $id){
-        return $this->findCredito($id);
+        $credito = $this->findCredito($id);
+        $this->authorize("view", [$credito]);
+        return $credito;
     }
 
     function print_plan_pagos(Request $request, PlanPagosPdfReporter $reporter, $id){
         $credito = $this->findCredito($id);
+        $this->authorize("printPlanPagos", [$credito]);
         return $reporter->generate($credito)->stream("plan_pagos.pdf");
     }
     
     function print_historial_pagos(Request $request, HistorialPagos $report, $id){
         $credito = $this->findCredito($id);
+        $this->authorize("printHistorialPagos", [$credito]);
         return $report->generate($credito)->stream("historial_pagos.pdf");
     }
 
     function store_pago_extra(Request $request, ProgramadorPagoExtra $programadorPagoExtra, $creditoId){
         $credito = $this->findCredito($creditoId);
+        $this->authorize("create", [
+            PagoExtra::class,
+            $credito,
+            $request->all()
+        ]);
         $payload = $request->validate([
             "tipo_ajuste" => "required|in:1,2,3,4",
             "importe" => "required|numeric",
@@ -59,11 +68,6 @@ class CreditoController extends Controller
                     $fail("No puede programar un pago extra en el periodo indicado.");
                 };
             }]
-        ]);
-        $this->authorize("create", [
-            PagoExtra::class,
-            $credito,
-            $payload
         ]);
 
         $credito = DB::transaction(function() use($payload, $programadorPagoExtra, $credito){

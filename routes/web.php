@@ -46,8 +46,8 @@ Route::controller(AuthController::class)->group(function(){
 Route::middleware("auth:sanctum")->get("/comprobantes/{comprobante}", [CajaController::class, "comprobante"])->name("comprobantes");
 
 Route::controller(CreditoController::class)->group(function(){
-  Route::middleware("auth:sanctum")->get('/creditos/{id}/historial_pagos', "print_historial_pagos")->name("creditos.historial_pagos");
-  Route::middleware("auth:sanctum")->get('/creditos/{id}/plan_pagos', "print_plan_pagos")->name("creditos.plan_pago");
+  Route::middleware("auth:sanctum")->get('/creditos/{id}/historial-pagos', "print_historial_pagos")->name("creditos.historial_pagos");
+  Route::middleware("auth:sanctum")->get('/creditos/{id}/plan-pagos', "print_plan_pagos")->name("creditos.plan_pago");
 });
 
 Route::controller(VentaController::class)->group(function(){

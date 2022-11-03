@@ -44,6 +44,10 @@ class PagoExtraPolicy
     public function create(User $user, Credito $credito, $payload)
     {
         if($credito->estado != 1) return Response::deny("El credito ha sido anulado.");
+        if($user->can("Programar adelantos a capital")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($credito->creditable->proyecto))
+            && (!$user->vendedor_id || $user->vendedor_id == $credito->creditable->vendedor_id)
+        ) return true;
     }
 
     /**

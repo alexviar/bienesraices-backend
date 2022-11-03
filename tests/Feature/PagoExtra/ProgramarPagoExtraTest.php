@@ -5,8 +5,12 @@ use App\Models\Cuota;
 use App\Models\DetalleTransaccion;
 use App\Models\Interfaces\UfvRepositoryInterface;
 use App\Models\PagoExtra;
+use App\Models\Permission;
+use App\Models\Proyecto;
+use App\Models\Role;
 use App\Models\Transaccion;
 use App\Models\User;
+use App\Models\Vendedor;
 use App\Models\Venta;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
@@ -45,6 +49,157 @@ function makeRequest(?Credito &$credito, ?array &$body = [])
     
     return $response;
 }
+
+test('el usuario ha iniciado sesión', function () {
+    $credito = buildCredito2();
+
+    $response = $this->postJson("/api/creditos/$credito->codigo/pagos-extras");
+    $response->assertUnauthorized();
+});
+
+#region Pruebas de autorización
+//Dado que se accede al credito mediante su codigo y este no se modifica al programar un adelanto a capital
+//al relizar una segunda llamada a la api, esta recuperará el nuevo credito o ninguno si todos estan anulados
+// it('Prohibe el acceso si el credito está anulado.', function () {
+//     /** @var TestCase $this */
+//     $body = ["periodo" => 14];
+//     $response = makeRequest($credito, $body);
+//     $body = ["periodo" => 15];
+//     $response = makeRequest($credito, $body);
+//     $response->dd();
+//     $response->assertForbidden();
+// });
+
+test('usuarios no autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $credito = $dataset["credito"];
+
+    $response = $this->actingAs($login)->postJson("/api/creditos/$credito->codigo/pagos-extras");
+    $response->assertForbidden();
+})->with([
+    "Sin permiso" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $login->assignRole($rol);
+        return [
+            "login" => $login, 
+            "credito" => $credito
+        ];
+    },
+    "Proyecto no vinculado" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Programar adelantos a capital");
+        $login->assignRole($rol);
+        $login->proyectos()->attach(Proyecto::factory()->create());
+        return [
+            "login" => $login,
+            "credito" => $credito
+        ];
+    },
+    "Vendedor no vinculado" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Programar adelantos a capital");
+        $login->assignRole($rol);
+        $login->vendedor()->associate(Vendedor::factory()->create());
+        return [
+            "login" => $login,
+            "credito" => $credito
+        ];
+    }
+]);
+
+test('usuarios autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $credito = $dataset["credito"];
+
+    $response = $this->actingAs($login)->postJson("/api/creditos/$credito->codigo/pagos-extras");
+    expect($response->getStatusCode())->not->toBe(403);
+})->with([
+    "Acceso directo" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Programar adelantos a capital");
+        $login->assignRole($rol);
+        return [
+            "login" => $login,
+            "credito" => $credito
+        ];
+    },
+    "Acceso indirecto" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $permission = Permission::factory()->create();
+        $permission->givePermissionTo("Programar adelantos a capital");
+        $rol->givePermissionTo($permission);
+        $login->assignRole($rol);
+        return [
+            "login" => $login,
+            "credito" => $credito
+        ];
+    },
+    "Proyecto vinculado" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Programar adelantos a capital");
+        $login->assignRole($rol);
+        $login->proyectos()->attach($credito->creditable->proyecto);
+        return [
+            "login" => $login,
+            "credito" => $credito
+        ];
+    },
+    "Vendedor vinculado" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Programar adelantos a capital");
+        $login->assignRole($rol);
+        $login->vendedor()->associate($credito->creditable->vendedor);
+        return [
+            "login" => $login,
+            "credito" => $credito
+        ];
+    },
+]);
+#endregion
 
 // // test("decimal", function(){
 // //     $a = BigDecimal::of("0.1")->multipliedBy(30)->dividedBy(360, 20, RoundingMode::HALF_UP);
@@ -115,18 +270,6 @@ it('Genera un nuevo credito y anula el anterior.', function () {
     expect($credito->fresh()->estado)->toBe(2);
     expect($nuevoCredito->estado)->toBe(1);
 });
-
-// it('Prohibe el acceso si el credito está anulado.', function () {
-//     /** @var TestCase $this */
-//     $this->mock(UfvRepositoryInterface::class, function(MockInterface $mock){
-//         $mock->shouldReceive('findByDate')->andReturn(BigDecimal::one());
-//     });
-//     $body = ["periodo" => 14];
-//     $response = makeRequest($credito, $body);
-//     $body = ["periodo" => 15];
-//     $response = makeRequest($credito, $body);
-//     $response->assertForbidden();
-// });
 
 it('copia las referencias del credito anterior', function(){
     /** @var TestCase $this */

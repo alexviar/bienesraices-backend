@@ -11,8 +11,6 @@
 |
 */
 
-use Database\Seeders\RolesAndPermissionsSeeder;
-use Illuminate\Support\Facades\Event;
 use PHPUnit\Framework\Assert;
 
 uses(Tests\TestCase::class)->in('Feature');
@@ -81,6 +79,16 @@ function read_csv($filename){
 
     fclose($file);
 
+}
+
+function comparePdf($generatedContent, $sampleContent){
+    $generatedContent = \Illuminate\Support\Str::beforeLast($generatedContent, "endstream");
+    $generatedContent = \Illuminate\Support\Str::afterLast($generatedContent, "stream");
+
+    $sampleContent = \Illuminate\Support\Str::beforeLast($sampleContent, "endstream");
+    $sampleContent = \Illuminate\Support\Str::afterLast($sampleContent, "stream");
+
+    return $generatedContent == $sampleContent;
 }
 
 uses()
