@@ -63,9 +63,22 @@
       "Eliminar lotes"
     ],
     "Reservas": [
-
+      "Ver reservas",
+      "Registrar reservas",
+      "Anular reserva"
     ],
     "Ventas": [
+      "Ver ventas",
+      "Registrar ventas",
+      "Anular venta"
+    ],
+    "Créditos": [
+
+    ],
+    "Caja": [
+
+    ],
+    "Lista de mora": [
 
     ]
   },
@@ -82,10 +95,12 @@
       "Ver proyectos"
     ],
     "Registrar lotes": [
-      "Ver manzanas"
+      "Ver manzanas",
+      "Ver categorías"
     ],
     "Editar lotes": [
-      "Ver manzanas"
+      "Ver manzanas",
+      "Ver categorías"
     ]
   }
 }

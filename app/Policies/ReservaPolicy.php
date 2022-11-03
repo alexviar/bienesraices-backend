@@ -2,9 +2,11 @@
 
 namespace App\Policies;
 
+use App\Models\Proyecto;
 use App\Models\Reserva;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Support\Arr;
 
 class ReservaPolicy
 {
@@ -16,9 +18,11 @@ class ReservaPolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function viewAny(User $user)
+    public function viewAny(User $user, Proyecto $proyecto)
     {
-        //
+        if($user->can("Ver reservas")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+        ) return true;
     }
 
     /**
@@ -39,9 +43,12 @@ class ReservaPolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function create(User $user)
+    public function create(User $user, Proyecto $proyecto, $payload)
     {
-        //
+        if($user->can("Registrar reservas")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+            && (!$user->vendedor_id || Arr::get($payload, "vendedor_id") == $user->vendedor_id)
+        ) return true;
     }
 
     /**
