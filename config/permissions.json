@@ -44,7 +44,12 @@
       "Marcar planos como obsoleto/vigente",
       "Bloquear/Habilitar la edición de planos"
     ],
-    "Manzanas": [],
+    "Manzanas": [
+      "Ver manzanas",
+      "Registrar manzanas",
+      "Editar manzanas",
+      "Eliminar manzanas"
+    ],
     "Lotes": [],
     "Reservas": [],
     "Ventas": []
