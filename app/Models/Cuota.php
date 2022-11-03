@@ -246,9 +246,9 @@ class Cuota extends Model
         /** @var UfvRepositoryInterface $ufvRepository */
         $ufvRepository = app()->make(UfvRepositoryInterface::class);
         $ufvVencimiento = $ufvRepository->findByDate($this->vencimiento);
-        if (!$ufvVencimiento) throw new Exception("No se encontro el valor de la UFV en la fecha " . $this->vencimiento->format("Y-m-d"));
+        if (!$ufvVencimiento) abort(500, "No se encontro el valor de la UFV en la fecha " . $this->vencimiento->format("Y-m-d"));
         $ufvPago = $ufvRepository->findByDate($this->projectionDate);
-        if (!$ufvPago) throw new Exception("No se encontro el valor de la UFV en la fecha " . $this->projectionDate->format("Y-m-d"));
+        if (!$ufvPago) abort(500, "No se encontro el valor de la UFV en la fecha " . $this->projectionDate->format("Y-m-d"));
         //Factor de mantenimiento de valor
         $fmv = $ufvPago->isLessThan($ufvVencimiento) ? BigRational::one() : BigRational::of($ufvPago)->dividedBy($ufvVencimiento);
         $fas = BigRational::of($this->credito->tasa_mora)

@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Models\CategoriaLote;
+use App\Models\Proyecto;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -16,9 +17,11 @@ class CategoriaLotePolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function viewAny(User $user)
+    public function viewAny(User $user, Proyecto $proyecto, $queryArgs)
     {
-        //
+        if($user->can("Ver categorías")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+        ) return true;
     }
 
     /**
@@ -39,9 +42,11 @@ class CategoriaLotePolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function create(User $user)
+    public function create(User $user, Proyecto $proyecto, $payload)
     {
-        //
+        if($user->can("Registrar categorías")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+        ) return true;
     }
 
     /**
@@ -53,7 +58,10 @@ class CategoriaLotePolicy
      */
     public function update(User $user, CategoriaLote $categoriaLote)
     {
-        //
+        $proyecto = $categoriaLote->proyecto;
+        if($user->can("Editar categorías")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+        ) return true;
     }
 
     /**

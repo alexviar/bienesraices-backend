@@ -18,6 +18,12 @@
       "Editar proyectos",
       "Archivar/Desarchivar proyectos"
     ],
+    "Categorias": [
+      "Ver categorías",
+      "Registrar categorías",
+      "Editar categorías",
+      "Eliminar categorías"
+    ],
     "UFV": [
       "Ver UFVs",
       "Registrar UFVs",
@@ -56,8 +62,12 @@
       "Editar lotes",
       "Eliminar lotes"
     ],
-    "Reservas": [],
-    "Ventas": []
+    "Reservas": [
+
+    ],
+    "Ventas": [
+
+    ]
   },
 
   "includes": {
@@ -70,6 +80,12 @@
       "Ver roles",
       "Ver vendedores",
       "Ver proyectos"
+    ],
+    "Registrar lotes": [
+      "Ver manzanas"
+    ],
+    "Editar lotes": [
+      "Ver manzanas"
     ]
   }
 }

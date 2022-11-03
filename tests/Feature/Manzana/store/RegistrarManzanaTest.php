@@ -9,7 +9,7 @@ use App\Models\User;
 use Tests\TestCase;
 
 test('el usuario ha iniciado sesión', function () {
-    $response = $this->postJson("/api/proyectos/100/planos");
+    $response = $this->postJson("/api/proyectos/100/manzanas");
     $response->assertUnauthorized();
 });
 
@@ -117,7 +117,7 @@ test('usuarios autorizados', function ($dataset) {
     $login = $dataset["login"];
     $proyecto = $dataset["proyecto"];
 
-    $response = $this->actingAs($login)->postJson("/api/proyectos/$proyecto->id/planos");
+    $response = $this->actingAs($login)->postJson("/api/proyectos/$proyecto->id/manzanas");
     expect($response->getStatusCode())->not->toBe(403);
 })->with([
     "Acceso directo" => function(){
@@ -129,7 +129,7 @@ test('usuarios autorizados', function ($dataset) {
         ])->create();
         /** @var Role $rol */
         $rol = Role::factory()->create();
-        $rol->givePermissionTo("Registrar planos");
+        $rol->givePermissionTo("Registrar manzanas");
         $login->assignRole($rol);
         return [
             "login" => $login,
@@ -146,7 +146,7 @@ test('usuarios autorizados', function ($dataset) {
         /** @var Role $rol */
         $rol = Role::factory()->create();
         $permission = Permission::factory()->create();
-        $permission->givePermissionTo("Registrar planos");
+        $permission->givePermissionTo("Registrar manzanas");
         $rol->givePermissionTo($permission);
         $login->assignRole($rol);
         return [
@@ -163,7 +163,7 @@ test('usuarios autorizados', function ($dataset) {
         ])->create();
         /** @var Role $rol */
         $rol = Role::factory()->create();
-        $rol->givePermissionTo("Registrar planos");
+        $rol->givePermissionTo("Registrar manzanas");
         $login->assignRole($rol);
         $login->proyectos()->attach($proyecto);
         return [

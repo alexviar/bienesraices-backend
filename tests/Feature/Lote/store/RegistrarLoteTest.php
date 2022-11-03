@@ -122,7 +122,7 @@ test('usuarios autorizados', function ($dataset) {
     $login = $dataset["login"];
     $proyecto = $dataset["proyecto"];
 
-    $response = $this->actingAs($login)->postJson("/api/proyectos/$proyecto->id/planos");
+    $response = $this->actingAs($login)->postJson("/api/proyectos/$proyecto->id/lotes");
     expect($response->getStatusCode())->not->toBe(403);
 })->with([
     "Acceso directo" => function(){
@@ -134,7 +134,7 @@ test('usuarios autorizados', function ($dataset) {
         ])->create();
         /** @var Role $rol */
         $rol = Role::factory()->create();
-        $rol->givePermissionTo("Registrar planos");
+        $rol->givePermissionTo("Registrar lotes");
         $login->assignRole($rol);
         return [
             "login" => $login,
@@ -151,7 +151,7 @@ test('usuarios autorizados', function ($dataset) {
         /** @var Role $rol */
         $rol = Role::factory()->create();
         $permission = Permission::factory()->create();
-        $permission->givePermissionTo("Registrar planos");
+        $permission->givePermissionTo("Registrar lotes");
         $rol->givePermissionTo($permission);
         $login->assignRole($rol);
         return [
@@ -168,7 +168,7 @@ test('usuarios autorizados', function ($dataset) {
         ])->create();
         /** @var Role $rol */
         $rol = Role::factory()->create();
-        $rol->givePermissionTo("Registrar planos");
+        $rol->givePermissionTo("Registrar lotes");
         $login->assignRole($rol);
         $login->proyectos()->attach($proyecto);
         return [
