@@ -2,11 +2,164 @@
 
 use App\Models\CategoriaLote;
 use App\Models\Lote;
+use App\Models\Permission;
 use App\Models\Plano;
 use App\Models\Proyecto;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Arr;
+
+test('el usuario ha iniciado sesión', function () {
+    $plano = Plano::factory()->create();
+
+    $response = $this->putJson("/api/proyectos/$plano->proyecto_id/planos/$plano->id");
+    $response->assertUnauthorized();
+});
+
+#region Pruebas de autorización
+test('usuarios sin permiso no estan autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $plano = $dataset["plano"];
+
+    $response = $this->actingAs($login)->putJson("/api/proyectos/$plano->proyecto_id/planos/$plano->id");
+    $response->assertForbidden();
+})->with([
+    "Sin permiso" => function(){
+        $plano = Plano::factory()->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $login->assignRole($rol);
+        return [
+            "login" => $login, 
+            "plano" => $plano
+        ];
+    },
+    "Plano obsoleto no editable" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $login->assignRole("Super usuarios");
+        return [
+            "login" => $login,
+            "plano" => Plano::factory([
+                "estado" => 2
+            ])->create()
+        ];
+    },
+    "Plano obsoleto editable" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $login->assignRole("Super usuarios");
+        return [
+            "login" => $login,
+            "plano" => Plano::factory([
+                "estado" => 0 //Obsoleto y Editable
+            ])->create()
+        ];
+    },
+    "Plano vigente no editable" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Editar planos");
+        $login->assignRole("Super usuarios");
+        return [
+            "login" => $login,
+            "plano" => Plano::factory([
+                "estado" => 3 //Vigente y No editable
+            ])->create()
+        ];
+    },
+    "Proyecto no vinculado" => function(){
+        $plano = Plano::factory()->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Editar planos");
+        $login->assignRole($rol);
+        $login->proyectos()->attach(Proyecto::factory()->create());
+        return [
+            "login" => $login,
+            "plano" => $plano
+        ];
+    }
+]);
+
+test('usuarios autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $plano = $dataset["plano"];
+
+    $response = $this->actingAs($login)->putJson("/api/proyectos/$plano->proyecto_id/planos/$plano->id");
+    expect($response->getStatusCode())->not->toBe(403);
+})->with([
+    "Acceso directo" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Editar planos");
+        $login->assignRole($rol);
+        return [
+            "login" => $login,
+            "plano" => Plano::factory()->create()
+        ];
+    },
+    "Acceso indirecto" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $permission = Permission::factory()->create();
+        $permission->givePermissionTo("Editar planos");
+        $rol->givePermissionTo($permission);
+        $login->assignRole($rol);
+        return [
+            "login" => $login,
+            "plano" => Plano::factory()->create()
+        ];
+    },
+    "Proyecto vinculado" => function(){
+        $proyecto = Proyecto::factory()->create();
+        $plano = Plano::factory()->for($proyecto)->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Editar planos");
+        $login->assignRole($rol);
+        $login->proyectos()->attach($proyecto);
+        return [
+            "login" => $login,
+            "plano" => $plano
+        ];
+    }
+]);
+#endregion
 
 test('campos requeridos', function () {
     $plano = Plano::factory()->for(Proyecto::factory())->create();

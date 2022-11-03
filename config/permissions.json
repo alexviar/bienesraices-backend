@@ -36,7 +36,14 @@
       "Editar vendedores",
       "Eliminar vendedores"
     ],
-    "Planos": [],
+    "Planos": [
+      "Ver planos",
+      "Registrar planos",
+      "Editar planos",
+      "Eliminar planos",
+      "Marcar planos como obsoleto/vigente",
+      "Bloquear/Habilitar la edición de planos"
+    ],
     "Manzanas": [],
     "Lotes": [],
     "Reservas": [],

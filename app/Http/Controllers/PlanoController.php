@@ -14,8 +14,8 @@ class PlanoController extends Controller
 {
     function index(Request $request, $proyectoId){
         $proyecto = $this->findProyecto($proyectoId);
+        $this->authorize("viewAny", [Plano::class, $proyecto, $request->all()]);
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        $this->authorize("viewAll", [Plano::class, $queryArgs]);
         return $this->buildResponse($proyecto->planos(), $queryArgs);
     }
 
@@ -28,7 +28,7 @@ class PlanoController extends Controller
     function store(Request $request, $proyectoId)
     {
         $proyecto = $this->findProyecto($proyectoId);
-        $this->authorize("create", [Plano::class, $request->all()]);
+        $this->authorize("create", [Plano::class, $proyecto, $request->all()]);
         $payload = $request->validate([
             "titulo" => "required|string|max:100",
             "descripcion" => "nullable|string|max:255",
