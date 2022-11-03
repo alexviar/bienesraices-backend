@@ -33,6 +33,11 @@ class ClientePolicy
         //
     }
 
+    public function viewListaMora(User $user)
+    {
+        if($user->can("Ver clientes en mora")) return true;
+    }
+
     /**
      * Determine whether the user can create models.
      *

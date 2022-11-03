@@ -21,6 +21,7 @@ class ListaMoraController extends Controller
 
     function index(Request $request)
     {
+        $this->authorize("viewListaMora", [Cliente::class, $request->all()]);
         $queryArgs =  $request->only(["search", "filter", "page"]);
         $response = $this->buildResponse(Cliente::query()->with(Arr::dot(["creditosEnMora"=>[
             "credito.cuotasVencidas",
