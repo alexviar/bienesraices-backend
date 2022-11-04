@@ -18,7 +18,7 @@ class ProyectoPolicy
      */
     public function viewAny(User $user)
     {
-        //
+        if($user->can("Ver proyectos")) return true;
     }
 
     /**
@@ -30,7 +30,9 @@ class ProyectoPolicy
      */
     public function view(User $user, Proyecto $proyecto)
     {
-        //
+        if($user->can("Ver proyectos")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+        ) return true;
     }
 
     /**
@@ -41,7 +43,7 @@ class ProyectoPolicy
      */
     public function create(User $user)
     {
-        //
+        if($user->can("Registrar proyectos")) return true;
     }
 
     /**
@@ -53,7 +55,9 @@ class ProyectoPolicy
      */
     public function update(User $user, Proyecto $proyecto)
     {
-        //
+        if($user->can("Editar proyectos")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+        ) return true;
     }
 
     /**

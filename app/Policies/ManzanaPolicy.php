@@ -3,8 +3,10 @@
 namespace App\Policies;
 
 use App\Models\Manzana;
+use App\Models\Proyecto;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Support\Facades\Log;
 
 class ManzanaPolicy
 {
@@ -16,9 +18,11 @@ class ManzanaPolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function viewAny(User $user)
+    public function viewAny(User $user, Proyecto $proyecto, $queryArgs)
     {
-        //
+        if($user->can("Ver manzanas")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+        ) return true;
     }
 
     /**
@@ -39,9 +43,13 @@ class ManzanaPolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function create(User $user)
+    public function create(User $user, Proyecto $proyecto, $payload)
     {
-        //
+        $plano = $proyecto->plano;
+        if(/*!$plano->is_vigente || */$plano->is_locked) return false;
+        if($user->can("Registrar manzanas")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+        ) return true;
     }
 
     /**

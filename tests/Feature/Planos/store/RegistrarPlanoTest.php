@@ -1,13 +1,119 @@
 <?php
 
 use App\Models\CategoriaLote;
-use App\Models\Lote;
+use App\Models\Permission;
 use App\Models\Plano;
 use App\Models\Proyecto;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Arr;
 
+test('el usuario ha iniciado sesión', function () {
+    $proyecto = Proyecto::factory()->create();
+
+    $response = $this->postJson("/api/proyectos/$proyecto->id/planos");
+    $response->assertUnauthorized();
+});
+
+#region Pruebas de autorización
+test('usuarios sin permiso no estan autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $proyecto = $dataset["proyecto"];
+
+    $response = $this->actingAs($login)->postJson("/api/proyectos/$proyecto->id/planos");
+    $response->assertForbidden();
+})->with([
+    "Sin permiso" => function(){
+        $proyecto = Proyecto::factory()->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $login->assignRole($rol);
+        return [
+            "login" => $login, 
+            "proyecto" => $proyecto
+        ];
+    },
+    "Proyecto no vinculado" => function(){
+        $proyecto = Proyecto::factory()->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar planos");
+        $login->assignRole($rol);
+        $login->proyectos()->attach(Proyecto::factory()->create());
+        return [
+            "login" => $login,
+            "proyecto" => $proyecto
+        ];
+    }
+]);
+
+test('usuarios autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $proyecto = $dataset["proyecto"];
+
+    $response = $this->actingAs($login)->postJson("/api/proyectos/$proyecto->id/planos");
+    expect($response->getStatusCode())->not->toBe(403);
+})->with([
+    "Acceso directo" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar planos");
+        $login->assignRole($rol);
+        return [
+            "login" => $login,
+            "proyecto" => Proyecto::factory()->create()
+        ];
+    },
+    "Acceso indirecto" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $permission = Permission::factory()->create();
+        $permission->givePermissionTo("Registrar planos");
+        $rol->givePermissionTo($permission);
+        $login->assignRole($rol);
+        return [
+            "login" => $login,
+            "proyecto" => Proyecto::factory()->create()
+        ];
+    },
+    "Proyecto vinculado" => function(){
+        $proyecto = Proyecto::factory()->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar planos");
+        $login->assignRole($rol);
+        $login->proyectos()->attach($proyecto);
+        return [
+            "login" => $login,
+            "proyecto" => $proyecto
+        ];
+    }
+]);
+#endregion
+
+#region Pruebas de validación
 test('campos requeridos', function () {
     $proyecto = Proyecto::factory()->create();
     $proyectoId = $proyecto->id;
@@ -16,6 +122,7 @@ test('campos requeridos', function () {
         "titulo" => "El campo 'titulo' es requerido."
     ]);
 });
+#endregion
 
 test('solo puede haber un plano vigente', function () {
     $proyecto = Proyecto::factory()->create();

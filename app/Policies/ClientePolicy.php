@@ -18,7 +18,7 @@ class ClientePolicy
      */
     public function viewAny(User $user)
     {
-        //
+        if($user->can("Ver clientes")) return true;
     }
 
     /**
@@ -33,6 +33,11 @@ class ClientePolicy
         //
     }
 
+    public function viewListaMora(User $user)
+    {
+        if($user->can("Ver clientes en mora")) return true;
+    }
+
     /**
      * Determine whether the user can create models.
      *
@@ -41,7 +46,7 @@ class ClientePolicy
      */
     public function create(User $user)
     {
-        //
+        if($user->can("Registrar clientes")) return true;
     }
 
     /**

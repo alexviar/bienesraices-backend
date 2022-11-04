@@ -18,7 +18,7 @@ class VendedorPolicy
      */
     public function viewAny(User $user)
     {
-        //
+        if($user->can("Ver vendedores")) return true;
     }
 
     /**
@@ -41,7 +41,7 @@ class VendedorPolicy
      */
     public function create(User $user)
     {
-        //
+        if($user->can("Registrar vendedores")) return true;
     }
 
     /**

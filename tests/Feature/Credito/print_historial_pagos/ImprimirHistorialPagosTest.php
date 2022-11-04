@@ -8,10 +8,13 @@ use App\Models\DetalleTransaccion;
 use App\Models\Interfaces\UfvRepositoryInterface;
 use App\Models\Lote;
 use App\Models\Manzana;
+use App\Models\Permission;
 use App\Models\Plano;
 use App\Models\Proyecto;
+use App\Models\Role;
 use App\Models\Transaccion;
 use App\Models\User;
+use App\Models\Vendedor;
 use App\Models\Venta;
 use Brick\Math\BigDecimal;
 use Illuminate\Http\Response;
@@ -20,15 +23,144 @@ use Illuminate\Support\Facades\DB;
 use Mockery\MockInterface;
 use Tests\TestCase;
 
-function comparePdf($generatedContent, $sampleContent){
-    $generatedContent = Str::beforeLast($generatedContent, "endstream");
-    $generatedContent = Str::afterLast($generatedContent, "stream");
+test('el usuario ha iniciado sesión', function () {
+    $credito = buildCredito2();
 
-    $sampleContent = Str::beforeLast($sampleContent, "endstream");
-    $sampleContent = Str::afterLast($sampleContent, "stream");
+    $response = $this->getJson("/creditos/$credito->codigo/historial-pagos");
+    $response->assertUnauthorized();
+});
 
-    return $generatedContent == $sampleContent;
-}
+#region Pruebas de autorización
+test('usuarios sin permiso no estan autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $credito = $dataset["credito"];
+
+    $response = $this->actingAs($login)->get("/creditos/$credito->codigo/historial-pagos");
+    $response->assertForbidden();
+})->with([
+    "Sin permiso" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $login->assignRole($rol);
+        return [
+            "login" => $login, 
+            "credito" => $credito
+        ];
+    },
+    "Proyecto no vinculado" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Imprimir historial de pagos");
+        $login->assignRole($rol);
+        $login->proyectos()->attach(Proyecto::factory()->create());
+        return [
+            "login" => $login,
+            "credito" => $credito
+        ];
+    },
+    "Vendedor no vinculado" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Imprimir historial de pagos");
+        $login->assignRole($rol);
+        $login->vendedor()->associate(Vendedor::factory()->create());
+        return [
+            "login" => $login,
+            "credito" => $credito
+        ];
+    }
+]);
+
+test('usuarios autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $credito = $dataset["credito"];
+
+    $response = $this->actingAs($login)->getJson("/creditos/$credito->codigo/historial-pagos");
+    expect($response->getStatusCode())->not->toBe(403);
+})->with([
+    "Acceso directo" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Imprimir historial de pagos");
+        $login->assignRole($rol);
+        return [
+            "login" => $login,
+            "credito" => $credito
+        ];
+    },
+    "Acceso indirecto" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $permission = Permission::factory()->create();
+        $permission->givePermissionTo("Imprimir historial de pagos");
+        $rol->givePermissionTo($permission);
+        $login->assignRole($rol);
+        return [
+            "login" => $login,
+            "credito" => $credito
+        ];
+    },
+    "Proyecto vinculado" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Imprimir historial de pagos");
+        $login->assignRole($rol);
+        $login->proyectos()->attach($credito->creditable->proyecto);
+        return [
+            "login" => $login,
+            "credito" => $credito
+        ];
+    },
+    "Vendedor vinculado" => function(){
+        $credito = buildCredito2();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Imprimir historial de pagos");
+        $login->assignRole($rol);
+        $login->vendedor()->associate($credito->creditable->vendedor);
+        return [
+            "login" => $login,
+            "credito" => $credito
+        ];
+    },
+]);
+#endregion
 
 it("Genera un reporte del historial de pagos", function(){
     /** @var TestCase $this */
@@ -178,7 +310,7 @@ it("imprime el historial de pagos en pantalla", function(){
     // $mock = \Mockery::mock(new HistorialPagos);
     // $this->instance(HistorialPagos::class, $mock)->shouldReceive("generate")->once();
 
-    $response = $this->actingAs($user)->get("/creditos/{$credito->codigo}/historial_pagos");
+    $response = $this->actingAs($user)->get("/creditos/{$credito->codigo}/historial-pagos");
 
     $response->assertOk();
     $response->assertSeeText("MOCKED_CONTENT");

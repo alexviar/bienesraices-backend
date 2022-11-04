@@ -1,0 +1,157 @@
+{
+  "groups": {
+    "Usuarios": [
+      "Ver usuarios",
+      "Registrar usuarios",
+      "Editar usuarios",
+      "Activar/Desactivar usuarios"
+    ],
+    "Roles": [
+      "Ver roles",
+      "Registrar roles",
+      "Editar roles",
+      "Eliminar roles"
+    ],
+    "Proyectos": [
+      "Ver proyectos",
+      "Registrar proyectos",
+      "Editar proyectos",
+      "Archivar/Desarchivar proyectos"
+    ],
+    "Categorias": [
+      "Ver categorías",
+      "Registrar categorías",
+      "Editar categorías",
+      "Eliminar categorías"
+    ],
+    "UFV": [
+      "Ver UFVs",
+      "Registrar UFVs",
+      "Editar UFVs",
+      "Eliminar UFVs"
+    ],
+    "Clientes": [
+      "Ver clientes",
+      "Registrar clientes",
+      "Editar clientes",
+      "Eliminar clientes"
+    ],
+    "Vendedores": [
+      "Ver vendedores",
+      "Registrar vendedores",
+      "Editar vendedores",
+      "Eliminar vendedores"
+    ],
+    "Planos": [
+      "Ver planos",
+      "Registrar planos",
+      "Editar planos",
+      "Eliminar planos",
+      "Marcar planos como obsoleto/vigente",
+      "Bloquear/Habilitar la edición de planos"
+    ],
+    "Manzanas": [
+      "Ver manzanas",
+      "Registrar manzanas",
+      "Editar manzanas",
+      "Eliminar manzanas"
+    ],
+    "Lotes": [
+      "Ver lotes",
+      "Registrar lotes",
+      "Editar lotes",
+      "Eliminar lotes"
+    ],
+    "Reservas": [
+      "Ver reservas",
+      "Registrar reservas",
+      "Anular reservas",
+      "Imprimir comprobantes de reserva"
+    ],
+    "Ventas": [
+      "Ver ventas",
+      "Registrar ventas",
+      "Anular ventas",
+      "Imprimir comprobantes de venta"
+    ],
+    "Caja": [
+      "Ver transacciones",
+      "Registrar transacciones",
+      "Imprimir recibos",
+      "Anular transacciones"
+    ],
+    "Créditos": [
+      "Diferir creditos",
+      "Programar adelantos a capital",
+      "Imprimir plan de pagos",
+      "Imprimir historial de pagos"
+    ],
+    "Lista de mora": [
+      "Ver clientes en mora"
+    ]
+  },
+
+  "includes": {
+    "Registrar usuarios": [
+      "Ver roles",
+      "Ver vendedores",
+      "Ver proyectos"
+    ],
+    "Editar usuarios": [
+      "Ver roles",
+      "Ver vendedores",
+      "Ver proyectos"
+    ],
+    "Ver planos": [
+      "Ver proyectos"
+    ],
+    "Registrar planos": [
+      "Ver proyectos"
+    ],
+    "Editar planos": [
+      "Ver proyectos"
+    ],
+    "Ver manzanas": [
+      "Ver proyectos"
+    ],
+    "Registrar manzanas": [
+      "Ver proyectos"
+    ],
+    "Editar manzanas": [
+      "Ver proyectos"
+    ],
+    "Ver lotes": [
+      "Ver proyectos"
+    ],
+    "Registrar lotes": [
+      "Ver proyectos",
+      "Ver manzanas",
+      "Ver categorías"
+    ],
+    "Editar lotes": [
+      "Ver proyectos",
+      "Ver manzanas",
+      "Ver categorías"
+    ],
+    "Ver reservas": [
+      "Ver proyectos"
+    ],
+    "Registrar reservas": [
+      "Ver proyectos",
+      "Ver manzanas",
+      "Ver lotes",
+      "Ver clientes",
+      "Ver vendedores"
+    ],
+    "Ver ventas": [
+      "Ver proyectos"
+    ],
+    "Registrar ventas": [
+      "Ver proyectos",
+      "Ver manzanas",
+      "Ver lotes",
+      "Ver clientes",
+      "Ver vendedores"
+    ]
+  }
+}

@@ -13,12 +13,20 @@ class ProyectoController extends Controller
 {
     function applyFilters($query, $queryArgs)
     {
+        if($search = Arr::get($queryArgs, "search")){
+            $query->where("nombre", "LIKE", "$search%");
+        }    
     }
 
     function index(Request $request)
     {
+        $this->authorize("viewAny", [Proyecto::class, $request->all()]);
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        return $this->buildResponse(Proyecto::query(), $queryArgs);
+        $query = Proyecto::query()->latest();
+        if(($user = $request->user())->proyectos->count()){
+            $query->whereIn("id", $user->proyectos->pluck("id"));
+        }
+        return $this->buildResponse($query, $queryArgs);
     }
 
     function findProyecto(Request $request, $id){
@@ -31,10 +39,13 @@ class ProyectoController extends Controller
 
     function show(Request $request, $id)
     {
-        return $this->findProyecto($request, $id);
+        $proyecto = $this->findProyecto($request, $id);
+        $this->authorize("view", [$proyecto]);
+        return $proyecto;
     }
 
     function store(Request $request){
+        $this->authorize("create", [Proyecto::class, $request->all()]);
         $payload = $request->validate([
             "nombre" => "required|string",
             "ubicacion.latitud" => "required|numeric|min:-90|max:90",
@@ -62,6 +73,7 @@ class ProyectoController extends Controller
     function update(Request $request, $proyectoId)
     {
         $proyecto = $this->findProyecto($request, $proyectoId);
+        $this->authorize("update", [$proyecto, $request->all()]);
         $payload = $request->validate([
             "nombre" => "sometimes|required|string",
             "ubicacion" => "sometimes|array|required",

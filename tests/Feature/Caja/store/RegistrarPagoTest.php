@@ -5,6 +5,8 @@ use App\Models\Cliente;
 use App\Models\Cuota;
 use App\Models\Credito;
 use App\Models\Interfaces\UfvRepositoryInterface;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\Transaccion;
 use App\Models\User;
 use App\Models\Venta;
@@ -27,6 +29,62 @@ function buildCredito2(){
     $credito->build();
     return $credito;
 }
+
+test('el usuario ha iniciado sesión', function () {
+    $response = $this->postJson('/api/transacciones');
+    $response->assertUnauthorized();
+});
+
+#region Pruebas de autorización
+test('usuarios sin permiso no estan autorizados', function () {
+    /** @var TestCase $this */
+    /** @var User $login */
+    $login = User::factory([
+        "estado" => 1
+    ])->create();
+    /** @var Role $rol */
+    $rol = Role::factory()->create();
+    $login->assignRole($rol);
+    $response = $this->actingAs($login)->postJson('/api/transacciones');
+    $response->assertForbidden();
+});
+
+test('usuarios autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $response = $this->actingAs($login)->postJson('/api/transacciones');
+    expect($response->getStatusCode())->not->toBe(403);
+})->with([
+    "Acceso directo" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar transacciones");
+        $login->assignRole($rol);
+        return [
+            "login" => $login
+        ];
+    },
+    "Acceso indirecto" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $permission = Permission::factory()->create();
+        $permission->givePermissionTo("Registrar transacciones");
+        $rol->givePermissionTo($permission);
+        $login->assignRole($rol);
+        return [
+            "login" => $login
+        ];
+    }
+]);
+#endregion
 
 test("Campos requeridos", function($dataset){
     /** @var TestCase $this */
@@ -546,6 +604,71 @@ test('El pago excede el saldo de la cuota', function() {
     $response->assertCreated();
 });
 
+test('El pago excede el saldo de la cuota (saldo 0)', function() {
+    /** @var TestCase $this */
+
+    $this->travelTo(Carbon::createFromFormat("Y-m-d", "2022-02-28"));
+
+    $venta = Venta::factory([
+        "fecha" => now(),
+        "importe" => "10530.96"
+    ])->credito("10030.96")->create();
+    // $venta->crearPlanPago();
+    $credito = Credito::factory([
+        "dia_pago" => 31,
+        "plazo" => 48,
+        "periodo_pago" => 1
+    ])->for($venta, "creditable")->create();
+    $credito->build();
+
+    $this->travelTo($credito->cuotas[0]->vencimiento);
+
+    $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [
+        "cliente_id" => $venta->cliente_id,
+        "moneda" => $venta->moneda,
+        "detalles" => [
+            [
+                "importe" => "255.19",
+                "id" => $credito->cuotas[0]->getMorphKey(),
+                "type" => $credito->cuotas[0]->getMorphClass()
+            ]
+        ],
+        "medios_pago" => [
+            [
+                "forma_pago" => 2,
+                "importe" => "256",
+                "numero_comprobante" => 123124354236,
+                "comprobante" => UploadedFile::fake()->image("comprobante.png")
+            ]
+        ]
+    ]);
+    $response->assertCreated();
+
+    $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', [
+        "cliente_id" => $venta->cliente_id,
+        "moneda" => $venta->moneda,
+        "detalles" => [
+            [
+                "importe" => "0.01",
+                "id" => $credito->cuotas[0]->getMorphKey(),
+                "type" => $credito->cuotas[0]->getMorphClass()
+            ]
+        ],
+        "medios_pago" => [
+            [
+                "forma_pago" => 2,
+                "importe" => "256",
+                "numero_comprobante" => 123124354236,
+                "comprobante" => UploadedFile::fake()->image("comprobante.png")
+            ]
+        ]
+    ]);
+    $response->assertStatus(500);
+    $response->assertJson([
+        "message" => "El pago excede el importe a pagar."
+    ]);
+});
+
 test('Solo puede pagar cuotas en curso o vencidas', function() {
     /** @var TestCase $this */
 
@@ -592,3 +715,5 @@ test('Solo puede pagar cuotas en curso o vencidas', function() {
         "message" => "Solo puede pagar cuotas vencidas o en curso."
     ]);
 });
+
+// test('Pago doble')

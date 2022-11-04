@@ -16,9 +16,11 @@ class PlanoPolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function viewAny(User $user)
+    public function viewAny(User $user, $proyecto, $queryArgs)
     {
-        //
+        if($user->can("Ver planos")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+        ) return true;
     }
 
     /**
@@ -30,7 +32,9 @@ class PlanoPolicy
      */
     public function view(User $user, Plano $plano)
     {
-        //
+        if($user->can("Ver planos")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($plano->proyecto))
+        ) return true;
     }
 
     /**
@@ -39,9 +43,11 @@ class PlanoPolicy
      * @param  \App\Models\User  $user
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function create(User $user)
+    public function create(User $user, $proyecto, $payload)
     {
-        //
+        if($user->can("Registrar planos")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($proyecto))
+        ) return true;
     }
 
     /**
@@ -51,9 +57,12 @@ class PlanoPolicy
      * @param  \App\Models\Plano  $plano
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, Plano $plano)
+    public function update(User $user, Plano $plano, $payload)
     {
-        //
+        if(!$plano->is_vigente || $plano->is_locked) return false;
+        if($user->can("Editar planos")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($plano->proyecto))
+        ) return true;
     }
 
     /**

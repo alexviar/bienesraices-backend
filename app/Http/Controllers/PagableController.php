@@ -6,6 +6,7 @@ use App\Models\Cliente;
 use App\Models\Credito;
 use App\Models\Cuota;
 use App\Models\Reserva;
+use App\Models\Transaccion;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -15,6 +16,7 @@ class PagableController extends Controller
 {
     function index(Request $request)
     {
+        $this->authorize("viewPagables", [Transaccion::class, $request->all()]);
         $codigoPago = $request->get("codigo_pago");
         if(!$codigoPago){
             abort(400, "No proporcionó un código de pago");

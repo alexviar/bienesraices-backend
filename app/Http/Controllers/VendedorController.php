@@ -21,7 +21,26 @@ class VendedorController extends Controller
     
     function index(Request $request)
     {
+        $this->authorize("viewAny", [Vendedor::class, $request->all()]);
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        return $this->buildResponse(Vendedor::query(), $queryArgs);
+        $query = Vendedor::query();
+        if(($user = $request->user())->vendedor_id){
+            $query->where("id", $user->vendedor_id);
+        }
+        return $this->buildResponse($query, $queryArgs);
+    }
+
+    function store(Request $request)
+    {
+        $this->authorize("create", [Vendedor::class, $request->all()]);
+        $payload = $request->validate([
+            "numero_documento" => "required",
+            "apellido_paterno" => "required_if:apellido_materno,null",
+            "apellido_materno" => "required_if:apellido_paterno,null",
+            "nombre" => "required",
+            "telefono" => "sometimes"
+        ]);
+
+        return Vendedor::create($payload);
     }
 }

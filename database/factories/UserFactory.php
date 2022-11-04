@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 class UserFactory extends Factory
@@ -15,11 +16,12 @@ class UserFactory extends Factory
     public function definition($attributes)
     {
         return [
-            'username' => $attributes["username"] ?? $this->faker->name(),
+            'username' => $attributes["username"] ?? $this->faker->userName(),
             'email' => $attributes["email"] ?? $this->faker->unique()->safeEmail(),
-            'email_verified_at' => $attributes["email_verified_at"] ?? now(),
+            'email_verified_at' => Arr::get($attributes, "email_verified_at", now()),
             'password' => $attributes["password"] ?? "password",//'$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
             'remember_token' => $attributes["remember_token"] ?? Str::random(10),
+            'estado' => $attributes["estado"] ?? 1
         ];
     }
 

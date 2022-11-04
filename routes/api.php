@@ -13,6 +13,7 @@ use App\Http\Controllers\PagableController;
 use App\Http\Controllers\PlanoController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Controllers\ReservaController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UFVController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendedorController;
@@ -47,7 +48,10 @@ Route::middleware('auth:sanctum')->get('/currencies', [CurrencyController::class
 Route::middleware('auth:sanctum')->get('/clientes', [ClienteController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/clientes', [ClienteController::class, "store"]);
 
-Route::middleware('auth:sanctum')->get('/vendedores', [VendedorController::class, "index"]);
+Route::controller(VendedorController::class)->prefix("vendedores")->group(function(){
+    Route::middleware('auth:sanctum')->get('/', "index");
+    Route::middleware('auth:sanctum')->post('/', "store");
+});
 
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/ventas', [VentaController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/ventas', [VentaController::class, "store"]);
@@ -106,4 +110,19 @@ Route::controller(CreditoController::class)->group(function(){
 Route::controller(UFVController::class)->group(function(){
     Route::middleware('auth:sanctum')->get('/ufvs', 'index');
     Route::middleware('auth:sanctum')->post('/ufvs', 'store');
+});
+
+Route::controller(UserController::class)->prefix("/usuarios")->group(function(){
+    Route::middleware('auth:sanctum')->get('/{userId}', 'show');
+    Route::middleware('auth:sanctum')->get('/', 'index');
+    Route::middleware('auth:sanctum')->post('/', 'store');
+    Route::middleware('auth:sanctum')->put('/{userId}/{action}', 'changeStatus')->where("action", "^(activar|desactivar)$");
+    Route::middleware('auth:sanctum')->put('/{userId}', 'update');
+});
+
+Route::controller(RoleController::class)->prefix("/roles")->group(function(){
+    Route::middleware('auth:sanctum')->get('/{rolId}', 'show');
+    Route::middleware('auth:sanctum')->put('/{rolId}', 'update');
+    Route::middleware('auth:sanctum')->get('/', 'index');
+    Route::middleware('auth:sanctum')->post('/', 'store');
 });

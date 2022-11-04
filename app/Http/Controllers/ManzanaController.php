@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Manzana;
+use App\Models\Plano;
 use App\Models\Proyecto;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class ManzanaController extends Controller
     function index(Request $request, $proyectoId)
     {
         $proyecto = $this->findProyecto($proyectoId);
+        $this->authorize("viewAny", [Manzana::class, $proyecto, $request->all()]);
         if(!$proyecto->plano){
             return $this->buildPaginatedResponseData([
                 "total_records" => 0
@@ -49,6 +51,7 @@ class ManzanaController extends Controller
         if(!($plano = $proyecto->plano)){
             abort(404, "El proyecto no tiene un plano vigente.");
         }
+        $this->authorize("create", [Manzana::class, $proyecto, $request->all()]);
         $payload = $request->validate([
             "numero" => ["required", Rule::unique(Manzana::class)->where(function ($query) use($plano) {
                 return $query->where("plano_id", $plano->id);

@@ -70,11 +70,29 @@ expect()->extend('toMatchNestedArray', function ($array, $path="") {
 |
 */
 
-function something()
-{
-    // ..
+function read_csv($filename){
+    $file = fopen($filename, "r");
+
+    while (($data = fgetcsv($file, 0, "\t")) !== FALSE) {
+        yield $data;
+    }
+
+    fclose($file);
+
 }
 
-uses()->beforeEach(function(){
+function comparePdf($generatedContent, $sampleContent){
+    $generatedContent = \Illuminate\Support\Str::beforeLast($generatedContent, "endstream");
+    $generatedContent = \Illuminate\Support\Str::afterLast($generatedContent, "stream");
+
+    $sampleContent = \Illuminate\Support\Str::beforeLast($sampleContent, "endstream");
+    $sampleContent = \Illuminate\Support\Str::afterLast($sampleContent, "stream");
+
+    return $generatedContent == $sampleContent;
+}
+
+uses()
+->beforeEach(function(){
     $this->faker->seed(2022);  
+    $this->seed();
 })->in("Feature");

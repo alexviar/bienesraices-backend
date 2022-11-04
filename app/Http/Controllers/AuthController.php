@@ -42,7 +42,7 @@ class AuthController extends Controller
 
     // abort(401, __("passwords.credentials"));
     // throw UnauthorizedException(__("passwords.credentials"))
-    return response()->json(["message"=>__("passwords.credentials")], 401);
+    return response()->json(["message"=>__("auth.failed")], 401);
   }
 
   public function logout(Request $request){

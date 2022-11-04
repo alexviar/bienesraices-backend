@@ -50,6 +50,7 @@ class LoteController extends Controller
     function index(Request $request, $proyectoId)
     {
         $proyecto = $this->findProyecto($proyectoId);
+        $this->authorize("viewAny", [Lote::class, $proyecto, $request->all()]);
         if(!($plano = $proyecto->plano)){
             // abort(404, "No hay un plano vigente.");
             return $this->buildPaginatedResponseData([
@@ -68,6 +69,9 @@ class LoteController extends Controller
     function store(Request $request, $proyectoId)
     {
         $proyecto = $this->findProyecto($proyectoId);
+        if(!($plano = $proyecto->plano)){
+            abort(404, "El proyecto no tiene un plano vigente.");
+        }
         try
         {
             $request->merge([
@@ -75,6 +79,8 @@ class LoteController extends Controller
             ]);
         }
         catch(Throwable $e){ }
+        
+        $this->authorize("create", [Lote::class, $proyecto, $request->all()]);
         // dd($proyecto->lotes()->where("error", 1)->whereNotExists(function($query){
         //     $query->select(DB::raw(1))
         //     ->from("lotes", "l")

@@ -57,7 +57,7 @@
     </div>
     <p style="line-height: 2;text-align:justify">
         Se registró la venta al <b>{{$tipoVenta}}</b> del lote <b>{{$codigoLote}}</b> del proyecto <b>{{$nombreProyecto}}</b> por un valor de 
-        <b style="text-transform:uppercase">{{$importeTextual[0]}}</b> con <b style="text-transform:uppercase">{{$importeTextual[0]}}</b> centavos.
+        <b style="text-transform:uppercase">{{$importeTextual[0]}}</b> con <b style="text-transform:uppercase">{{$importeTextual[1]}}</b> centavos.
         A nombre de <b>{{$nombreCliente}}</b> con <b>{{$tipoDocumento}} {{$documento}}</b>
     </p>
 </body>

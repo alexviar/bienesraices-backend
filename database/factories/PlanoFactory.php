@@ -17,7 +17,8 @@ class PlanoFactory extends Factory
         return [
             "titulo" => $attributes["titulo"] ?? $this->faker->text(100),
             "descripcion" => $attributes["descripcion"] ?? $this->faker->text(255),
-            "proyecto_id" => $attributes["proyecto_id"] ?? Proyecto::factory()
+            "proyecto_id" => $attributes["proyecto_id"] ?? Proyecto::factory(),
+            "estado" => $attributes["estado"] ?? 1,
         ];
     }
 }

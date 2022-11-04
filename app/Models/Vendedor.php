@@ -11,6 +11,14 @@ class Vendedor extends Model
     use HasFactory, SaveToUpper;
 
     protected $table = "vendedores";
+
+    protected $fillable = [
+        "numero_documento",
+        "apellido_materno",
+        "apellido_paterno",
+        "nombre",
+        "telefono"
+    ];
     
     protected $appends = [ "nombre_completo" ];
 

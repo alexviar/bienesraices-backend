@@ -26,7 +26,7 @@ class CajaController extends Controller
     function index(Request $request)
     {
         $queryArgs = $request->only(["search", "filter", "page"]);
-        $this->authorize("viewAll", [Transaccion::class, $queryArgs]);
+        $this->authorize("viewAny", [Transaccion::class, $queryArgs]);
         return $this->buildResponse(Transaccion::with(["cliente"]), $queryArgs);
     }
 
@@ -50,11 +50,11 @@ class CajaController extends Controller
 
     function store(Request $request)
     {
-        $this->authorize("store", [Transaccion::class]);
         $today = Carbon::today();
         $request->mergeIfMissing([
             "fecha" => $today->format("Y-m-d")
         ]);
+        $this->authorize("create", [Transaccion::class, $request->all()]);
 
         //Mejor no usar la validacion exists para disminuir el numero de llamadas a la BD
         //¿Que tan conveniente es dejar que la solicitud falle?
@@ -131,7 +131,7 @@ class CajaController extends Controller
             }
 
             $saldo = $pagoTotal->minus($transaccion->importe->amount);
-            Log::debug(json_encode([(string)$pagoTotal, (string)$transaccion->importe, (string)$saldo]));
+            // Log::debug(json_encode([(string)$pagoTotal, (string)$transaccion->importe, (string)$saldo]));
             if ($saldo->isGreaterThan("0") && Arr::get($payload, "registrar_excedentes")) {
                 // 
                 $account = Account::where("cliente_id", $payload["cliente_id"])

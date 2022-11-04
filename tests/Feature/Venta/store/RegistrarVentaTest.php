@@ -3,32 +3,160 @@
 use App\Events\VentaCreated;
 use App\Models\Credito;
 use App\Models\Lote;
+use App\Models\Permission;
 use App\Models\Proyecto;
 use App\Models\Reserva;
+use App\Models\Role;
 use App\Models\Talonario;
-use App\Models\Transaccion;
 use App\Models\User;
+use App\Models\Vendedor;
 use App\Models\Venta;
 use Brick\Math\BigDecimal;
 use Illuminate\Filesystem\FilesystemAdapter;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
-use Mockery\MockInterface;
 use Tests\TestCase;
 
-function read_csv($filename){
-    $file = fopen($filename, "r");
+test('el usuario ha iniciado sesión', function () {
+    $proyecto = Proyecto::factory()->create();
 
-    while (($data = fgetcsv($file, 0, "\t")) !== FALSE) {
-        yield $data;
+    $response = $this->postJson("/api/proyectos/$proyecto->id/ventas");
+    $response->assertUnauthorized();
+});
+
+#region Pruebas de autorización
+test('usuarios sin permiso no estan autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $proyecto = $dataset["proyecto"];
+
+    $response = $this->actingAs($login)->postJson("/api/proyectos/$proyecto->id/ventas");
+    $response->assertForbidden();
+})->with([
+    "Sin permiso" => function(){
+        $proyecto = Proyecto::factory()->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $login->assignRole($rol);
+        return [
+            "login" => $login, 
+            "proyecto" => $proyecto
+        ];
+    },
+    "Proyecto no vinculado" => function(){
+        $proyecto = Proyecto::factory()->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar ventas");
+        $login->assignRole($rol);
+        $login->proyectos()->attach(Proyecto::factory()->create());
+        return [
+            "login" => $login,
+            "proyecto" => $proyecto
+        ];
+    },
+    "Vendedor no vinculado" => function(){
+        $proyecto = Proyecto::factory()->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar ventas");
+        $login->assignRole($rol);
+        $login->vendedor()->associate(Vendedor::factory()->create());
+        return [
+            "login" => $login,
+            "proyecto" => $proyecto
+        ];
     }
+]);
 
-    fclose($file);
+test('usuarios autorizados', function ($dataset) {
+    /** @var TestCase $this */
+    $login = $dataset["login"];
+    $proyecto = $dataset["proyecto"];
 
-}
+    $response = $this->actingAs($login)->postJson("/api/proyectos/$proyecto->id/ventas", [
+        "vendedor_id" => $login->vendedor_id
+    ]);
+    expect($response->getStatusCode())->not->toBe(403);
+})->with([
+    "Acceso directo" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar ventas");
+        $login->assignRole($rol);
+        return [
+            "login" => $login,
+            "proyecto" => Proyecto::factory()->create()
+        ];
+    },
+    "Acceso indirecto" => function(){
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $permission = Permission::factory()->create();
+        $permission->givePermissionTo("Registrar ventas");
+        $rol->givePermissionTo($permission);
+        $login->assignRole($rol);
+        return [
+            "login" => $login,
+            "proyecto" => Proyecto::factory()->create()
+        ];
+    },
+    "Proyecto vinculado" => function(){
+        $proyecto = Proyecto::factory()->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar ventas");
+        $login->assignRole($rol);
+        $login->proyectos()->attach($proyecto);
+        return [
+            "login" => $login,
+            "proyecto" => $proyecto
+        ];
+    },
+    "Vendedor vinculado" => function(){
+        $proyecto = Proyecto::factory()->create();
+        /** @var User $login */
+        $login = User::factory([
+            "estado" => 1
+        ])->create();
+        /** @var Role $rol */
+        $rol = Role::factory()->create();
+        $rol->givePermissionTo("Registrar ventas");
+        $login->assignRole($rol);
+        $login->vendedor()->associate(Vendedor::factory()->create());
+        return [
+            "login" => $login,
+            "proyecto" => $proyecto
+        ];
+    },
+]);
+#endregion
 
 test('La fecha no puede estar en el futuro', function(){
     /** @var TestCase $this */
