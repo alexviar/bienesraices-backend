@@ -25,7 +25,7 @@ class Venta extends Model
     use HasFactory, SaveToUpper;
 
     protected $attributes = [
-        "estado" => 1,
+        "estado" => 0,
         "importe_pendiente" => 0
     ];
 

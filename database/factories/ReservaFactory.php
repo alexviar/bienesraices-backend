@@ -18,7 +18,9 @@ class ReservaFactory extends Factory
      */
     public function definition($attributes)
     {
-        $loteId = $this->resolveAttribute($attributes["lote_id"] ?? Lote::factory(), []);
+        $loteId = $this->resolveAttribute($attributes["lote_id"] ?? Lote::factory([
+            "estado" => 3
+        ]), []);
         $lote = Lote::find($loteId);
         $proyecto = $lote->manzana->proyecto;
         $fecha = $this->resolveAttribute($attributes["fecha"] ?? $this->faker->date, []);
@@ -35,6 +37,7 @@ class ReservaFactory extends Factory
             "lote_id" => $loteId,
             "cliente_id" => $attributes["cliente_id"] ?? Cliente::factory(),
             "vendedor_id" => $attributes["vendedor_id"] ?? Vendedor::factory(),
+            "estado" => $attributes["estado"] ?? 1
         ];
     }
 

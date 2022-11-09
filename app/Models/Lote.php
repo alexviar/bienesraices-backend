@@ -63,38 +63,38 @@ class Lote extends Model
         return $precioSugerido->round(2);
     }
 
-    function getEstadoAttribute($value){
-        if($value == 1){
-            if($this->reserva){
-                return [
-                    "code" => 3,
-                    "message" => "Reservado"
-                ];
-            }
-            if($this->venta){
-                return [
-                    "code" => 4,
-                    "message" => "Vendido"
-                ];
-            }
-            return [
-                "code" => 1,
-                "message" => "Disponible"
-            ];
-        }
+    // function getEstadoAttribute($value){
+    //     if($value == 1){
+    //         if($this->reserva){
+    //             return [
+    //                 "code" => 3,
+    //                 "message" => "Reservado"
+    //             ];
+    //         }
+    //         if($this->venta){
+    //             return [
+    //                 "code" => 4,
+    //                 "message" => "Vendido"
+    //             ];
+    //         }
+    //         return [
+    //             "code" => 1,
+    //             "message" => "Disponible"
+    //         ];
+    //     }
 
-        if($value == 2) {
-            return [
-                "code" => 2,
-                "message" => "No disponible"
-            ];
-        }
+    //     if($value == 2) {
+    //         return [
+    //             "code" => 2,
+    //             "message" => "No disponible"
+    //         ];
+    //     }
 
-        return [
-            "code" => $value,
-            "text" => "Desconocido"
-        ];
-    }
+    //     return [
+    //         "code" => $value,
+    //         "text" => "Desconocido"
+    //     ];
+    // }
 
     #region Relationships
     function reserva(){

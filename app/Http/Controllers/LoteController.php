@@ -31,9 +31,6 @@ class LoteController extends Controller
         }
         if($estado = Arr::get($filter, "estado")){
             $query->whereEstado($estado);
-            if($estado == 1){
-                $query->whereDoesntHave("venta")->whereDoesntHave("reserva");
-            }
         }
     }
 

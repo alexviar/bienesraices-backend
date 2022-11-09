@@ -27,7 +27,15 @@ class LoteFactory extends Factory
             "manzana_id" => $manzanaId,
             "categoria_id" => $attributes["categoria_id"] ?? CategoriaLote::factory([
                 "proyecto_id" => Manzana::find($manzanaId)->plano->proyecto_id
-            ])
+            ]),
+            "estado" => $attributes["estado"] ?? 1,
         ];
+    }
+
+    public function disponible()
+    {
+        return $this->state([
+            "estado" => 1
+        ]);
     }
 }

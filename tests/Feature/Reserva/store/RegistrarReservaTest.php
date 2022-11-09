@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\ReservaCreated;
+use App\Models\Lote;
 use App\Models\Permission;
 use App\Models\Proyecto;
 use App\Models\Reserva;
@@ -167,7 +168,7 @@ it('registra una nueva reserva', function ($dataset) {
     ] + $data);
 })->with([
     function(){
-        $data = Reserva::factory()->raw();
+        $data = Reserva::factory()->for(Lote::factory()->disponible())->raw();
         return [
             "data" => $data,
         ];
@@ -191,7 +192,7 @@ it('despacha el evento de nueva reserva creada', function ($dataset) {
     
 })->with([
     function(){
-        $data = Reserva::factory()->raw();
+        $data = Reserva::factory()->for(Lote::factory()->disponible())->raw();
         return [
             "data" => $data,
         ];

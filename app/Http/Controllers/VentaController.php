@@ -116,8 +116,8 @@ class VentaController extends Controller
             // $payload["importe"] = (string) $importe->exchangeTo($payload["moneda"])->round(2)->amount;
             // $payload["importe_pendiente"] = (string) $reserva->saldo_contado->minus($importe)->exchangeTo($payload["moneda"])->round(2)->amount;
             $request->merge([
-                "lote_id" => $request->lote_id,
-                "cliente_id" => $request->cliente_id,
+                "lote_id" => $reserva->lote_id,
+                "cliente_id" => $reserva->cliente_id,
                 "vendedor_id" => $reserva->vendedor_id
             ]);
         }
@@ -137,9 +137,9 @@ class VentaController extends Controller
                 if(!$lote || $lote->proyecto->id != $proyectoId){
                     $fail('Lote inválido.');
                 }
-                else if($lote->estado["code"] !== 1){
+                else if($lote->estado !== 1){
                     $cliente_id = $reserva ? $reserva->cliente_id : $request->input("cliente_id");
-                    if($lote->estado["code"] === 3){
+                    if($lote->estado === 3){
                         if($lote->reserva->cliente_id != $cliente_id){
                             $fail("El lote ha sido reservado por otro cliente.");
                         }
@@ -158,7 +158,7 @@ class VentaController extends Controller
                     $fail("Reserva invalida.");
                 }
                 else if($reserva->estado !== 1){
-                    $fail("La reserva ha sido anulada o se ha concretado la venta.");
+                    $fail("La reserva no esta disponible.");
                 }
                 //No se realiza una restriccion basada en el vencimiento de la reserva
                 //para dejar al criterio del operador si efectua o no la venta en casos excepcionales

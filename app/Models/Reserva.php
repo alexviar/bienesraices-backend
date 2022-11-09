@@ -17,6 +17,10 @@ class Reserva extends Model
 {
     use HasFactory;
 
+    protected $attributes = [
+        "estado" => 0
+    ];
+
     protected $fillable = [
         "fecha",
         "proyecto_id",

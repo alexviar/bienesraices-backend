@@ -217,7 +217,7 @@ it('Registra una venta', function ($dataset) {
         $data = Venta::factory([
             "moneda" => "USD",
             "importe" => "10530.96",
-        ])->contado()->withoutReserva()->raw();
+        ])->contado()->for(Lote::factory()->disponible())->withoutReserva()->raw();
         unset($data["importe_pendiente"]);
         return [
             "data" => $data,
@@ -245,7 +245,7 @@ it('Registra una venta', function ($dataset) {
             "fecha" => "2022-02-28",
             "moneda" => "USD",
             "importe" => "500",
-        ])->credito("10030.96")->withoutReserva()->raw();
+        ])->credito("10030.96")->for(Lote::factory()->disponible())->withoutReserva()->raw();
         $dataCredito = Credito::factory([
             "plazo" => 48,
             "periodo_pago" => 1,
@@ -283,7 +283,7 @@ it('Registra una venta', function ($dataset) {
             "fecha" => "2022-02-28",
             "moneda" => "USD",
             "importe" => "500",
-        ])->credito("10030.96")->withoutReserva()->raw();
+        ])->credito("10030.96")->for(Lote::factory()->disponible())->withoutReserva()->raw();
         $dataCredito = Credito::factory([
             "plazo" => 48,
             "periodo_pago" => 1,
@@ -314,6 +314,7 @@ it('Registra una venta', function ($dataset) {
     function(){
         //Venta al contado
         $reserva = Reserva::factory([
+            "fecha" => Carbon::now()->format("Y-m-d"),
             "moneda" => "USD",
             "importe" => "100",
             "saldo_contado" => "10430.96",
@@ -323,7 +324,7 @@ it('Registra una venta', function ($dataset) {
             "moneda" => "USD",
             "importe" => "10530.96",
         ])->contado()->for($reserva)->raw();
-        unset($data["importe_pendiente"]);
+        unset($data["importe_pendiente"], $data["cliente_id"], $data["vendedor_id"], $data["lote_id"]);
         return [
             "data" => $data,
             "expectations" => [
@@ -344,6 +345,7 @@ it('Registra una venta', function ($dataset) {
     function(){
         //Venta al contado
         $reserva = Reserva::factory([
+            "fecha" => Carbon::now()->format("Y-m-d"),
             "moneda" => "USD",
             "importe" => "100",
             "saldo_contado" => "10430.96",
@@ -374,6 +376,7 @@ it('Registra una venta', function ($dataset) {
     function(){
         //Venta al contado
         $reserva = Reserva::factory([
+            "fecha" => Carbon::now()->format("Y-m-d"),
             "moneda" => "BOB",
             "importe" => "100",
             "saldo_contado" => "10430.96",
@@ -407,6 +410,7 @@ it('Registra una venta', function ($dataset) {
             "siguiente" => 1
         ]);
         $reserva = Reserva::factory([
+            "fecha" => Carbon::now()->format("Y-m-d"),
             "moneda" => "USD",
             "importe" => "100",
             "saldo_contado" => "10430.96",
@@ -447,6 +451,7 @@ it('Registra una venta', function ($dataset) {
             "siguiente" => 1
         ]);
         $reserva = Reserva::factory([
+            "fecha" => Carbon::now()->format("Y-m-d"),
             "moneda" => "BOB",
             "importe" => "100",
             "saldo_contado" => "10430.96",
@@ -533,14 +538,13 @@ test("Pagos programados el 31 de cada mes", function(){
 });
 
 test("Un lote que ha sido reservado por un cliente no puede ser vendido a otro, a menos que la reserva haya expirado", function (){
-
-    $lote = Lote::factory()->create();
     $now = Carbon::now();
     $reserva = Reserva::factory([
         "fecha" => $now->format("Y-m-d"),
         "saldo_contado" => "0",
         "saldo_credito" => "0",
-    ])->for($lote)->create();
+    ])->create();
+    $lote = $reserva->lote;
 
     //Venta al contado
     $data = Venta::factory()->for($lote)->contado()->withReserva(false)->raw();
@@ -563,6 +567,8 @@ test("Un lote que ha sido reservado por un cliente no puede ser vendido a otro, 
     ]);
 
     $this->travel(1)->days();
+    $lote->estado = 1;
+    $lote->update();
     $response = $this->actingAs(User::find(1))->postJson("/api/proyectos/$proyectoId/ventas", $data);
 
     $response->assertCreated();

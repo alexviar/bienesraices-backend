@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Events\ReservaCreated;
 use App\Listeners\TransaccionSubscriber;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -19,9 +20,12 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
-        // PagoCuotaCreated::class => [
-        //     RegistrarTransaccion::class
-        // ],
+        \App\Events\ReservaCreated::class => [
+            \App\Listeners\UpdateEstadoLoteOnReservaCreated::class
+        ],
+        \App\Events\VentaCreated::class => [
+            \App\Listeners\UpdateEstadoLoteOnVentaCreated::class
+        ]
     ];
 
     protected $subscribe = [

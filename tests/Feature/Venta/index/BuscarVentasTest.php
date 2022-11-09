@@ -188,7 +188,7 @@ it('solo puede ver ventas del vendedor vinculado al usuario', function(){
         ->for(Lote::factory()->for(Manzana::factory()->for($plano)))
         ->create();
 
-    $response = $this->actingAs($login)->getJson("/api/proyectos/$proyecto->id/reservas");
+    $response = $this->actingAs($login)->getJson("/api/proyectos/$proyecto->id/ventas");
 
     $response->assertOk();
     expect($response->json("records.*.id"))->toBe([$venta->id]);
