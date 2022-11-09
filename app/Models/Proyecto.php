@@ -69,7 +69,7 @@ class Proyecto extends Model
     public function getLotesSummaryAttribute() {
         return [
             "total" => $this->plano ? $this->plano->lotes->count() : 0,
-            "disponibles" => $this->plano ? $this->plano->lotes->where("estado.code", 1)->count() : 0
+            "disponibles" => $this->plano ? $this->plano->lotes->where("estado", 1)->count() : 0
         ];
     }
 

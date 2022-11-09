@@ -127,7 +127,7 @@ class Plano extends Model
             FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
             LINES TERMINATED BY '$eol'
             IGNORE 1 LINES
-            (`numero`, @c1, @c2, @c3)
+            (`numero`, @c1, @c2, @c3, @c4)
             SET `plano_id` = ?
         SQL, [$planoId]);
 
@@ -145,10 +145,9 @@ class Plano extends Model
             FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
             LINES TERMINATED BY '$eol'
             IGNORE 1 LINES
-            (@manzana, `numero`, `superficie`, @categoria)
+            (@manzana, `numero`, `superficie`, @categoria, `estado`)
             SET `manzana_id` = (SELECT `id` FROM `manzanas` WHERE `plano_id` = ? AND `numero` = @manzana),
-                `categoria_id` = (SELECT `id` FROM `categoria_lotes` WHERE `codigo` = @categoria AND `proyecto_id` = ?),
-                `estado` = 1
+                `categoria_id` = (SELECT `id` FROM `categoria_lotes` WHERE `codigo` = @categoria AND `proyecto_id` = ?)
         SQL, [$planoId, $this->proyecto_id]);
         $warning_messages = collect(DB::select('SHOW WARNINGS'))->filter(function($warning){
             return $warning->Code !== 1062;

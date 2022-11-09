@@ -41,7 +41,8 @@ class ReleaseLotes extends Command
     public function handle()
     {
         return Lote::joinSub(
-            Reserva::where("vencimiento", "<", Carbon::today()->format("Y-m-d")),
+            Reserva::where("vencimiento", "<", Carbon::today()->format("Y-m-d"))
+                ->where("estado", 1),
             "reservas_vencidas", 
             function ($join) {
                 $join->on('lotes.id', '=', 'reservas_vencidas.lote_id');

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,7 +22,10 @@ use Illuminate\Support\Facades\File;
 |
 */
 Route::get('/migrate', function(){
-  Artisan::call("migrate");
+  Artisan::call("migrate --force");
+  $migrationOutput = Artisan::output();
+  Artisan::call("db:seed RolesAndPermissionsSeeder --force");
+  dd($migrationOutput, Artisan::output());
 });
 
 // Route::get('/seed', function(){

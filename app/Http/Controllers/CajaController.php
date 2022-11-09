@@ -27,7 +27,7 @@ class CajaController extends Controller
     {
         $queryArgs = $request->only(["search", "filter", "page"]);
         $this->authorize("viewAny", [Transaccion::class, $queryArgs]);
-        return $this->buildResponse(Transaccion::with(["cliente"]), $queryArgs);
+        return $this->buildResponse(Transaccion::with(["cliente"])->latest(), $queryArgs);
     }
 
     function show(Request $request, $id)
