@@ -21,8 +21,13 @@ use Illuminate\Support\Facades\Storage;
 | contains the "web" middleware group. Now create something great!
 |
 */
-Route::get('/migrate', function(){
-  Artisan::call("migrate --force");
+Route::get('/migrate', function(Request $request){
+  if($request->fresh){
+    Artisan::call("migrate:fresh --force");
+  }
+  else{
+    Artisan::call("migrate --force");
+  }
   $migrationOutput = Artisan::output();
   Artisan::call("db:seed RolesAndPermissionsSeeder --force");
   dd($migrationOutput, Artisan::output());

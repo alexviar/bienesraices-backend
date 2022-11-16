@@ -242,7 +242,8 @@ class Cuota extends Model
 
     function getFactorActualizacion()
     {
-        if (!$this->projectionDate->isAfter($this->vencimiento)) return BigRational::one();
+        $tasaMora = BigRational::of($this->credito->tasa_mora);
+        if (!$this->projectionDate->isAfter($this->vencimiento) || $tasaMora->isEqualTo("0")) return BigRational::one();
         /** @var UfvRepositoryInterface $ufvRepository */
         $ufvRepository = app()->make(UfvRepositoryInterface::class);
         $ufvVencimiento = $ufvRepository->findByDate($this->vencimiento);
@@ -251,8 +252,8 @@ class Cuota extends Model
         if (!$ufvPago) abort(500, "No se encontro el valor de la UFV en la fecha " . $this->projectionDate->format("Y-m-d"));
         //Factor de mantenimiento de valor
         $fmv = $ufvPago->isLessThan($ufvVencimiento) ? BigRational::one() : BigRational::of($ufvPago)->dividedBy($ufvVencimiento);
-        $fas = BigRational::of($this->credito->tasa_mora)
-            ->multipliedBy($this->projectionDate->diffInDays($this->vencimiento))
+        //Factor de actualizacion simple
+        $fas = $tasaMora->multipliedBy($this->projectionDate->diffInDays($this->vencimiento))
             ->dividedBy("360")
             ->plus("1");
         return $fmv->multipliedBy($fas);

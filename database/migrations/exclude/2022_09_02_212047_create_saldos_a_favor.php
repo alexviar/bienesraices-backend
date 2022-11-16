@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Account;
 use App\Models\Cliente;
 use App\Models\Currency;
 use App\Models\DetalleTransaccion;
@@ -46,12 +47,12 @@ class CreateSaldosAFavor extends Migration
                 }
                 $saldos[$transaccion->moneda] = $saldos[$transaccion->moneda]->plus($saldo);
             }
-            Saldo::create([
+            Account::create([
                 "cliente_id" => $idCliente,
                 "importe" => (string) $saldos["BOB"]->amount->toScale(2, RoundingMode::HALF_UP),
                 "moneda" => "BOB"
             ]);
-            Saldo::create([
+            Account::create([
                 "cliente_id" => $idCliente,
                 "importe" => (string) $saldos["USD"]->amount->toScale(2, RoundingMode::HALF_UP),
                 "moneda" => "USD"

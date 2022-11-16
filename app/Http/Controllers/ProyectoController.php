@@ -56,7 +56,7 @@ class ProyectoController extends Controller
             "duracion_reservas" => "required|integer",
             "cuota_inicial" => "required|numeric",
             "tasa_interes" => "required|numeric|min:0.0001|max:0.9999",
-            "tasa_mora" => "required|numeric|min:0.0001|max:0.9999",
+            "tasa_mora" => "required|numeric|min:0|max:0.9999",
         ]);
 
         $proyecto = DB::transaction(function() use($payload) {
