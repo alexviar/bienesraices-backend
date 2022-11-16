@@ -53,17 +53,17 @@ class Proyecto extends Model
 
     public function getPrecioMt2Attribute($value)
     {
-        return new Money($value, $this->currency);
+        return new Money($value, $this->moneda);
     }
 
     public function getPrecioReservasAttribute($value)
     {
-        return new Money($value, $this->currency);
+        return new Money($value, $this->moneda);
     }
 
     public function getCuotaInicialAttribute($value)
     {
-        return new Money($value, $this->currency);
+        return new Money($value, $this->moneda);
     }
 
     public function getLotesSummaryAttribute() {

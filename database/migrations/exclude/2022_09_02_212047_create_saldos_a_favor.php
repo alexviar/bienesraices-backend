@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Account;
 use App\Models\Cliente;
 use App\Models\Currency;
 use App\Models\DetalleTransaccion;
@@ -35,23 +36,25 @@ class CreateSaldosAFavor extends Migration
         $groupedTransacciones = Transaccion::get()->groupBy("cliente_id");
         foreach($groupedTransacciones as $idCliente => $transacciones){
             $saldos = [
-                "BOB" => new Money("0", Currency::find("BOB")),
-                "USD" => new Money("0", Currency::find("USD")),
+                "BOB" => new Money("0", "BOB"),
+                "USD" => new Money("0", "USD"),
             ];
             foreach($transacciones as $transaccion){
                 $detalles = $transaccion->detalles;
                 $saldo = $transaccion->importe;
                 foreach($detalles as $detalle){
-                    $saldo = $saldo->minus($detalle->importe->exchangeTo($saldo->currency));
+                    $saldo = $saldo->minus($detalle->importe->exchangeTo($saldo->moneda, [
+                        "date" => $transaccion->fecha
+                    ]));
                 }
                 $saldos[$transaccion->moneda] = $saldos[$transaccion->moneda]->plus($saldo);
             }
-            Saldo::create([
+            Account::create([
                 "cliente_id" => $idCliente,
                 "importe" => (string) $saldos["BOB"]->amount->toScale(2, RoundingMode::HALF_UP),
                 "moneda" => "BOB"
             ]);
-            Saldo::create([
+            Account::create([
                 "cliente_id" => $idCliente,
                 "importe" => (string) $saldos["USD"]->amount->toScale(2, RoundingMode::HALF_UP),
                 "moneda" => "USD"

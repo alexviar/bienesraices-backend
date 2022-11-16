@@ -188,7 +188,6 @@ it('registra pagos', function ($dataset) {
     $expectations = $dataset["expectations"];
 
     $response = $this->actingAs(User::find(1))->postJson('/api/transacciones', $data);
-    
     $response->assertCreated();
     $pagables->each->refresh();
     $this->assertEquals($expectations["pagables"], collect($pagables)->map(function($pagable){
@@ -716,4 +715,4 @@ test('Solo puede pagar cuotas en curso o vencidas', function() {
     ]);
 });
 
-// test('Pago doble')
+// // test('Pago doble')

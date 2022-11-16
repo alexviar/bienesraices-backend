@@ -31,11 +31,11 @@ class Deposito extends Model
     ];
     #region Mutators
     function getImporteAttribute($value){
-        return new Money($value, $this->currency);
+        return new Money($value, $this->currency->code);
     }
 
     function getSaldoAttribute($value){
-        return new Money($value, $this->currency);
+        return new Money($value, $this->currency->code);
     }
     #endregion
 
@@ -62,7 +62,7 @@ class Deposito extends Model
             return $carry;
         }, []);
 
-        $totalPagos = new Money("0.00", $this->currency);
+        $totalPagos = new Money("0.00", $this->currency->code);
         foreach($groups as $money){
             $totalPagos = $totalPagos->plus($money->exchangeTo($this->currency()));
         }

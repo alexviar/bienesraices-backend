@@ -3,9 +3,14 @@
 namespace App\Models;
 
 use App\Models\Traits\SaveToUpper;
+use Brick\Math\BigRational;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * 
+ * @property BigRational $rate
+ */
 class ExchangeRate extends Model
 {
     use HasFactory, SaveToUpper;
@@ -13,7 +18,23 @@ class ExchangeRate extends Model
     protected $fillable = [
         "source",
         "target",
-        "buy_rate",
-        "sell_rate"
+        "rate",
+        "indirect"
     ];
+
+    #region Accessors
+    /**
+     * 
+     */
+    public function getRateAttribute($value)
+    {
+        $rational = BigRational::one();
+        if ($this->indirect) {
+            return $rational->dividedBy($value);
+        }
+        else{
+            return $rational->multipliedBy($value);
+        }
+    }
+    #endregion
 }

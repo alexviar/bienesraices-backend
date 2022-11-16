@@ -24,7 +24,7 @@ class CategoriaLote extends Model
     ];
 
     function getPrecioM2Attribute($value){
-        return $value ? new Money($value, $this->proyecto->currency) : null;
+        return $value ? new Money($value, $this->proyecto->moneda) : null;
     }
 
     #region Relationships

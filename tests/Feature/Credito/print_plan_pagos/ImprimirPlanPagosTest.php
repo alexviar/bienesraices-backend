@@ -195,7 +195,7 @@ it("Genera un reporte del plan de pagos", function(){
     $credito->build();
     
     $pdf = $report->generate($credito->refresh());
-    // $pdf->save(__DIR__."/plan_pagos_sample_10.pdf");
+    $pdf->save(__DIR__."/plan_pagos_sample_10.pdf");
 
     $generatedContent = $pdf->output();
     $sampleContent = file_get_contents(__DIR__."/plan_pagos_sample_1.pdf");

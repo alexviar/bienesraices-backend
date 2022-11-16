@@ -25,12 +25,14 @@ class DetalleTransaccion extends Model
     protected $table = "detalles_transaccion";
 
     function getImporteAttribute($value){
-        return new Money($value, Currency::find($this->moneda));
+        return new Money($value, $this->moneda);
     }
 
     function getImporteMonedaTransaccionAttribute()
     {
-        return $this->importe->round(2)->exchangeTo($this->transaccion->moneda);
+        return $this->importe->round(2)->exchangeTo($this->transaccion->moneda, [
+            "date" => $this->transaccion->fecha
+        ]);
     }
 
     function transaccion(){

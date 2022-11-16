@@ -190,16 +190,16 @@ it('importa las manzanas y lotes desde un csv', function(){
     $tmpfname = tempnam(sys_get_temp_dir(), 'lotes.csv');
     file_put_contents($tmpfname, implode("\n", [
         "manzana,numero,superficie,categoria",
-        "10,1,18984.22,B",
-        "10,2,19009.33,B",
-        "10,3,19014.46,B",
-        "11,1,18286.89,B",
-        "11,2,18100.74,C",
-        "11,3,18100.74,C",
-        "13,1,19920.98,B",
-        "13,2,113376.86,A",
-        "14,1,118566.09,A",
-        "14,2,117661.62,AF",
+        "10,1,18984.22,B,1",
+        "10,2,19009.33,B,2",
+        "10,3,19014.46,B,4",
+        "11,1,18286.89,B,3",
+        "11,2,18100.74,C,1",
+        "11,3,18100.74,C,6",
+        "13,1,19920.98,B,2",
+        "13,2,113376.86,A,3",
+        "14,1,118566.09,A,1",
+        "14,2,117661.62,AF,7",
     ]));
     $plano->importManzanasYLotesFromCsv($tmpfname);
     $plano->refresh();
@@ -212,17 +212,17 @@ it('importa las manzanas y lotes desde un csv', function(){
         "lotes" => UploadedFile::fake()->createWithContent(
             'lotes_test.csv',
             implode("\n", [
-                "manzana,numero,superficie,categoria",
-                "10,1,8984.22,B",
-                "10,2,9009.33,B",
-                "10,3,9014.46,B",
-                "11,1,8286.89,B",
-                "11,2,8100.74,C",
-                "11,3,8100.74,C",
-                "13,1,9920.98,B",
-                "13,2,13376.86,A",
-                "14,1,18566.09,A",
-                "14,2,17661.62,A",
+                "manzana,numero,superficie,categoria,estado",
+                "10,1,8984.22,B,1",
+                "10,2,9009.33,B,2",
+                "10,3,9014.46,B,1",
+                "11,1,8286.89,B,2",
+                "11,2,8100.74,C,3",
+                "11,3,8100.74,C,4",
+                "13,1,9920.98,B,3",
+                "13,2,13376.86,A,2",
+                "14,1,18566.09,A,1",
+                "14,2,17661.62,A,1",
             ])
         )
     ];
@@ -248,18 +248,19 @@ it('importa las manzanas y lotes desde un csv', function(){
             $lote->manzana->numero,
             $lote->numero,
             $lote->getAttributes()["superficie"],
-            $lote->categoria->codigo
+            $lote->categoria->codigo,
+            $lote->estado
         ]);
     })->toArray())->toBe([
-        "10,1,18984.22,B",
-        "10,2,19009.33,B",
-        "10,3,19014.46,B",
-        "11,1,18286.89,B",
-        "11,2,18100.74,C",
-        "11,3,18100.74,C",
-        "13,1,19920.98,B",
-        "13,2,113376.86,A",
-        "14,1,118566.09,A",
-        "14,2,17661.62,A",
+        "10,1,18984.22,B,1",
+        "10,2,19009.33,B,2",
+        "10,3,19014.46,B,4",
+        "11,1,18286.89,B,3",
+        "11,2,18100.74,C,1",
+        "11,3,18100.74,C,6",
+        "13,1,19920.98,B,2",
+        "13,2,113376.86,A,3",
+        "14,1,118566.09,A,1",
+        "14,2,17661.62,A,1",
     ]);
 });

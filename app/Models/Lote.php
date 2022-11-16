@@ -52,7 +52,7 @@ class Lote extends Model
     ];
 
     function getPrecioAttribute($value){
-        return $value ? new Money($value, $this->proyecto->currency) : null;
+        return $value ? new Money($value, $this->proyecto->moneda) : null;
     }
 
     function getPrecioSugeridoAttribute(){

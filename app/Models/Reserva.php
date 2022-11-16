@@ -50,19 +50,19 @@ class Reserva extends Model
 
     #region Accessors
     function getImporteAttribute($value){
-        return new Money($value, Currency::find($this->moneda));
+        return new Money($value, $this->moneda);
     }
 
     function getSaldoAttribute($value){
-        return new Money($value, Currency::find($this->moneda));
+        return new Money($value, $this->moneda);
     }
 
     function getSaldoCreditoAttribute($value){
-        return new Money($value, Currency::find($this->moneda));
+        return new Money($value, $this->moneda);
     }
 
     function getSaldoContadoAttribute($value){
-        return new Money($value, Currency::find($this->moneda));
+        return new Money($value, $this->moneda);
     }
 
     function getObservacionesAttribute(){

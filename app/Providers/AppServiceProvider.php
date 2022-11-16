@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Http\Reports\Venta\HistorialPagos;
+use App\Infrastructure\Providers\DatabaseCurrencyExchangeProvider;
 use App\Infrastructure\Repositories\UfvRepository;
 use App\Models\Interfaces\UfvRepositoryInterface;
 use App\Models\Services\DisminucionPlazo;
@@ -10,6 +11,7 @@ use App\Models\Services\Diferido;
 use App\Models\Services\ProgramadorPagoExtra;
 use App\Models\Services\Prorrateo;
 use App\Models\Services\SoloInteres;
+use App\Models\ValueObjects\Money;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -39,6 +41,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        Money::setCurrencyExchangeProvider(new DatabaseCurrencyExchangeProvider);
     }
 }
