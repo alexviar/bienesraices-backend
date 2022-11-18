@@ -140,7 +140,7 @@ it('obtiene los pagables', function ($dataset) {
     $response = $this->actingAs(User::find(1))->getJson('/api/pagables?'.http_build_query($data));
 
     $response->assertOk();
-    expect($response->json("pagables"))->toMatchArray($dataset["expectations"]);
+    expect($response->json("pagables"))->toEqual($dataset["expectations"]);
 })->with([
     function(){
         $cliente = Cliente::factory()->create();
@@ -454,9 +454,44 @@ it('obtiene los pagables', function ($dataset) {
             ]
         ];
     },
+    "cuentas anteriores a la fecha consultada no deben mostrarse" => function(){
+        $cliente = Cliente::factory()->create();
+        $credito = Credito::factory([
+            "cuota_inicial" => "500",
+            "plazo" => 48,
+            "periodo_pago" => 1,
+            "dia_pago" => 1,
+            "estado" => 1
+        ])->for(Venta::factory([
+            "fecha" => "2022-02-28",
+            "importe" => "400",
+            "saldo" => "100",
+            "estado" => 1
+        ])->for($cliente)->for(Reserva::factory([
+            "fecha" => "2022-02-28",
+            "importe" => "100",
+            "saldo" => "50",
+            "saldo_contado" => "10430.96",
+            "saldo_credito" => "400",
+            "estado" => 1
+        ])->for($cliente))->credito("10030.96"), "creditable")->create();
+        $credito->build();
+
+        return [
+            "cliente" => $cliente,
+            "credito" => $credito,
+            "fecha" => $credito->fecha->subDays(1),
+            "data" => [
+                "codigo_pago"=> $cliente->codigo_pago
+            ],
+            "expectations" => []
+        ];
+    },
     /**
      * Una cuota atrasada (en mora), se realiza un pago casi total dejando solo el saldo total (saldo + multa)
-     * en un 1 ctv, pero el saldo adeudado en 0.00 UM. 0.01/0.005 = 2 => El factor de actualizacion 
-     * (1 + diasTranscurridos * interesAnual / 360) debe ser mayour a 2 (o un interes muy alto o muchos dias de mora)
+     * en un 1 ctv, pero el saldo adeudado en 0.00. Para que este sea el caso el adeudo debería ser de menor a 0.005,
+     * por lo tanto, el factor de actualizacion deberia ser mayor a 2 (0.01/0.005 = 2). Dado que el factor de actualizacion 
+     * (1 + diasTranscurridos * interesAnual / 360) debe ser mayour a 2, se necesita o un interes muy alto o muchos dias de mora
+     * para llegar a este escenario
      */
 ]);
