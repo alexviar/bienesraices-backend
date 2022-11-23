@@ -47,7 +47,9 @@ Route::controller(UserController::class)->prefix('/users')->group(function(){
 Route::middleware('auth:sanctum')->get('/currencies', [CurrencyController::class, "index"]);
 
 Route::controller(ExchangeRateController::class)->prefix("/exchange-rates")->group(function(){
-    Route::get("/", "index");
+    Route::middleware('auth:sanctum')->get("/", "index");
+    Route::middleware('auth:sanctum')->post("/", "store");
+    Route::middleware('auth:sanctum')->put("/{id}", "update");
 });
 
 Route::middleware('auth:sanctum')->get('/clientes', [ClienteController::class, "index"]);
