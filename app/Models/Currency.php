@@ -21,28 +21,4 @@ class Currency extends Model
         "code",
         "name"
     ];
-
-    public function exchangeRates(){
-        return $this->hasMany(ExchangeRate::class, "source");
-    }
-
-    public function __get($key){
-        $value = parent::__get($key);
-        // dd(Str::snake("exchangeRates"))
-
-        if(Str::snake($key) === "exchange_rates"){
-            $value = $value->mapWithKeys(function ($exchangeRate) {
-                return [$exchangeRate->target => $exchangeRate];
-            });
-        }
-
-        return $value;
-    }
-
-    public function toArray()
-    {
-        return [
-            "exchange_rates" => $this->exchangeRates
-        ] + parent::toArray();
-    }
 }

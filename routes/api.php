@@ -9,6 +9,7 @@ use App\Http\Controllers\ListaMoraController;
 use App\Http\Controllers\LoteController;
 use App\Http\Controllers\ManzanaController;
 use App\Http\Controllers\CreditoController;
+use App\Http\Controllers\ExchangeRateController;
 use App\Http\Controllers\PagableController;
 use App\Http\Controllers\PlanoController;
 use App\Http\Controllers\ProyectoController;
@@ -44,6 +45,10 @@ Route::controller(UserController::class)->prefix('/users')->group(function(){
 });
 
 Route::middleware('auth:sanctum')->get('/currencies', [CurrencyController::class, "index"]);
+
+Route::controller(ExchangeRateController::class)->prefix("/exchange-rates")->group(function(){
+    Route::get("/", "index");
+});
 
 Route::middleware('auth:sanctum')->get('/clientes', [ClienteController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/clientes', [ClienteController::class, "store"]);

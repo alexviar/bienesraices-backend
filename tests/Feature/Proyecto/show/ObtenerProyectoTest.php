@@ -4,6 +4,7 @@ use App\Models\Permission;
 use App\Models\Proyecto;
 use App\Models\Role;
 use App\Models\User;
+use Tests\TestCase;
 
 test('el usuario ha iniciado sesión', function () {
     $response = $this->getJson('/api/proyectos/100');
@@ -14,7 +15,7 @@ it('verifica que el proyecto exista', function(){
     /** @var User $login */
     $login = User::factory()->create();
     $login->assignRole("Super usuarios");
-    $response = $this->actingAs($login)->getJson("/api/proyectos/100", []);
+    $response = $this->actingAs($login)->getJson("/api/proyectos/100");
 
     $response->assertNotFound();
 });
@@ -118,3 +119,19 @@ test('usuarios autorizados', function ($dataset) {
 ]);
 #endregion
 
+it('verifica la estructura de la respuesta', function(){
+    /** @var TestCase $this */
+    /** @var User $login */
+    $login = User::factory()->create();
+    $login->assignRole("Super usuarios");
+    $proyecto = Proyecto::factory()->create();
+    $response = $this->actingAs($login)->getJson("/api/proyectos/$proyecto->id");
+    $response->assertJsonStructure([
+        "id",
+        "nombre",
+        "currency" => [
+            "code",
+            "name"
+        ]
+    ]);
+});

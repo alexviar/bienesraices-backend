@@ -25,7 +25,7 @@ class DatabaseCurrencyExchangeProvider implements CurrencyExchangeProvider
         /** @var ExchangeRate $exchangeRate */
         $exchangeRate = $query->first();
         if(!$exchangeRate) abort(500, "Currency exchange rate does not found ($from, $to, {$date->format("Y-m-d")}, $direct).");
-        $rate = $direct ?  $exchangeRate->rate : $exchangeRate->rate->reciprocal();
+        $rate = $direct ?  $exchangeRate->rational_rate : $exchangeRate->rational_rate->reciprocal();
         return $rate->multipliedBy($amount)->toScale(20, RoundingMode::HALF_UP);
     }
 }

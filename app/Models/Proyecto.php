@@ -47,7 +47,9 @@ class Proyecto extends Model
         'ubicacion'
     ];
 
-    protected $hidden = ["currency", "plano"];
+    protected $with = ["currency"]; 
+
+    protected $hidden = ["plano"];
 
     protected $appends = ["lotes_summary", "clientes_en_mora"];
 

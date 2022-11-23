@@ -26,14 +26,14 @@ class ExchangeRate extends Model
     /**
      * 
      */
-    public function getRateAttribute($value)
+    public function getRationalRateAttribute()
     {
         $rational = BigRational::one();
         if ($this->indirect) {
-            return $rational->dividedBy($value);
+            return $rational->dividedBy($this->rate);
         }
         else{
-            return $rational->multipliedBy($value);
+            return $rational->multipliedBy($this->rate);
         }
     }
     #endregion
