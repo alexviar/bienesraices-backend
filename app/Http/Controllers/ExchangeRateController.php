@@ -72,7 +72,15 @@ class ExchangeRateController extends Controller
             "rate" => "cotización"
         ]);
 
-        return $exchangeRate->update($payload);
+        $exchangeRate->update($payload);
+        return $exchangeRate;
+    }
+
+    function delete(Request $request, $id){
+        $exchangeRate = $this->findExchangeRate($id);
+        $this->authorize("forceDelete", [$exchangeRate]);
+
+        $exchangeRate->delete();
     }
 
     private function findExchangeRate($id)

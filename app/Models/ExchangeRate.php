@@ -41,12 +41,37 @@ class ExchangeRate extends Model
         $rational = BigRational::one();
         if ($this->indirect) {
             return $rational->dividedBy($this->rate);
-        }
-        else{
+        } else {
             return $rational->multipliedBy($this->rate);
         }
     }
     #endregion
+
+    #region Relationships
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function sourceCurrency()
+    {
+        return $this->belongsTo(Currency::class, "source", "code");
+    }
+    
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function targetCurrency()
+    {
+        return $this->belongsTo(Currency::class, "target", "code");
+    }
+    #endregion
+
+    public function toArray()
+    {
+        return [
+            "source" => $this->sourceCurrency,
+            "target" => $this->targetCurrency,
+        ] + parent::toArray();
+    }
 
     static function findByDate($source, $target, $date)
     {

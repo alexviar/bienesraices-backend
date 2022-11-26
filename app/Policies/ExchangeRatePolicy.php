@@ -89,6 +89,6 @@ class ExchangeRatePolicy
      */
     public function forceDelete(User $user, ExchangeRate $exchangeRate)
     {
-        //
+        if($user->can("Eliminar tipos de cambio")) return true;
     }
 }

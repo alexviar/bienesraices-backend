@@ -16,6 +16,6 @@ class CurrencyController extends Controller
 
     function index(Request $request)
     {
-        return Currency::get();
+        return $this->buildResponse(Currency::query(), $request->all());
     }
 }

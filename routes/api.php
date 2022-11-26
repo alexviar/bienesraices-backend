@@ -50,6 +50,7 @@ Route::controller(ExchangeRateController::class)->prefix("/exchange-rates")->gro
     Route::middleware('auth:sanctum')->get("/", "index");
     Route::middleware('auth:sanctum')->post("/", "store");
     Route::middleware('auth:sanctum')->put("/{id}", "update");
+    Route::middleware('auth:sanctum')->delete("/{id}", "delete");
 });
 
 Route::middleware('auth:sanctum')->get('/clientes', [ClienteController::class, "index"]);
