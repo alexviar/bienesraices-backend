@@ -16,8 +16,6 @@ class CurrencyController extends Controller
 
     function index(Request $request)
     {
-        return Currency::with("exchangeRates")->get()->mapWithKeys(function($currency){
-            return [$currency->code => $currency];
-        });
+        return $this->buildResponse(Currency::query(), $request->all());
     }
 }

@@ -100,13 +100,13 @@ class Credito extends Model
         //TODO: Aplicar un mecanismo equivalente a useMemo en React
         return $this->cuotas->reduce(function($total, $cuota){
             return $total->plus($cuota->importe)->plus($cuota->pago_extra);
-        }, new Money("0", $this->getCurrency()))->plus($this->cuota_inicial);
+        }, new Money("0", $this->getCurrency()->code))->plus($this->cuota_inicial);
     }
 
     function getTotalInteresesAttribute(){
         return $this->cuotas->reduce(function($total, $cuota){
             return $total->plus($cuota->interes);
-        }, new Money("0", $this->getCurrency()));
+        }, new Money("0", $this->getCurrency()->code));
     }
     
     /**

@@ -103,7 +103,9 @@ class CajaController extends Controller
 
                 $importe = new Money($detalle["importe"], $pagable->getCurrency()->code);
                 $importe->round(2);
-                $transaccion->importe = $transaccion->importe->plus($importe->exchangeTo($transaccion->moneda))->amount;
+                $transaccion->importe = $transaccion->importe->plus($importe->exchangeTo($transaccion->moneda, [
+                    "date" => $transaccion->fecha
+                ]))->amount;
 
                 $transaccion->detalles()->create(Arr::only($detalle, [
                     "forma_pago",

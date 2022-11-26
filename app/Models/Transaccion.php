@@ -28,7 +28,7 @@ class Transaccion extends Model
 
     function getImporteAttribute($value)
     {
-        return new Money($value ?? "0", $this->currency);
+        return new Money($value ?? "0.00", $this->moneda);
     }
 
     #region Relationships

@@ -31,7 +31,7 @@ class HistorialPagos {
 
         $pagos = $query->get();
         
-        $zero = new \App\Models\ValueObjects\Money("0", $venta->currency);
+        $zero = new \App\Models\ValueObjects\Money("0", $venta->moneda);
         $totalPagos = $pagos->reduce(function($carry, $pago){
             return $carry->add($pago->importe->exchangeTo($carry->currency, [
                 "exchangeMode" => Money::BUY

@@ -88,6 +88,12 @@
     ],
     "Lista de mora": [
       "Ver clientes en mora"
+    ],
+    "Tipos de cambio": [
+      "Ver tipos de cambio",
+      "Registrar tipos de cambio",
+      "Editar tipos de cambio",
+      "Eliminar tipos de cambio"
     ]
   },
 

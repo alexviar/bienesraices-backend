@@ -94,17 +94,17 @@ class Cuota extends Model
 
     function getImporteAttribute($value)
     {
-        return new Money($value, $this->getCurrency());
+        return new Money($value, $this->getCurrency()->code);
     }
 
     function getPagoExtraAttribute($value)
     {
-        return new Money($value, $this->getCurrency());
+        return new Money($value, $this->getCurrency()->code);
     }
 
     function getSaldoAttribute($value)
     {
-        return new Money($value, $this->getCurrency());
+        return new Money($value, $this->getCurrency()->code);
     }
 
     function getTotalMultasAttribute()
@@ -114,7 +114,7 @@ class Cuota extends Model
 
     function getTotalPagosAttribute($value)
     {
-        return new Money($value, $this->getCurrency());
+        return new Money($value, $this->getCurrency()->code);
     }
 
     function getDiasAttribute()
@@ -146,12 +146,12 @@ class Cuota extends Model
         $total = $this->saldo_rational
             ->multipliedBy($this->getFactorActualizacion())
             ->toScale(2, RoundingMode::HALF_UP)->toScale(4);
-        return new Money($total, $this->getCurrency());
+        return new Money($total, $this->getCurrency()->code);
     }
 
     function getSaldoCapitalAttribute($value)
     {
-        return new Money($value, $this->getCurrency());
+        return new Money($value, $this->getCurrency()->code);
     }
 
     function getFasAttribute()

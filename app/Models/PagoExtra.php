@@ -20,7 +20,7 @@ class PagoExtra extends Model
     protected $table = "pagos_extras";
 
     function getImporteAttribute($value){
-        return new Money($value, $this->credito->getCurrency());
+        return new Money($value, $this->credito->getCurrency()->code);
     }
 
     function credito(){

@@ -47,23 +47,25 @@ class Proyecto extends Model
         'ubicacion'
     ];
 
-    protected $hidden = ["currency", "plano"];
+    protected $with = ["currency"]; 
+
+    protected $hidden = ["plano"];
 
     protected $appends = ["lotes_summary", "clientes_en_mora"];
 
     public function getPrecioMt2Attribute($value)
     {
-        return new Money($value, $this->currency);
+        return new Money($value, $this->moneda);
     }
 
     public function getPrecioReservasAttribute($value)
     {
-        return new Money($value, $this->currency);
+        return new Money($value, $this->moneda);
     }
 
     public function getCuotaInicialAttribute($value)
     {
-        return new Money($value, $this->currency);
+        return new Money($value, $this->moneda);
     }
 
     public function getLotesSummaryAttribute() {

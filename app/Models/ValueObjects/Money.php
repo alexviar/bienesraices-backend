@@ -3,6 +3,7 @@
 namespace App\Models\ValueObjects;
 
 use App\Models\Currency;
+use App\Models\Interfaces\CurrencyExchangeProvider;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use Exception;
@@ -11,41 +12,49 @@ use Illuminate\Support\Arr;
 
 /**
  * @property BigDecimal $amount
- * @property Currency $currency
+ * @property string $currency
  */
-class Money implements Arrayable {
+class Money implements Arrayable
+{
     const BUY = 1;
     const SELL = 2;
+
+    /** @var CurrencyExchangeProvider $currencyExchangeProvider */
+    static $currencyExchangeProvider;
 
     /** @var Money|null $originalValue */
     private $originalValue;
     /** @var BigDecimal|null $_amount */
     private $_amount;
-    /** @var Currency $_currency */
+    /** @var string $_currency */
     private $_currency;
 
     /**
      * @param BigDecimal|string $amount
-     * @param Currency $currency
+     * @param string $currency
      */
-    function __construct($amount, $currency){
-        $this->_amount = BigDecimal::of($amount);
-        $this->_currency = is_string($currency) ? Currency::find($currency) : $currency;
+    function __construct($amount, $currency)
+    {
+        $this->_amount = $amount || $amount == "0" ? BigDecimal::of($amount) : null;
+        $this->_currency = $currency;
         $this->originalValue = null;
     }
 
-    function __get($attribute) {
-        if($attribute == "amount") return $this->_amount;
-        else if($attribute == "currency") return $this->_currency;
+    function __get($attribute)
+    {
+        if ($attribute == "amount") return $this->_amount;
+        else if ($attribute == "currency") return $this->_currency;
     }
 
     function __call($name, $arguments)
     {
-        if($name === "add"){
+        if ($name === "add") {
             return $this->plus(...$arguments);
-        }
-        else if($name === "sub"){
+        } else if ($name === "sub") {
             return $this->minus(...$arguments);
+        }
+        if (!$this->_amount || method_exists($this->_amount, $name)){
+            return new Money($this->_amount ? $this->_amount->{$name}(...$arguments) : null, $this->_currency);
         }
     }
 
@@ -55,10 +64,11 @@ class Money implements Arrayable {
      * 
      * @return Money
      */
-    function plus($amount){
-        if($amount instanceof Money){
-            if($this->currency->code != $amount->currency->code)
-                throw new Exception("Currencies should to be the same but gets {$this->currency->code} and {$amount->currency->code}");
+    function plus($amount)
+    {
+        if ($amount instanceof Money) {
+            if ($this->currency != $amount->currency)
+                throw new Exception("Currencies should to be the same but gets {$this->currency} and {$amount->currency}");
             $amount = $amount->amount;
         }
         return new Money($this->_amount->plus($amount), $this->currency);
@@ -70,10 +80,11 @@ class Money implements Arrayable {
      * 
      * @return Money
      */
-    function minus($amount){
-        if($amount instanceof Money){
-            if($this->currency->code != $amount->currency->code)
-                throw new Exception("Currencies should to be the same but gets {$this->currency->code} and {$amount->currency->code}");
+    function minus($amount)
+    {
+        if ($amount instanceof Money) {
+            if ($this->currency != $amount->currency)
+                throw new Exception("Currencies should to be the same but gets {$this->currency} and {$amount->currency}");
             $amount = $amount->amount;
         }
 
@@ -84,7 +95,8 @@ class Money implements Arrayable {
      * @param BigDecimal|string $value
      * @return Money
      */
-    function multipliedBy($value){
+    function multipliedBy($value)
+    {
         $amount = $this->_amount->multipliedBy($value);
         return new Money($amount, $this->_currency);
     }
@@ -93,7 +105,8 @@ class Money implements Arrayable {
      * @param BigDecimal|string $value
      * @return Money
      */
-    function dividedBy($value){
+    function dividedBy($value)
+    {
         $amount = $this->_amount->dividedBy($value, 20, RoundingMode::DOWN);
         return new Money($amount, $this->_currency);
     }
@@ -101,72 +114,87 @@ class Money implements Arrayable {
     /**
      * @return Money
      */
-    function round($scale=2, $roundingMode = RoundingMode::HALF_UP){
+    function round($scale = 2, $roundingMode = RoundingMode::HALF_UP)
+    {
         return new Money($this->_amount->toScale($scale, $roundingMode), $this->_currency);
     }
-    
+
     /**
      * @return Money
      */
-    function mround($round, $roundingMode = RoundingMode::HALF_UP){
+    function mround($round, $roundingMode = RoundingMode::HALF_UP)
+    {
         $amount = $this->amount ? $this->amount->dividedBy($round, 0, $roundingMode)->multipliedBy($round) : $this->amount;
         return new Money($amount, $this->_currency);
     }
 
-    function isEqualTo($money){
-        return (!$this->amount && !$money->amount) || (
-            $this->amount->isEqualTo($money->amount) &&
-            $this->currency->code == $money->currency->code
+    function isEqualTo($money)
+    {
+        return (!$this->amount && !$money->amount) || ($this->amount->isEqualTo($money->amount) &&
+            $this->currency == $money->currency
         );
     }
 
     /**
-     * @param Currency|string $currency
+     * @param string $currency
      * @param array $options
      * 
      * @return Money
      */
-    function exchangeTo($currency, $options = []){
+    function exchangeTo(string $currency, array $options = [])
+    {
+
+        // if(is_string($currency)) $currency = Currency::find($currency);
+        // if(!$currency) throw new Exception("Unknown currency");
+
+        if ($this->originalValue) return $this->originalValue->exchangeTo($currency, $options);
 
         $exchangeMode = Arr::get($options, "exchangeMode", Money::SELL);
         $preserveOriginal = Arr::get($options, "preserveOriginal", true);
 
-        if(is_string($currency)) $currency = Currency::find($currency);
-        if(!$currency) throw new Exception("Unknown currency");
+        if ($this->_currency === $currency) return clone $this;
+        // if($exchangeRate = Arr::get($this->currency->exchangeRates, $currency->code)){
+        //     $result = $this->multipliedBy($exchangeMode == Money::SELL ? $exchangeRate->sell_rate : $exchangeRate->buy_rate);
+        // }
+        // else if($exchangeRate = Arr::get($currency->exchangeRates, $this->currency->code)){
+        //     $result = $this->dividedBy($exchangeMode == Money::BUY ? $exchangeRate->sell_rate : $exchangeRate->buy_rate);
+        // }
+        // else{
+        //     throw new Exception("No se encontraron valores para el cambio de divisas: '{$this->currency->code}' -> '{$currency->code}'");
+        // }
+        $amount = $this->amount ? 
+            static::$currencyExchangeProvider->exchange($this->currency, $currency, (string) $this->amount, $options["date"] ?? null, $exchangeMode == Money::SELL) :
+            null;
+        $result = new Money($amount, $currency);
 
-        if($this->originalValue) return $this->originalValue->exchangeTo($currency, $exchangeMode);
-
-        if($this->_currency->code === $currency->code) return clone $this;
-        if($exchangeRate = Arr::get($this->currency->exchangeRates, $currency->code)){
-            $result = $this->multipliedBy($exchangeMode == Money::SELL ? $exchangeRate->sell_rate : $exchangeRate->buy_rate);
-        }
-        else if($exchangeRate = Arr::get($currency->exchangeRates, $this->currency->code)){
-            $result = $this->dividedBy($exchangeMode == Money::BUY ? $exchangeRate->sell_rate : $exchangeRate->buy_rate);
-        }
-        else{
-            throw new Exception("No se encontraron valores para el cambio de divisas: '{$this->currency->code}' -> '{$currency->code}'");
-        }
-        
-        if($preserveOriginal) $result->originalValue = $this;
+        if ($preserveOriginal) $result->originalValue = $this;
         $result->_currency = $currency;
 
         return $result;
     }
 
-    function toArray(){
+    function toArray()
+    {
         return [
             "amount" => (string) $this->_amount,
-            "currency" => $this->currency->code
+            "currency" => $this->currency
         ];
     }
+
 
     function __toString()
     {
         $amount = $this->amount ?? "-";
-        return "$amount {$this->currency->code}";
+        return "$amount {$this->currency}";
     }
 
-    static function create($amount, $currency){
+    static function create($amount, $currency)
+    {
         return new self($amount, $currency);
+    }
+
+    static function setCurrencyExchangeProvider(CurrencyExchangeProvider $provider)
+    {
+        static::$currencyExchangeProvider = $provider;
     }
 }

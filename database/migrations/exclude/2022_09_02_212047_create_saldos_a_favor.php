@@ -36,14 +36,16 @@ class CreateSaldosAFavor extends Migration
         $groupedTransacciones = Transaccion::get()->groupBy("cliente_id");
         foreach($groupedTransacciones as $idCliente => $transacciones){
             $saldos = [
-                "BOB" => new Money("0", Currency::find("BOB")),
-                "USD" => new Money("0", Currency::find("USD")),
+                "BOB" => new Money("0", "BOB"),
+                "USD" => new Money("0", "USD"),
             ];
             foreach($transacciones as $transaccion){
                 $detalles = $transaccion->detalles;
                 $saldo = $transaccion->importe;
                 foreach($detalles as $detalle){
-                    $saldo = $saldo->minus($detalle->importe->exchangeTo($saldo->currency));
+                    $saldo = $saldo->minus($detalle->importe->exchangeTo($saldo->moneda, [
+                        "date" => $transaccion->fecha
+                    ]));
                 }
                 $saldos[$transaccion->moneda] = $saldos[$transaccion->moneda]->plus($saldo);
             }
