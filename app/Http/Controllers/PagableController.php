@@ -28,6 +28,7 @@ class PagableController extends Controller
 
         //Reservas
         $reservas = Reserva::whereBelongsTo($cliente)
+        ->where("fecha", "<=", $fecha)
         ->where("estado", "<>", 2)
         ->where("saldo", ">", "0")
         ->oldest("id")
@@ -35,6 +36,7 @@ class PagableController extends Controller
 
         //Ventas
         $ventas = Venta::whereBelongsTo($cliente)
+        ->where("fecha", "<=", $fecha)
         ->where("estado", 1)
         ->where("saldo", ">", "0")
         ->oldest("id")
@@ -51,9 +53,10 @@ class PagableController extends Controller
             $query->whereNull("anterior.vencimiento")
                 ->orWhere("anterior.vencimiento", "<", $fecha);
         })
-        ->whereHas("credito", function($query) use($cliente){
-            $query->whereHasMorph("creditable", '*', function($query) use($cliente){
-                $query->whereBelongsTo($cliente);
+        ->whereHas("credito", function($query) use($cliente, $fecha){
+            $query->whereHasMorph("creditable", '*', function($query) use($cliente, $fecha){
+                $query->whereBelongsTo($cliente)
+                    ->where("fecha", "<=", $fecha);
             });
             $query->where("estado", 1);
         })

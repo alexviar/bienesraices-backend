@@ -55,7 +55,7 @@ class ProyectoController extends Controller
             "precio_reservas" => "required|numeric",
             "duracion_reservas" => "required|integer",
             "cuota_inicial" => "required|numeric",
-            "tasa_interes" => "required|numeric|min:0.0001|max:0.9999",
+            "tasa_interes" => "required|numeric|min:0|max:0.9999",
             "tasa_mora" => "required|numeric|min:0|max:0.9999",
         ]);
 
@@ -84,8 +84,8 @@ class ProyectoController extends Controller
             "precio_reservas" => "sometimes|required|numeric",
             "duracion_reservas" => "sometimes|required|integer",
             "cuota_inicial" => "sometimes|required|numeric",
-            "tasa_interes" => "sometimes|required|numeric|min:0.0001|max:0.9999",
-            "tasa_mora" => "sometimes|required|numeric|min:0.0001|max:0.9999",
+            "tasa_interes" => "sometimes|required|numeric|min:0|max:0.9999",
+            "tasa_mora" => "sometimes|required|numeric|min:0|max:0.9999",
         ]);
         if(Arr::has($payload, "ubicacion")){
             $payload["ubicacion"] = new Point(Arr::get($payload, "ubicacion.latitud"), Arr::get($payload, "ubicacion.longitud"));

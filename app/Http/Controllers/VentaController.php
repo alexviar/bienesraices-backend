@@ -166,7 +166,7 @@ class VentaController extends Controller
 
             "credito" => "required_if:tipo,2",
             // "credito.cuota_inicial" => "required_with:credito|numeric",
-            "credito.tasa_interes" => "required_with:credito|numeric",
+            "credito.tasa_interes" => "required_with:credito|numeric|min:0|max:0.9999",
             "credito.plazo" => "required_with:credito|numeric|integer",
             "credito.periodo_pago" => "required_with:credito|in:1,2,3,4,6",
             "credito.dia_pago" => "required_with:credito|min:1|max:31"
