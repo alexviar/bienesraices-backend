@@ -65,15 +65,19 @@ class VentaPolicy
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Determina si el usuario puede anular la venta.
      *
      * @param  \App\Models\User  $user
      * @param  \App\Models\Venta  $venta
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, Venta $venta)
+    public function cancel(User $user, Venta $venta)
     {
-        //
+        if($venta->estado == 2 || $venta->getAttributes()["importe"] !== $venta->getAttributes()["saldo"]) return false;
+        if($user->can("Anular ventas")
+            && ($user->proyectos->isEmpty() || $user->proyectos->contains($venta->proyecto))
+            && (!$user->vendedor_id || $venta->vendedor_id == $user->vendedor_id)
+        ) return true;
     }
 
     /**

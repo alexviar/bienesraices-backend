@@ -22,18 +22,21 @@ class VentaFactory extends Factory
 
         $reservaId = $this->resolveAttribute(isset($attributes["reserva_id"]) ? $attributes["reserva_id"] : optional(Reserva::factory())->value, []);
         $reserva = Reserva::find($reservaId);
-        $loteId = $this->resolveAttribute($reserva->lote ?? $attributes["lote_id"] ?? Lote::factory(), []);
+        $loteId = $this->resolveAttribute($reserva->lote ?? $attributes["lote_id"] ?? Lote::factory([
+            "estado" => 4
+        ]), []);
         $lote = Lote::find($loteId);
         $proyecto = $lote->manzana->proyecto;
+        $importe = $attributes["importe"] ?? $lote->getAttributes()["precio"] ?? (string) $lote->precio_sugerido->amount;
 
         return [
             "tipo" => $tipo,
             "fecha" => $attributes["fecha"] ?? $this->faker->date(),
             "moneda" => $attributes["moneda"] ?? $proyecto->moneda,
             "lote_id" => $lote->id,
-            "importe" => $attributes["importe"] ?? $lote->getAttributes()["precio"] ?? (string) $lote->precio_sugerido->amount,
+            "importe" => $importe,
             "importe_pendiente" => $attributes["importe_pendiente"] ??  "0.00",
-            "saldo" => $attributes["saldo"] ?? "0.00",
+            "saldo" => $attributes["saldo"] ?? $importe,
             "estado" => $attributes["estado"] ?? $this->faker->randomElement([1,2]),
             "cliente_id" => $reserva->cliente ?? $attributes["cliente_id"] ?? Cliente::factory(),
             "vendedor_id" => $reserva->vendedor ?? $attributes["vendedor_id"] ?? Vendedor::factory(),

@@ -32,7 +32,8 @@ class Lote extends Model
         "geocerca",
         "precio",
         "manzana_id",
-        "categoria_id"
+        "categoria_id",
+        "estado"
     ];
 
     protected $spatialFields = [
@@ -43,7 +44,7 @@ class Lote extends Model
         "plano",
         "proyecto",
         "reserva",
-        "venta"
+        "venta",
     ];
     
     protected $appends = [
