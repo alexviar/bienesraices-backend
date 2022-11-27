@@ -61,9 +61,6 @@ Route::controller(VendedorController::class)->prefix("vendedores")->group(functi
     Route::middleware('auth:sanctum')->post('/', "store");
 });
 
-Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/ventas', [VentaController::class, "index"]);
-Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/ventas', [VentaController::class, "store"]);
-
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/reservas', [ReservaController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/reservas', [ReservaController::class, "store"]);
 
@@ -93,6 +90,12 @@ Route::controller(ProyectoController::class)->prefix('/proyectos')->group(functi
         Route::controller(LoteController::class)->prefix('/lotes')->group(function(){
             Route::middleware('auth:sanctum')->get('/', "index");
             Route::middleware('auth:sanctum')->post('/', "store");
+        });
+
+        Route::controller(VentaController::class)->prefix('/ventas')->group(function(){
+            Route::middleware('auth:sanctum')->get('/', "index");
+            Route::middleware('auth:sanctum')->post('/', "store");
+            Route::middleware('auth:sanctum')->post('/{ventaId}/anular', 'cancel');
         });
     });
 

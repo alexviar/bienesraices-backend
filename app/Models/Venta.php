@@ -103,6 +103,11 @@ class Venta extends Model
     //     return parent::find($id);
     // }
 
+    #region Relationships
+    function anulacion(){
+        return $this->morphOne(Anulacion::class, "anulable");
+    }
+
     function reserva(){
         return $this->belongsTo(Reserva::class);
     }
@@ -136,6 +141,7 @@ class Venta extends Model
     function currency(){
         return $this->belongsTo(Currency::class, "moneda");
     }
+    #endregion
 
     function getReferencia(){
         return $this->tipo == 1 ? "Venta N.º {$this->id}" : "Cuota inicial del crédito {$this->credito->codigo}";

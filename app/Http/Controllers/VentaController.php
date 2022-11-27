@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\VentaCreated;
 use App\Http\Reports\Venta\HistorialPagos;
 use App\Http\Reports\Venta\PlanPagosPdfReporter;
+use App\Models\Anulacion;
 use App\Models\Credito;
 use App\Models\Currency;
 use App\Models\DetalleTransaccion;
@@ -17,11 +18,11 @@ use App\Models\ValueObjects\Money;
 use App\Models\Venta;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
-use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use NumberFormatter;
 use Throwable;
@@ -96,16 +97,6 @@ class VentaController extends Controller
             "documento" => $venta->cliente->documento_identidad["numero"],
         // ])->setPaper([0, 0, 72*8.5, 72*13])->stream();
         ])->setPaper("A6", "landscape")->stream();
-    }
-
-    /**
-     * @return Venta
-     */
-    protected function findVenta($proyectoId, $ventaId){
-        // $venta = Venta::where("proyecto_id", $proyectoId)->where("id", $ventaId)->first();
-        $venta = Venta::find($ventaId);
-        if(!$venta || $venta->proyecto_id != $proyectoId) throw new ModelNotFoundException();
-        return $venta;
     }
 
     function preprocesStoreRequest(Request $request){
@@ -229,6 +220,28 @@ class VentaController extends Controller
         return $record;
     }
 
+    function cancel(Request $request, $proyectoId, $ventaId)
+    {
+        $venta = $this->findVenta($proyectoId, $ventaId);
+        $this->authorize("cancel", [$venta]);
+        $payload = $request->validate([
+            "motivo" => "required|string"
+        ]);
+        $anulacion = DB::transaction(function() use($venta, $payload){
+            $anulacion = $venta->anulacion()->create($payload + [
+                "fecha" => Carbon::today()
+            ]);
+            $venta->update([
+                "estado" => 2
+            ]);
+            $venta->lote->update([
+                "estado" => 1
+            ]);
+            return $anulacion;
+        });
+        return $anulacion;
+    }
+
     private function findProyecto($proyectoId)
     {
         $proyecto = Proyecto::find($proyectoId);
@@ -236,5 +249,15 @@ class VentaController extends Controller
             throw new ModelNotFoundException("El proyecto no existe");
         }
         return $proyecto;
+    }
+
+    private function findVenta($proyectoId, $ventaId)
+    {
+        $proyecto = Proyecto::find($proyectoId);
+        $venta = Venta::find($ventaId);
+        if (!$venta || $venta->proyecto_id != $proyecto->id) {
+            throw new ModelNotFoundException("La venta no existe");
+        }
+        return $venta;
     }
 }

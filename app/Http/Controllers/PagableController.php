@@ -54,6 +54,7 @@ class PagableController extends Controller
         ->whereHas("credito", function($query) use($cliente){
             $query->whereHasMorph("creditable", '*', function($query) use($cliente){
                 $query->whereBelongsTo($cliente);
+                $query->whereEstado(1);
             });
             $query->where("estado", 1);
         })
