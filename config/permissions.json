@@ -147,7 +147,8 @@
       "Ver manzanas",
       "Ver lotes",
       "Ver clientes",
-      "Ver vendedores"
+      "Ver vendedores",
+      "Ver tipos de cambio"
     ],
     "Ver ventas": [
       "Ver proyectos"
@@ -157,7 +158,11 @@
       "Ver manzanas",
       "Ver lotes",
       "Ver clientes",
-      "Ver vendedores"
+      "Ver vendedores",
+      "Ver tipos de cambio"
+    ],
+    "Registrar transacciones": [
+      "Ver tipos de cambio"
     ]
   }
 }

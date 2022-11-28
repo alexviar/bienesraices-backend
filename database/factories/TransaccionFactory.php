@@ -21,7 +21,8 @@ class TransaccionFactory extends Factory
             "importe" => $attributes["importe"] ?? $this->faker->numerify("###.##"),
             
             "cliente_id" => $attributes["cliente_id"] ?? Cliente::factory(),
-            "user_id" => $attributes["user_id"] ?? User::find(1)
+            "user_id" => $attributes["user_id"] ?? User::find(1),
+            "estado" => $attributes["estado"] ?? 1
         ];
     }
 }

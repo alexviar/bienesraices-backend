@@ -8,7 +8,9 @@ use App\Events\TransaccionRegistrada;
 use App\Events\VentaCreated;
 use App\Models\Cuota;
 use App\Models\DetalleTransaccion;
+use App\Models\Reserva;
 use App\Models\Transaccion;
+use App\Models\Venta;
 use Exception;
 
 class TransaccionSubscriber {
@@ -77,7 +79,6 @@ class TransaccionSubscriber {
             "importe" => $importe
         ]);
         do{
-            $pagable->refresh();
             $pagable->projectTo($fecha);
             if(!$pagable->pendiente){
                 throw new Exception("Solo puede pagar cuotas vencidas o en curso.");
@@ -93,6 +94,9 @@ class TransaccionSubscriber {
                     "saldo" => $pagable->saldo->amount,
                     "total_pagos" => $pagable->total_pagos->plus($importe)->amount
                 ]);
+            if(!$updated){
+                $pagable->refresh();
+            }
         } while(!$updated);
     }
 
@@ -100,7 +104,6 @@ class TransaccionSubscriber {
         $pagable = $detalleTransacccion->pagable;
         $importe = $detalleTransacccion->getAttributes()["importe"];
         do{
-            $pagable->refresh();
             if($pagable->saldo->amount->isLessThan($importe)){
                 throw new Exception("El pago excede el importe a pagar");
             }
@@ -109,6 +112,9 @@ class TransaccionSubscriber {
                 ->update([
                     "saldo" => $pagable->saldo->minus($importe)->amount
                 ]);
+            if(!$updated){
+                $pagable->refresh();
+            }
         } while(!$updated);
     }
 
@@ -121,7 +127,7 @@ class TransaccionSubscriber {
                     $query->where("estado", 1);
                 })->first(), $event->transaccion->fecha, $detalle->getAttributes()["importe"]);
             }
-            else{
+            else if($detalle->pagable_type == Reserva::class || $detalle->pagable_type == Venta::class){
                 $this->actualizarPagable($detalle);
             }
         }

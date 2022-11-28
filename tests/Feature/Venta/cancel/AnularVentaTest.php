@@ -96,20 +96,20 @@ test('usuarios sin permiso no estan autorizados', function ($dataset) {
             "venta" => $venta
         ];
     },
-    "Pagado" => function(){
-        $venta = Venta::factory([
-            "saldo" => 1
-        ])->create();
-        /** @var User $login */
-        $login = User::factory([
-            "estado" => 1
-        ])->create();
-        $login->assignRole("Super usuarios");
-        return [
-            "login" => $login,
-            "venta" => $venta
-        ];
-    }
+    // "Pagado" => function(){
+    //     $venta = Venta::factory([
+    //         "saldo" => 1
+    //     ])->create();
+    //     /** @var User $login */
+    //     $login = User::factory([
+    //         "estado" => 1
+    //     ])->create();
+    //     $login->assignRole("Super usuarios");
+    //     return [
+    //         "login" => $login,
+    //         "venta" => $venta
+    //     ];
+    // }
 ]);
 
 test('usuarios autorizados', function ($dataset) {

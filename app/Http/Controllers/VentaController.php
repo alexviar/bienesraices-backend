@@ -39,7 +39,7 @@ class VentaController extends Controller
         $proyecto = $this->findProyecto($proyectoId);
         $this->authorize("viewAny", [Venta::class, $proyecto, $request->all()]);
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        $query = Venta::with(["cliente", "vendedor", "lote.manzana", "credito"])
+        $query = Venta::with(["anulacion", "cliente", "vendedor", "lote.manzana", "credito"])
             ->where("proyecto_id", $proyectoId)
             ->latest();
         $user = $request->user();
@@ -228,11 +228,23 @@ class VentaController extends Controller
             "motivo" => "required|string"
         ]);
         $anulacion = DB::transaction(function() use($venta, $payload){
+            $updated = false;
+            while(!$updated){
+                if($venta->estado == 2){
+                    throw new Exception("La venta ya ha sido anulada");
+                }
+                $updated = Venta::where("id", $venta->id)
+                    ->where("updated_at", $venta->updated_at)
+                    ->update([
+                        "estado" => 2
+                    ]);
+                if(!$updated)
+                {
+                    $venta->refresh();
+                }
+            }
             $anulacion = $venta->anulacion()->create($payload + [
                 "fecha" => Carbon::today()
-            ]);
-            $venta->update([
-                "estado" => 2
             ]);
             $venta->lote->update([
                 "estado" => 1

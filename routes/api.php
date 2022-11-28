@@ -103,9 +103,13 @@ Route::controller(ProyectoController::class)->prefix('/proyectos')->group(functi
     Route::middleware('auth:sanctum')->post('/', "store");
 });
 
-Route::middleware('auth:sanctum')->get('/transacciones', [CajaController::class, "index"]);
-Route::middleware('auth:sanctum')->get('/transacciones/{id}', [CajaController::class, "show"]);
-Route::middleware('auth:sanctum')->post('/transacciones', [CajaController::class, "store"]);
+Route::controller(CajaController::class)->prefix("transacciones")->group(function(){
+    Route::middleware('auth:sanctum')->get('/', [CajaController::class, "index"]);
+    Route::middleware('auth:sanctum')->get('/{id}', [CajaController::class, "show"]);
+    Route::middleware('auth:sanctum')->post('/', [CajaController::class, "store"]);
+    Route::middleware('auth:sanctum')->post('/{transaccionId}/anular', [CajaController::class, "cancel"]);
+});
+
 
 Route::middleware('auth:sanctum')->get('lista-mora', [ListaMoraController::class, "index"]);
 

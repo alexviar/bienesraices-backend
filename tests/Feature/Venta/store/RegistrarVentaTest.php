@@ -497,7 +497,7 @@ test("Pagos programados el 31 de cada mes", function(){
         "fecha" => "2022-02-28",
         "moneda" => "USD",
         "importe" => "500",
-    ])->credito("10030.96")->withReserva(false)->raw();
+    ])->credito("10030.96")->for(Lote::factory())->withReserva(false)->raw();
     $dataCredito = Credito::factory([
         "plazo" => 48,
         "periodo_pago" => 1,
@@ -575,13 +575,13 @@ test("Un lote que ha sido reservado por un cliente no puede ser vendido a otro, 
 
 });
 
-it('registra la transaccion', function () {
+it('dispatch event', function () {
     /** @var TestCase $this  */
 
     $data = Venta::factory([
         "moneda" => "USD",
         "importe" => "10530.96",
-    ])->contado()->withReserva(false)->raw();
+    ])->for(Lote::factory())->contado()->withReserva(false)->raw();
     $proyectoId = $data["proyecto_id"];
     unset($data["importe_pendiente"]);
 

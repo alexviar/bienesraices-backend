@@ -186,7 +186,7 @@ it("Genera un reporte del plan de pagos", function(){
     ->credito("3100")
     ->create();
     $credito = Credito::factory([
-        "cuota_inicial" => "500",
+        "codigo" => "5952",
         "plazo" => "48",
         "dia_pago" => 1,
         "periodo_pago" => 1,

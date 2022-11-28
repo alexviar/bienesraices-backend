@@ -62,15 +62,16 @@ class TransaccionPolicy
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Determina si el usuario puede anular .
      *
      * @param  \App\Models\User  $user
      * @param  \App\Models\Transaccion  $transaccion
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, Transaccion $transaccion)
+    public function cancel(User $user, Transaccion $transaccion)
     {
-        //
+        if($transaccion->estado == 2) return false;
+        if($user->can("Anular transacciones")) return true;
     }
 
     /**

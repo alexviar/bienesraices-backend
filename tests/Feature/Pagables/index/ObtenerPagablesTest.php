@@ -140,6 +140,7 @@ it('obtiene los pagables', function ($dataset) {
     $response = $this->actingAs(User::find(1))->getJson('/api/pagables?'.http_build_query($data));
 
     $response->assertOk();
+
     expect($response->json("pagables"))->toEqual($dataset["expectations"]);
 })->with([
     function(){
@@ -150,7 +151,8 @@ it('obtiene los pagables', function ($dataset) {
             "dia_pago" => 1
         ])->for(Venta::factory([
             "fecha" => "2022-02-28",
-            "importe" => "500"
+            "importe" => "500",
+            "saldo" => "0"
         ])->for($cliente)->credito("10030.96"), "creditable")->create();
         $credito->build();
         return [
@@ -183,7 +185,8 @@ it('obtiene los pagables', function ($dataset) {
             "dia_pago" => 1
         ])->for(Venta::factory([
             "fecha" => "2022-02-28",
-            "importe" => "500"
+            "importe" => "500",
+            "saldo" => "0"
         ])->for($cliente)->credito("10030.96"), "creditable")->create();
         $credito->build();
         return [
@@ -217,7 +220,8 @@ it('obtiene los pagables', function ($dataset) {
             "dia_pago" => 1
         ])->for(Venta::factory([
             "fecha" => "2022-02-28",
-            "importe" => "500"
+            "importe" => "500",
+            "saldo" => "0"
         ])->for($cliente)->credito("10030.96"), "creditable")->create();
         $credito->build();
         return [
@@ -262,7 +266,8 @@ it('obtiene los pagables', function ($dataset) {
             "dia_pago" => 1
         ])->for(Venta::factory([
             "fecha" => "2022-02-28",
-            "importe" => "500"
+            "importe" => "500",
+            "saldo" => "0"
         ])->for($cliente)->credito("10030.96"), "creditable")->create();
         $credito->build();
 
@@ -318,7 +323,8 @@ it('obtiene los pagables', function ($dataset) {
             "dia_pago" => 1
         ])->for(Venta::factory([
             "fecha" => "2022-02-28",
-            "importe" => "500"
+            "importe" => "500",
+            "saldo" => "0"
         ])->for($cliente)->credito("10030.96"), "creditable")->create();
         $credito->build();
 
@@ -369,7 +375,6 @@ it('obtiene los pagables', function ($dataset) {
     function(){
         $cliente = Cliente::factory()->create();
         $credito = Credito::factory([
-            "cuota_inicial" => "500",
             "plazo" => 48,
             "periodo_pago" => 1,
             "dia_pago" => 1,
@@ -378,7 +383,6 @@ it('obtiene los pagables', function ($dataset) {
             "fecha" => "2022-02-28",
             "importe" => "400",
             "saldo" => "100",
-            "estado" => 1
         ])->for($cliente)->for(Reserva::factory([
             "importe" => "100",
             "saldo" => "50",

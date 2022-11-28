@@ -73,7 +73,7 @@ class VentaPolicy
      */
     public function cancel(User $user, Venta $venta)
     {
-        if($venta->estado == 2 || $venta->getAttributes()["importe"] !== $venta->getAttributes()["saldo"]) return false;
+        if($venta->estado == 2 /* || $venta->getAttributes()["importe"] !== $venta->getAttributes()["saldo"]*/) return false;
         if($user->can("Anular ventas")
             && ($user->proyectos->isEmpty() || $user->proyectos->contains($venta->proyecto))
             && (!$user->vendedor_id || $venta->vendedor_id == $user->vendedor_id)

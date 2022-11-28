@@ -27,7 +27,7 @@ class CajaController extends Controller
     {
         $queryArgs = $request->only(["search", "filter", "page"]);
         $this->authorize("viewAny", [Transaccion::class, $queryArgs]);
-        return $this->buildResponse(Transaccion::with(["cliente"])->latest(), $queryArgs);
+        return $this->buildResponse(Transaccion::with(["anulacion", "cliente"])->latest(), $queryArgs);
     }
 
     function show(Request $request, $id)
@@ -107,9 +107,7 @@ class CajaController extends Controller
                     "date" => $transaccion->fecha
                 ]))->amount;
 
-                $transaccion->detalles()->create(Arr::only($detalle, [
-                    "forma_pago",
-                ]) + [
+                $transaccion->detalles()->create([
                     "moneda" => $pagable->getCurrency()->code,
                     "importe" => $importe->amount,
                     "referencia" => $pagable->getReferencia(),
@@ -135,7 +133,6 @@ class CajaController extends Controller
             $saldo = $pagoTotal->minus($transaccion->importe->amount);
             // Log::debug(json_encode([(string)$pagoTotal, (string)$transaccion->importe, (string)$saldo]));
             if ($saldo->isGreaterThan("0") && Arr::get($payload, "registrar_excedentes")) {
-                // 
                 $account = Account::where("cliente_id", $payload["cliente_id"])
                     ->where("moneda", $payload["moneda"])
                     ->first();
@@ -143,7 +140,15 @@ class CajaController extends Controller
                     $account = Account::create(Arr::only($payload, ["cliente_id", "moneda"]) + [
                         "balance" => "0"
                     ]);
-                }
+                }      
+                $pagable = $account;          
+                $transaccion->detalles()->create([
+                    "moneda" => $pagable->moneda,
+                    "importe" => $saldo,
+                    "referencia" => "Excedente",
+                    "pagable_id" => $pagable->getMorphKey(),
+                    "pagable_type" => $pagable->getMorphClass()
+                ]);
                 do {
                     $account->refresh();
                     $updated = Account::where("id", $account->id)
@@ -160,6 +165,94 @@ class CajaController extends Controller
         });
 
         return $transaccion;
+    }
+
+    function cancel(Request $request, $transaccionId)
+    {
+        $transaccion = $this->findTransaccion($transaccionId);
+        $this->authorize("cancel", [$transaccion]);
+        $payload = $request->validate([
+            "motivo" => "required|string"
+        ]);
+        $anulacion = DB::transaction(function() use($transaccion, $payload){
+            $updated = false;
+            while(!$updated){
+                if($transaccion->estado == 2){
+                    throw abort(500, "La transacción ya ha sido anulada.");
+                }
+                $updated = Transaccion::where("id", $transaccion->id)
+                    ->where("updated_at", $transaccion->updated_at)
+                    ->update([
+                        "estado" => 2
+                    ]);
+                if(!$updated)
+                {
+                    $transaccion->refresh();
+                }
+            }
+            
+            foreach($transaccion->detalles->sortBy(["pagable_type", "pagable_id"]) as $detalle){
+                $pagable = $detalle->pagable;
+                if($pagable instanceof Reserva){
+                    $updated = Reserva::where("id", $pagable->id)
+                        ->where("updated_at", $pagable->updated_at)
+                        ->update([
+                            "saldo" => (string) $pagable->saldo->plus($detalle->importe)->amount
+                        ]);
+                    if(!$updated)
+                    {
+                        abort(500, "Optimistic lock: la reserva {$pagable->id} ha sido actualizada desde que inició la operación.");
+                    }
+                }
+                else if($pagable instanceof Venta){
+                    $updated = Venta::where("id", $pagable->id)
+                        ->where("updated_at", $pagable->updated_at)
+                        ->update([
+                            "saldo" => (string) $pagable->saldo->plus($detalle->importe)->amount
+                        ]);
+                    if(!$updated)
+                    {
+                        abort(500, "Optimistic lock: la venta {$pagable->id} ha sido actualizada desde que inició la operación.");
+                    }
+                }
+                else if($pagable instanceof Cuota){
+                    $pago = $pagable->pagos->first(function($pago) use($detalle){
+                        return $pago->fecha->isSameAs($detalle->transaccion->fecha)
+                            && $detalle->importe->amount->isEqualTo($pago->importe);
+                    });
+                    $pago->delete();
+                    $pagable->load("pagos");
+                    $pagable->recalcularSaldo();
+                    $updated = Cuota::where("id", $pagable->id)
+                        ->where("updated_at", $pagable->updated_at)
+                        ->update([
+                            "saldo" => (string) $pagable->saldo->amount,
+                            "total_pagos" => (string) $pagable->total_pagos->minus($detalle->importe)->amount
+                        ]);
+                    if(!$updated)
+                    {
+                        abort(500, "Optimistic lock: la cuota {$pagable->codigo} ha sido actualizada desde que inició la operación.");
+                    }
+                }
+                else if($pagable instanceof Account){
+                    $updated = Account::where("id", $pagable->id)
+                    ->where("updated_at", $pagable->updated_at)
+                    ->update([
+                        "balance" => (string) $pagable->balance->minus($detalle->importe)->amount
+                    ]);
+                    if(!$updated)
+                    {
+                        abort(500, "Optimistic lock: la cuenta {$pagable->id} ha sido actualizada desde que inició la operación.");
+                    }
+                }
+            }
+
+            return $transaccion->anulacion()->create($payload + [
+                "fecha" => Carbon::today()
+            ]);
+        });
+
+        return $anulacion;
     }
 
     function findPagable($type, $id)

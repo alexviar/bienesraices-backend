@@ -37,7 +37,7 @@ class VentaFactory extends Factory
             "importe" => $importe,
             "importe_pendiente" => $attributes["importe_pendiente"] ??  "0.00",
             "saldo" => $attributes["saldo"] ?? $importe,
-            "estado" => $attributes["estado"] ?? $this->faker->randomElement([1,2]),
+            "estado" => $attributes["estado"] ?? 1,
             "cliente_id" => $reserva->cliente ?? $attributes["cliente_id"] ?? Cliente::factory(),
             "vendedor_id" => $reserva->vendedor ?? $attributes["vendedor_id"] ?? Vendedor::factory(),
             "proyecto_id" => $proyecto,

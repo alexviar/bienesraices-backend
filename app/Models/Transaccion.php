@@ -63,5 +63,12 @@ class Transaccion extends Model
     {
         return $this->belongsTo(Currency::class, "moneda");
     }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\MorphOne
+     */
+    function anulacion(){
+        return $this->morphOne(Anulacion::class, "anulable");
+    }
     #endregion
 }

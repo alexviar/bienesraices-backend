@@ -6,6 +6,7 @@ use App\Models\Lote;
 use App\Models\Reserva;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ReleaseLotes extends Command
 {
@@ -40,16 +41,18 @@ class ReleaseLotes extends Command
      */
     public function handle()
     {
-        return Lote::joinSub(
-            Reserva::where("vencimiento", "<", Carbon::today()->format("Y-m-d"))
-                ->where("estado", 1),
-            "reservas_vencidas", 
-            function ($join) {
-                $join->on('lotes.id', '=', 'reservas_vencidas.lote_id');
-            }
-        )
-        ->update([
-            "lotes.estado" => 1
-        ]);
+        $today = Carbon::today();
+        $result = Lote::join(
+            "reservas",
+            'lotes.id',
+            'reservas.lote_id'
+        )->where("reservas.vencimiento", "<", $today->format("Y-m-d"))
+            ->where("reservas.estado", 1)
+            ->update([
+                "lotes.estado" => 1,
+                "reservas.estado" => 4,
+            ]);
+
+        Log::debug("$result lotes liberados por reservas vencidas");
     }
 }
