@@ -35,7 +35,7 @@ class TransaccionPolicy
      */
     public function view(User $user, Transaccion $transaccion)
     {
-        //
+        if($user->can("Ver transacciones")) return true;
     }
 
     /**
