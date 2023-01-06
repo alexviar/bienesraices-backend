@@ -51,7 +51,7 @@ class Cliente extends Model
         // return $this->hasMany(Credito::class)->with("creditable")->whereHasMorph([Venta::class], function($query){
         //     $query->where("estado", 1);
         // })->whereHas("cuotasVencidas");
-        return $this->hasMany(Venta::class)->whereHas("credito", function($query){
+        return $this->hasMany(Venta::class)->where("estado", 1)->whereHas("credito", function($query){
             $query->whereHas("cuotasVencidas");
         });
     }

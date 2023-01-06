@@ -78,7 +78,7 @@ class ListaMoraController extends Controller
                 // ])->toArray()
                 "creditos" => $value->creditosEnMora->map(function($venta){
                     return [
-                        "id" => $venta->id,
+                        "id" => $venta->credito->codigo,
                         "fecha" => $venta->fecha->format("Y-m-d"),
                         "proyecto" => [
                             "id" => $venta->proyecto->id,
