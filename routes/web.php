@@ -65,7 +65,7 @@ Route::controller(VentaController::class)->group(function(){
 
 Route::fallback(function (Request $request) {
   if ($request->expectsJson()) {
-      return abort(404);
+      return abort(404, "Route not found");
   }
   return File::get(public_path() . "/build/index.html");
 });

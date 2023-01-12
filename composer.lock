@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0033047c1e6953a322275de7df984599",
+    "content-hash": "fc5672ee80ac9c74716196a9731e1e58",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -6852,6 +6852,79 @@
             "time": "2022-01-10T16:22:52+00:00"
         },
         {
+            "name": "ozzie/pest-plugin-nest",
+            "version": "v0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ozziexsh/pest-plugin-nest.git",
+                "reference": "655762523ded70ff66e59d02ec7d517c8bce6d65"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ozziexsh/pest-plugin-nest/zipball/655762523ded70ff66e59d02ec7d517c8bce6d65",
+                "reference": "655762523ded70ff66e59d02ec7d517c8bce6d65",
+                "shasum": ""
+            },
+            "require": {
+                "pestphp/pest": "^1.0",
+                "pestphp/pest-plugin": "^1.0",
+                "php": "^7.4 || ^8.0"
+            },
+            "require-dev": {
+                "pestphp/pest-dev-tools": "dev-master",
+                "pestphp/pest-plugin-mock": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/Autoload.php"
+                ],
+                "psr-4": {
+                    "Ozzie\\Nest\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Nest Pest PHP tests for better organization and readability",
+            "keywords": [
+                "describe",
+                "framework",
+                "nest",
+                "pest",
+                "php",
+                "plugin",
+                "test",
+                "testing",
+                "unit"
+            ],
+            "support": {
+                "issues": "https://github.com/ozziexsh/pest-plugin-nest/issues",
+                "source": "https://github.com/ozziexsh/pest-plugin-nest/tree/v0.1.0"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=66BYDWAT92N6L",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/nunomaduro",
+                    "type": "github"
+                },
+                {
+                    "url": "https://www.patreon.com/nunomaduro",
+                    "type": "patreon"
+                }
+            ],
+            "time": "2022-08-04T08:03:52+00:00"
+        },
+        {
             "name": "pestphp/pest",
             "version": "v1.21.2",
             "source": {
@@ -8886,11 +8959,11 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.3|^8.0"
+        "php": "^7.4|^8.0"
     },
     "platform-dev": [],
     "platform-overrides": {
-        "php": "7.3"
+        "php": "7.4"
     },
     "plugin-api-version": "2.3.0"
 }

@@ -11,10 +11,16 @@ class CuotaFactory extends Factory
      *
      * @return array
      */
-    public function definition()
+    public function definition($attributes)
     {
         return [
-            //
+            "vencimiento" => $attributes["vencimiento"] ?? $this->faker->date(),
+            "numero" => $attributes["moneda"] ?? $this->faker->numberBetween(1,48),
+            "importe" => $attributes["importe"] ?? $this->faker->numerify("###.##"),
+            "saldo" => $attributes["saldo"] ?? "0",
+            "saldo_capital" => $attributes["saldo_capital"] ?? "0",
+            "codigo" => $this->faker->numerify("########"),
+            "credito_id" => $attributes["credito_id"],
         ];
     }
 }

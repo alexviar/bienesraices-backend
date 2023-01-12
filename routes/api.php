@@ -13,13 +13,13 @@ use App\Http\Controllers\ExchangeRateController;
 use App\Http\Controllers\PagableController;
 use App\Http\Controllers\PlanoController;
 use App\Http\Controllers\ProyectoController;
+use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UFVController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VendedorController;
 use App\Http\Controllers\VentaController;
-use App\Models\Lote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -63,6 +63,10 @@ Route::controller(VendedorController::class)->prefix("vendedores")->group(functi
 
 Route::middleware('auth:sanctum')->get('/proyectos/{proyectoId}/reservas', [ReservaController::class, "index"]);
 Route::middleware('auth:sanctum')->post('/proyectos/{proyectoId}/reservas', [ReservaController::class, "store"]);
+
+Route::controller(ReporteController::class)->prefix("reportes")->group(function(){
+    Route::middleware('auth:sanctum')->get('/reporte-de-pagos', "reporte_pagos")->name("reportes.pagos");
+});
 
 Route::controller(ProyectoController::class)->prefix('/proyectos')->group(function() {
     Route::prefix('/{proyectoId}')->group(function(){
