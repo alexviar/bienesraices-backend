@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cliente;
+use App\Models\Credito;
+use App\Models\Cuota;
 use App\Models\Venta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Brick\Math\BigDecimal;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class ListaMoraController extends Controller
@@ -14,20 +17,36 @@ class ListaMoraController extends Controller
 
     function applyFilters($query, $queryArgs)
     {
-        $query->whereHas("creditosEnMora", function($subquery){
-
+        $query->with(Arr::dot(["creditosEnMora"=>[
+            "credito.cuotasVencidas",
+            "proyecto",
+            "lote"
+        ]]));
+        $sub = Venta::selectRaw("MIN(cuotas.vencimiento) as fecha")
+            ->addSelect("cliente_id")
+            ->join("creditos", "creditos.creditable_id", "ventas.id")
+            ->join("cuotas", "cuotas.credito_id", "creditos.id")
+            ->where("ventas.estado", 1)
+            ->where("creditos.estado", 1)
+            ->where("cuotas.vencimiento", "<", Carbon::today()->toDateString())
+            ->where("cuotas.saldo", ">", 0)
+            ->groupBy("cliente_id");
+        $query->joinSub($sub, "sub1", function($query){
+            $query->on("sub1.cliente_id", "clientes.id");
         });
+        // $query->whereHas("creditosEnMora", function($subquery){
+
+        // });
+
+        $query->select("clientes.*");
+        $query->orderBy("sub1.fecha");
     }
 
     function index(Request $request)
     {
         $this->authorize("viewListaMora", [Cliente::class, $request->all()]);
         $queryArgs =  $request->only(["search", "filter", "page"]);
-        $response = $this->buildResponse(Cliente::query()->with(Arr::dot(["creditosEnMora"=>[
-            "credito.cuotasVencidas",
-            "proyecto",
-            "lote"
-        ]])), $queryArgs);
+        $response = $this->buildResponse(Cliente::query(), $queryArgs);
 
         $response["records"] = $response["records"]->map(function($value) {
             $resumen = $value->creditosEnMora->reduce(function($carry, $venta){
@@ -47,6 +66,9 @@ class ListaMoraController extends Controller
             return [
                 "cliente" => $value->setVisible([
                     "id",
+                    "nombre",
+                    "apellido_paterno",
+                    "apellido_materno",
                     "nombre_completo",
                     "documento_identidad",
                     "telefono"
